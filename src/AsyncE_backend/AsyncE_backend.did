@@ -6,8 +6,8 @@ type User = record {
 type Group = record {
     "id": text;
     "name": text;
-    "users": vec string;
-    "owner": string;
+    "users": vec text;
+    "owner": text;
     "profile_picture_blob": blob;
 };
 
@@ -20,6 +20,6 @@ service : {
     "get_username": () -> (opt text) query;
 
     "create_group": (text, blob) -> ();
-    "get_all_groups: () -> (vec Group) query;
+    "get_all_groups": () -> (vec Group) query;
     "get_group": (text) -> (opt Group) query;
 }
