@@ -56,9 +56,14 @@ fn validate_user_register(user: &mut User, principal: Principal) {
 
 #[ic_cdk::update]
 pub fn register(mut user: User) {
-    assert_user_logged_in();
-
+    // we don't use `assert_user_logged_in` since that function
+    // also checks for `null username` which we definitely have
+    // at this moment since it's "registering"
     let principal = ic_cdk::caller();
+    if principal != Principal::anonymous() {
+        panic!("User needs to login to proceed!")
+    }
+
     validate_user_register(&mut user, principal);
 
     USERS.with_borrow_mut(|users| users.insert(principal, user));
@@ -66,7 +71,14 @@ pub fn register(mut user: User) {
 
 #[ic_cdk::query]
 pub fn get_self() -> Option<User> {
-    assert_user_logged_in();
+    // we don't use `assert_user_logged_in` since that function
+    // also checks for `null username`
+    // and at this point when user refreshes the page when on `creating username` part
+    // this function won't return err
+    let principal = ic_cdk::caller();
+    if principal != Principal::anonymous() {
+        panic!("User needs to login to proceed!")
+    }
 
     let principal = ic_cdk::caller();
     USERS.with_borrow(|users| users.get(&principal).cloned())
