@@ -75,13 +75,9 @@ pub fn get_user(username: String) -> Option<User> {
 }
 
 #[ic_cdk::query]
-pub fn get_username(username: String) -> Option<String> {
+pub fn get_username() -> Option<String> {
     assert_user_logged_in();
 
-    USERS.with_borrow(|users| {
-        users
-            .values()
-            .find(|x| x.username == username)
-            .map(|x| x.username.clone())
-    })
+    let principal = ic_cdk::caller();
+    USERS.with_borrow(|users| users.get(&principal).map(|x| x.username.clone()))
 }
