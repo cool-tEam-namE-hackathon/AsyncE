@@ -1,3 +1,8 @@
+type User = record {
+    "username": text;
+};
+
 service : {
-    "login": () -> (text) query;
+    "login": () -> (opt User) query;
+    "register": (User) -> ();
 }
