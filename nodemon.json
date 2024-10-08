@@ -1,0 +1,5 @@
+{
+    "watch": ["src/AsyncE_frontend/src"],
+    "ext": "js,ts,vue",
+    "exec": "dfx deploy"
+}
