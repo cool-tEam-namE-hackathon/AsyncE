@@ -11,6 +11,10 @@ type Group = record {
     "profile_picture_blob": blob;
 };
 
+type Video = record {
+    "blob_data": blob;
+}
+
 service : {
     "login": () -> (opt User) query;
     "register": (User) -> ();
@@ -22,4 +26,8 @@ service : {
     "create_group": (text, blob) -> ();
     "get_all_groups": () -> (vec Group) query;
     "get_group": (text) -> (opt Group) query;
+
+    "get_videos": (text) -> (vec Video) query;
+    "add_video": (text, blob) -> ();
+    "concat_video": (text, text, blob) -> ();
 }

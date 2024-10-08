@@ -5,7 +5,7 @@ use crate::globals::USERS;
 
 #[derive(Clone, Debug, Default, CandidType, Deserialize)]
 pub struct User {
-    pub username: String,
+    pub username: Option<String>,
     pub profile_picture_blob: Vec<u8>,
 }
 
@@ -13,6 +13,13 @@ pub fn assert_user_logged_in() {
     let principal = ic_cdk::caller();
     if principal != Principal::anonymous() {
         panic!("User needs to login to proceed!")
+    }
+
+    if USERS
+        .with_borrow(|users| users.get(&principal).map(|x| x.username.clone()).flatten())
+        .is_none()
+    {
+        panic!("User needs to have a username to proceed!")
     }
 }
 
@@ -31,14 +38,20 @@ fn validate_user_register(user: &mut User, principal: Principal) {
         }
     });
 
-    user.username = user.username.trim().to_string();
-    if user.username.len() < 3 || user.username.len() > 20 {
+    if user.username.is_none() {
+        panic!("Username must be filled!")
+    }
+
+    let username = user.username.as_ref().unwrap().trim().to_string();
+    if username.len() < 3 || username.len() > 20 {
         panic!("Username must between 3 to 20 characters!")
     }
 
-    if user.username.chars().any(|x| !x.is_alphanumeric()) {
+    if username.chars().any(|x| !x.is_alphanumeric()) {
         panic!("Username contains special characters!")
     }
+
+    user.username = Some(username);
 }
 
 #[ic_cdk::update]
@@ -64,13 +77,14 @@ pub fn get_selfname() -> Option<String> {
     assert_user_logged_in();
 
     let principal = ic_cdk::caller();
-    USERS.with_borrow(|users| users.get(&principal).map(|x| x.username.clone()))
+    USERS.with_borrow(|users| users.get(&principal).map(|x| x.username.clone()).flatten())
 }
 
 #[ic_cdk::query]
 pub fn get_user(username: String) -> Option<User> {
     assert_user_logged_in();
 
+    let username = Some(username);
     USERS.with_borrow(|users| users.values().find(|x| x.username == username).cloned())
 }
 
@@ -79,5 +93,5 @@ pub fn get_username() -> Option<String> {
     assert_user_logged_in();
 
     let principal = ic_cdk::caller();
-    USERS.with_borrow(|users| users.get(&principal).map(|x| x.username.clone()))
+    USERS.with_borrow(|users| users.get(&principal).map(|x| x.username.clone()).flatten())
 }
