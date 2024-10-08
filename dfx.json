@@ -1,0 +1,45 @@
+{
+  "canisters": {
+    "AsyncE_backend": {
+      "candid": "src/AsyncE_backend/AsyncE_backend.did",
+      "package": "AsyncE_backend",
+      "type": "rust"
+    },
+    "AsyncE_frontend": {
+      "dependencies": [
+        "AsyncE_backend"
+      ],
+      "source": [
+        "src/AsyncE_frontend/dist"
+      ],
+      "type": "assets",
+      "workspace": "AsyncE_frontend"
+    },
+    "internet_identity": {
+      "candid": "https://github.com/dfinity/internet-identity/releases/latest/download/internet_identity.did",
+      "frontend": {},
+      "remote": {
+        "id": {
+          "ic": "rdmx6-jaaaa-aaaaa-aaadq-cai"
+        }
+      },
+      "type": "custom",
+      "wasm": "https://github.com/dfinity/internet-identity/releases/latest/download/internet_identity_dev.wasm.gz"
+    }
+  },
+  "defaults": {
+    "bitcoin": {
+      "enabled": true,
+      "log_level": "info",
+      "nodes": [
+        "127.0.0.1:18444"
+      ]
+    },
+    "build": {
+      "args": "",
+      "packtool": ""
+    }
+  },
+  "output_env_file": ".env",
+  "version": 1
+}
