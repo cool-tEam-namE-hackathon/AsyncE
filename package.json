@@ -19,5 +19,9 @@
         "globals": "^15.10.0",
         "nodemon": "^3.1.7",
         "prettier": "^3.3.3"
+    },
+    "dependencies": {
+        "@dfinity/auth-client": "^2.1.2",
+        "vue-router": "^4.4.5"
     }
 }
