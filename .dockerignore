@@ -1,0 +1,10 @@
+/target
+/.vscode
+/.cph
+/.dfx
+/.github
+/node_modules
+
+.git
+.gitignore
+.DS_Store

@@ -10,23 +10,26 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout repository
-      uses: actions/checkout@v2
+      - name: Checkout repository
+        uses: actions/checkout@v2
 
-    - name: Install dfx
-      uses: dfinity/setup-dfx@main
+      - name: Install dfx
+        uses: dfinity/setup-dfx@main
 
-    - name: Confirm successful installation
-      run: dfx --version
+      - name: Confirm successful installation
+        run: dfx --version
 
-    - name: Update cargo so no error
-      run: cargo update
+      - name: Update cargo so no error
+        run: cargo update
 
-    - name: Add wasm
-      run: rustup target add wasm32-unknown-unknown
+      - name: Add wasm
+        run: rustup target add wasm32-unknown-unknown
 
-    - name: Start dfx server in the background
-      run: dfx start --background
+      - name: Install NPM packages
+        run: npm i
 
-    - name: Deploy canisters
-      run: dfx deploy
+      - name: Start dfx server in the background
+        run: dfx start --background
+
+      - name: Deploy canisters
+        run: dfx deploy

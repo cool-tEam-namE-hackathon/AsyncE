@@ -1,4 +1,7 @@
-use std::io::Cursor;
+use std::{
+    io::Cursor,
+    time::{SystemTime, UNIX_EPOCH},
+};
 
 use candid::CandidType;
 use mp4::{
@@ -13,12 +16,23 @@ use crate::{globals::VIDEOS, group, user};
 #[derive(Clone, Debug, Default, CandidType, Deserialize)]
 pub struct Video {
     pub id: String,
+    pub username: String,
     pub webcam_blob: Vec<u8>,
     pub screen_blob: Vec<u8>,
+    pub created_time_unix: u128,
+}
+
+#[derive(Clone, Debug, Default, CandidType, Deserialize)]
+pub struct VideoFrames {
+    pub id: String,
+    pub username: String,
+    pub webcam_blob: Vec<u8>,
+    pub screen_blob: Vec<u8>,
+    pub created_time_unix: u128,
 }
 
 impl Video {
-    pub fn new(webcam_blob: Vec<u8>, screen_blob: Vec<u8>) -> Self {
+    pub fn new(username: String, webcam_blob: Vec<u8>, screen_blob: Vec<u8>) -> Self {
         let cursor_webcam = Cursor::new(&webcam_blob);
         let cursor_screen = Cursor::new(&screen_blob);
 
@@ -33,8 +47,13 @@ impl Video {
 
         Self {
             id: Uuid::new_v4().to_string(),
+            username,
             webcam_blob,
             screen_blob,
+            created_time_unix: SystemTime::now()
+                .duration_since(UNIX_EPOCH)
+                .expect("Time went backwards")
+                .as_millis(),
         }
     }
 }
@@ -277,7 +296,8 @@ pub fn add_video(group_id: String, webcam_blob: Vec<u8>, screen_blob: Vec<u8>) {
     user::assert_user_logged_in();
     assert_check_group(&group_id);
 
-    let video = Video::new(webcam_blob, screen_blob);
+    let selfname = user::get_selfname().unwrap();
+    let video = Video::new(selfname, webcam_blob, screen_blob);
     VIDEOS.with_borrow_mut(|videos| {
         videos
             .entry(group_id)
