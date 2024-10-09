@@ -1,7 +1,7 @@
 FROM --platform=linux/amd64 ubuntu:20.04
 
 ENV DEBIAN_FRONTEND=noninteractive 
-RUN apt-get update && apt-get install -y \
+RUN apt-get update && apt-get install -y --no-install-recommends \
     curl \
     qemu-user-static \
     libc6 \
@@ -16,7 +16,16 @@ RUN apt-get update && apt-get install -y \
     pkg-config \
     git \
     nodejs \
-    npm
+    npm \
+    python3 \
+    python3-pip \
+    ssh \
+    libunwind-dev \
+    libdigest-sha-perl \
+    cmake \
+    rsync
+RUN apt-get clean
+RUN rm -rf /var/lib/apt/lists/*
 
 ENV DFXVM_INIT_YES=true
 RUN curl --fail --silent --show-error --location --retry 10 --connect-timeout 5 --max-time 20 --retry-connrefused  https://internetcomputer.org/install.sh | bash
@@ -34,4 +43,4 @@ RUN npm i
 
 EXPOSE 4943
 
-RUN dfx start --background && dfx deploy
+RUN dfx start --clean --emulator --background && dfx deploy --with-cycles 100000000000
