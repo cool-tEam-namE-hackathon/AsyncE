@@ -104,6 +104,11 @@ import {
 import { AuthClient } from "@dfinity/auth-client";
 import { HttpAgent } from "@dfinity/agent";
 
+interface LoginResponse {
+    username: string;
+    blob: Blob;
+}
+
 let be = AsyncE_backend;
 async function login() {
     let authClient = await AuthClient.create();
@@ -124,6 +129,7 @@ async function login() {
     });
 
     const identity = authClient.getIdentity();
+    // @ts-expect-error: no createSync
     const agent = HttpAgent.createSync({ identity });
 
     const canisterId = process.env.CANISTER_ID_ASYNCE_BACKEND || "";
@@ -131,7 +137,7 @@ async function login() {
         agent,
     });
 
-    await be.login().then((response) => {
+    await be.login().then((response: LoginResponse) => {
         console.log(response);
     });
 }
