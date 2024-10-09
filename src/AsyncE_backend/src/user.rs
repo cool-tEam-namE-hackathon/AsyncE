@@ -25,7 +25,10 @@ pub fn assert_user_logged_in() {
 
 #[ic_cdk::query]
 pub fn login() -> Option<User> {
-    assert_user_logged_in();
+    let principal = ic_cdk::caller();
+    if principal != Principal::anonymous() {
+        panic!("User needs to login to proceed!")
+    }
 
     let principal = ic_cdk::caller();
     USERS.with_borrow(|users| users.get(&principal).cloned())
