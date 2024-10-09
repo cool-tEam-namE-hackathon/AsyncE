@@ -24,7 +24,7 @@ pub fn assert_user_logged_in() {
 }
 
 #[ic_cdk::query]
-pub fn login() -> Option<User> {
+pub fn get_user_credentials() -> Option<User> {
     let principal = ic_cdk::caller();
     if principal == Principal::anonymous() {
         panic!("User needs to login to proceed!")

@@ -30,7 +30,7 @@ type WebsocketEventMessage = record {
 };
 
 service : {
-    "login": () -> (opt User) query;
+    "get_user_credentials": () -> (opt User) query;
     "register": (User) -> ();
     "get_self": () -> (opt User) query;
     "get_selfname": () -> (opt text) query;
