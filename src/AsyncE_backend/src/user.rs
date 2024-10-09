@@ -36,7 +36,7 @@ pub fn login() -> Option<User> {
 
 fn validate_user_register(user: &mut User, principal: Principal) {
     USERS.with_borrow(|users| {
-        if !users.contains_key(&principal) {
+        if users.contains_key(&principal) {
             panic!("User is already registered!")
         }
     });
@@ -74,7 +74,7 @@ pub fn register(mut user: User) {
     // also checks for `null username` which we definitely have
     // at this moment since it's "registering"
     let principal = ic_cdk::caller();
-    if principal != Principal::anonymous() {
+    if principal == Principal::anonymous() {
         panic!("User needs to login to proceed!")
     }
 
@@ -144,4 +144,14 @@ pub fn set_principal() {
 #[ic_cdk::query]
 pub fn get_principal() -> Option<Principal> {
     PRINCIPAL.get()
+}
+
+#[ic_cdk::query]
+pub fn get_all_usernames() -> Vec<String> {
+    USERS.with_borrow(|users| {
+        users
+            .values()
+            .map(|x| x.username.as_ref().unwrap().clone())
+            .collect::<Vec<_>>()
+    })
 }
