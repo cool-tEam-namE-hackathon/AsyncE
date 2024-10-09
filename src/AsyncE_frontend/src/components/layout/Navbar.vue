@@ -4,13 +4,45 @@
             <span>AsyncE</span>
         </router-link>
         <nav className="ml-auto flex gap-4 sm:gap-6">
-            <router-link
-                to="/group"
+            <button
+                v-if="!isAuthenticated"
+                to="/login"
                 class="text-sm font-medium hover:underline underline-offset-4"
+                @click="login"
             >
-                Group
-            </router-link>
+                Login
+            </button>
+            <div v-else class="flex items-center gap-3">
+                <!-- <router-link
+                    to="/group"
+                    class="text-sm font-medium hover:underline underline-offset-4"
+                >
+                    Create Group
+                </router-link> -->
+                <span class="text-sm font-medium">{{ username }}</span>
+                <button
+                    @click="logout"
+                    class="text-sm font-medium hover:underline underline-offset-4"
+                >
+                    Logout
+                </button>
+            </div>
         </nav>
     </header>
 </template>
-<script setup></script>
+<script setup>
+import { storeToRefs } from "pinia";
+import { useUserStore } from "@/stores/user-store";
+
+const userStore = useUserStore();
+const { isAuthenticated, username } = storeToRefs(userStore);
+
+async function login() {
+    await userStore.login();
+    window.location.reload();
+}
+function logout() {
+    userStore.logout();
+    window.location.reload();
+}
+</script>
