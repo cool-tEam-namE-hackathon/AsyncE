@@ -96,43 +96,4 @@
         </div>
     </section>
 </template>
-<script setup lang="ts">
-import {
-    createActor,
-    AsyncE_backend,
-} from "@declarations/AsyncE_backend/index";
-import { AuthClient } from "@dfinity/auth-client";
-import { HttpAgent } from "@dfinity/agent";
-
-let be = AsyncE_backend;
-async function login() {
-    let authClient = await AuthClient.create();
-
-    const network =
-        process.env.DFX_NETWORK ||
-        (process.env.NODE_ENV === "production" ? "ic" : "local");
-    const internetIdentityUrl =
-        network === "local"
-            ? `http://${process.env.CANISTER_ID_INTERNET_IDENTITY}.localhost:4943/`
-            : `https://identity.ic0.app`;
-
-    await new Promise((resolve) => {
-        authClient.login({
-            identityProvider: internetIdentityUrl,
-            onSuccess: resolve,
-        });
-    });
-
-    const identity = authClient.getIdentity();
-    const agent = HttpAgent.createSync({ identity });
-
-    const canisterId = process.env.CANISTER_ID_ASYNCE_BACKEND || "";
-    be = createActor(canisterId, {
-        agent,
-    });
-
-    await be.login().then((response) => {
-        console.log(response);
-    });
-}
-</script>
+<script setup lang="ts"></script>
