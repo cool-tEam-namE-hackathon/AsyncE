@@ -38,6 +38,9 @@ service : {
     "get_username": () -> (opt text) query;
     "query_username": (text) -> (vec text) query;
 
+    "set_principal": () -> ();
+    "get_principal": () -> (opt principal) query;
+
     "create_group": (text, blob) -> ();
     "get_all_groups": () -> (vec Group) query;
     "get_group": (text) -> (opt Group) query;
