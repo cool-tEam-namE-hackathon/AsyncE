@@ -54,6 +54,17 @@ fn validate_user_register(user: &mut User, principal: Principal) {
         panic!("Username contains special characters!")
     }
 
+    USERS.with_borrow(|users| {
+        if users.values().any(|x| {
+            x.username
+                .as_ref()
+                .map(|x| x.eq_ignore_ascii_case(&username))
+                .unwrap_or(false)
+        }) {
+            panic!("User is already registered!")
+        }
+    });
+
     user.username = Some(username);
 }
 

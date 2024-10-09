@@ -5,16 +5,35 @@ pub mod group;
 pub mod invite;
 pub mod user;
 pub mod video;
+pub mod websocket;
 
-use crate::{group::Group, user::User, video::Video};
+use crate::{group::Group, user::User, video::Video, websocket::WebsocketEventMessage};
 use getrandom::register_custom_getrandom;
 use globals::{GROUPS, GROUP_INVITES, USERS, VIDEOS};
+use ic_websocket_cdk::{
+    CanisterWsCloseArguments, CanisterWsCloseResult, CanisterWsGetMessagesArguments,
+    CanisterWsGetMessagesResult, CanisterWsMessageArguments, CanisterWsMessageResult,
+    CanisterWsOpenArguments, CanisterWsOpenResult, WsHandlers, WsInitParams,
+};
 
 fn custom_getrandom(_buf: &mut [u8]) -> Result<(), getrandom::Error> {
     Ok(())
 }
 
 register_custom_getrandom!(custom_getrandom);
+
+#[ic_cdk::init]
+fn init() {
+    let handlers = WsHandlers {
+        on_open: Some(websocket::on_open),
+        on_message: Some(websocket::on_message),
+        on_close: Some(websocket::on_close),
+    };
+
+    let params = WsInitParams::new(handlers);
+
+    ic_websocket_cdk::init(params);
+}
 
 #[ic_cdk::pre_upgrade]
 fn pre_upgrade() {
