@@ -1,44 +1,40 @@
 #![allow(non_snake_case)]
 
-use candid::{CandidType, Principal};
-use serde::Deserialize;
-use std::{cell::RefCell, collections::HashMap};
+pub mod globals;
+pub mod group;
+pub mod invite;
+pub mod user;
+pub mod video;
 
-#[derive(Clone, Debug, Default, CandidType, Deserialize)]
-pub struct User {
-    pub username: String,
+use crate::{group::Group, user::User, video::Video};
+use getrandom::register_custom_getrandom;
+use globals::{GROUPS, GROUP_INVITES, USERS, VIDEOS};
+
+fn custom_getrandom(_buf: &mut [u8]) -> Result<(), getrandom::Error> {
+    Ok(())
 }
 
-thread_local! {
-    pub static USERS: RefCell<HashMap<Principal, User>> = RefCell::default();
+register_custom_getrandom!(custom_getrandom);
+
+#[ic_cdk::pre_upgrade]
+fn pre_upgrade() {
+    let users_store = USERS.with_borrow(|users| users.clone());
+    let groups_store = GROUPS.with_borrow(|groups| groups.clone());
+    let videos_store = VIDEOS.with_borrow(|videos| videos.clone());
+    let group_invites_store = GROUP_INVITES.with_borrow(|group_invites| group_invites.clone());
+
+    ic_cdk::storage::stable_save((users_store, groups_store, videos_store, group_invites_store))
+        .unwrap();
 }
 
-pub fn assert_user_logged_in() {
-    let principal = ic_cdk::api::caller();
-    assert!(
-        principal != Principal::anonymous(),
-        "User needs to login to proceed."
-    );
+#[ic_cdk::post_upgrade]
+fn post_upgrade() {
+    let (user_store, group_store, videos_store, group_invites_store) =
+        ic_cdk::storage::stable_restore().unwrap();
+    USERS.with_borrow_mut(|users| *users = user_store);
+    GROUPS.with_borrow_mut(|groups| *groups = group_store);
+    VIDEOS.with_borrow_mut(|videos| *videos = videos_store);
+    GROUP_INVITES.with_borrow_mut(|group_invites| *group_invites = group_invites_store);
 }
 
-#[ic_cdk::query]
-pub fn login() -> Option<User> {
-    assert_user_logged_in();
-
-    let principal = ic_cdk::api::caller();
-    USERS.with(|users| users.borrow().get(&principal).cloned())
-}
-
-#[ic_cdk::update]
-pub fn register(user: User) {
-    assert_user_logged_in();
-
-    let principal = ic_cdk::api::caller();
-    USERS.with(|users| {
-        if users.borrow().contains_key(&principal) {
-            panic!("user is already registered!")
-        }
-
-        users.borrow_mut().insert(principal, user);
-    });
-}
+ic_cdk::export_candid!();
