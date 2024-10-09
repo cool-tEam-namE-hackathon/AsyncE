@@ -72,4 +72,7 @@ service : {
     "ws_close" : (CanisterWsCloseArguments) -> (CanisterWsCloseResult);
     "ws_message" : (CanisterWsMessageArguments, opt WebsocketEventMessage) -> (CanisterWsMessageResult);
     "ws_get_messages" : (CanisterWsGetMessagesArguments) -> (CanisterWsGetMessagesResult) query;
+
+    "add_chat": (text, text) -> ();
+    "get_chats": (text) -> (vec Chat);
 }
