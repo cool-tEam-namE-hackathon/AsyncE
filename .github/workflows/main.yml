@@ -19,6 +19,9 @@ jobs:
     - name: Confirm successful installation
       run: dfx --version
 
+    - name: Update cargo so no error
+      run: cargo update
+
     - name: Start dfx server in the background
       run: dfx start --background
 
