@@ -1,0 +1,14 @@
+jobs:
+  example-job:
+    runs-on: ubuntu-latest 
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v2
+    - name: Install dfx
+      uses: dfinity/setup-dfx@main
+    - name: Confirm successful installation
+      run: dfx --version
+    - name: Start server in background
+      run: dfx start --background
+    - name: Deploy
+      run: dfx deploy
