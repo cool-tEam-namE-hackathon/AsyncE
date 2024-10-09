@@ -10,7 +10,7 @@ pub mod websocket;
 
 use crate::{chat::Chat, group::Group, user::User, video::Video, websocket::WebsocketEventMessage};
 use getrandom::register_custom_getrandom;
-use globals::{GROUPS, GROUP_INVITES, USERS, VIDEOS};
+use globals::{CHATS, GROUPS, GROUP_INVITES, USERS, VIDEOS};
 use ic_websocket_cdk::{
     CanisterWsCloseArguments, CanisterWsCloseResult, CanisterWsGetMessagesArguments,
     CanisterWsGetMessagesResult, CanisterWsMessageArguments, CanisterWsMessageResult,
@@ -42,19 +42,28 @@ fn pre_upgrade() {
     let groups_store = GROUPS.with_borrow(|groups| groups.clone());
     let videos_store = VIDEOS.with_borrow(|videos| videos.clone());
     let group_invites_store = GROUP_INVITES.with_borrow(|group_invites| group_invites.clone());
+    let chat_store = CHATS.with_borrow(|chats| chats.clone());
 
-    ic_cdk::storage::stable_save((users_store, groups_store, videos_store, group_invites_store))
-        .unwrap();
+    ic_cdk::storage::stable_save((
+        users_store,
+        groups_store,
+        videos_store,
+        group_invites_store,
+        chat_store,
+    ))
+    .unwrap();
 }
 
 #[ic_cdk::post_upgrade]
 fn post_upgrade() {
-    let (user_store, group_store, videos_store, group_invites_store) =
+    let (user_store, group_store, videos_store, group_invites_store, chat_store) =
         ic_cdk::storage::stable_restore().unwrap();
+
     USERS.with_borrow_mut(|users| *users = user_store);
     GROUPS.with_borrow_mut(|groups| *groups = group_store);
     VIDEOS.with_borrow_mut(|videos| *videos = videos_store);
     GROUP_INVITES.with_borrow_mut(|group_invites| *group_invites = group_invites_store);
+    CHATS.with_borrow_mut(|chats| *chats = chat_store);
 }
 
 ic_cdk::export_candid!();
