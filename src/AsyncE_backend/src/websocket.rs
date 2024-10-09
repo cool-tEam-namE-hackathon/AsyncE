@@ -30,12 +30,12 @@ impl WebsocketEventMessage {
 
     pub fn new_group_invited(group_id: &str) -> Self {
         Self {
-            ty: String::from("group-invited"),
+            ty: String::from("group_invited"),
             data: WebsocketEventMessageData::GroupInvited(group_id.to_string()),
         }
     }
 
-    fn new_ping() -> Self {
+    pub fn new_ping() -> Self {
         Self {
             ty: String::from("ping"),
             data: WebsocketEventMessageData::Ping,
@@ -67,14 +67,16 @@ fn ws_get_messages(args: CanisterWsGetMessagesArguments) -> CanisterWsGetMessage
 }
 
 pub fn on_open(args: OnOpenCallbackArgs) {
-    let msg = WebsocketEventMessage::new_ping();
-    send_app_message(args.client_principal, msg);
+    ic_cdk::println!("Client connected");
+    send_app_message(
+        args.client_principal,
+        WebsocketEventMessage::new_group_invited("lol"),
+    );
 }
 
 pub fn on_message(args: OnMessageCallbackArgs) {
     let app_msg: WebsocketEventMessage = candid::decode_one(&args.message).unwrap();
     ic_cdk::println!("Received message: {:?}", app_msg);
-    send_app_message(args.client_principal, WebsocketEventMessage::new_ping());
     // send_app_message(args.client_principal, new_msg)
 }
 
