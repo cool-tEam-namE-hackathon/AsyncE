@@ -15,7 +15,6 @@
         "skipLibCheck": true,
         "strict": true,
         "target": "ESNext",
-        "types": ["vite/client", "@testing-library/jest-dom"],
         "useDefineForClassFields": true,
         "paths": {
             "@/*": ["*"],
@@ -23,6 +22,5 @@
             "@dfinity/*": ["./node_modules/@dfinity/*"]
         }
     },
-    "extends": "@vue/tsconfig/tsconfig.json",
     "include": ["src"]
 }
