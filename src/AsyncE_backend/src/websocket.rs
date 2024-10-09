@@ -1,3 +1,5 @@
+use std::{cell::RefCell, collections::HashSet};
+
 use candid::CandidType;
 use ic_websocket_cdk::{
     CanisterWsCloseArguments, CanisterWsCloseResult, CanisterWsGetMessagesArguments,
@@ -6,6 +8,10 @@ use ic_websocket_cdk::{
     OnMessageCallbackArgs, OnOpenCallbackArgs,
 };
 use serde::{Deserialize, Serialize};
+
+thread_local! {
+    pub static CLIENTS: RefCell<HashSet<ClientPrincipal>> = RefCell::default();
+}
 
 #[derive(CandidType, Clone, Debug, Deserialize, Serialize, Eq, PartialEq)]
 pub enum WebsocketEventMessageData {
@@ -68,10 +74,16 @@ fn ws_get_messages(args: CanisterWsGetMessagesArguments) -> CanisterWsGetMessage
 
 pub fn on_open(args: OnOpenCallbackArgs) {
     ic_cdk::println!("Client connected");
-    send_app_message(
-        args.client_principal,
-        WebsocketEventMessage::new_group_invited("lol"),
-    );
+    CLIENTS.with_borrow_mut(|clients| clients.insert(args.client_principal));
+
+    CLIENTS.with_borrow(|clients| {
+        for &client_principal in clients.iter() {
+            send_app_message(
+                client_principal,
+                WebsocketEventMessage::new_group_invited("lol"),
+            );
+        }
+    })
 }
 
 pub fn on_message(args: OnMessageCallbackArgs) {
@@ -90,4 +102,5 @@ fn send_app_message(client_principal: ClientPrincipal, msg: WebsocketEventMessag
 
 pub fn on_close(args: OnCloseCallbackArgs) {
     ic_cdk::println!("Client {} disconnected", args.client_principal);
+    CLIENTS.with_borrow_mut(|clients| clients.remove(&args.client_principal));
 }
