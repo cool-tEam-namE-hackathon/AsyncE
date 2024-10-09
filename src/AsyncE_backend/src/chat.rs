@@ -1,15 +1,16 @@
 use std::time::{SystemTime, UNIX_EPOCH};
 
 use candid::CandidType;
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
 use crate::{
     globals::{CHATS, GROUPS},
     user,
+    websocket::{self, WebsocketEventMessage},
 };
 
-#[derive(Clone, Debug, CandidType, Deserialize)]
+#[derive(Clone, Debug, CandidType, Serialize, Deserialize)]
 pub struct Chat {
     pub id: String,
     pub content: String,
@@ -47,7 +48,9 @@ pub fn add_chat(group_id: String, content: String) {
         chats
             .entry(group_id)
             .or_default()
-            .insert(chat.id.clone(), chat);
+            .insert(chat.id.clone(), chat.clone());
+
+        websocket::broadcast_websocket_message(WebsocketEventMessage::new_chat(chat));
     })
 }
 

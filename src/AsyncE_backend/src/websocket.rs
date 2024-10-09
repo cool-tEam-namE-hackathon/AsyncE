@@ -7,18 +7,21 @@ use ic_websocket_cdk::{
 };
 use serde::{Deserialize, Serialize};
 
-use crate::globals::WEBSOCKET_CLIENTS;
+use crate::{chat::Chat, globals::WEBSOCKET_CLIENTS};
 
-#[derive(CandidType, Clone, Debug, Deserialize, Serialize, Eq, PartialEq)]
+#[derive(CandidType, Clone, Debug, Deserialize, Serialize)]
 pub enum WebsocketEventMessageData {
     #[serde(rename = "ping")]
     Ping,
 
     #[serde(rename = "group_invited")]
     GroupInvited(String),
+
+    #[serde(rename = "add_chat")]
+    AddChat(Chat),
 }
 
-#[derive(CandidType, Clone, Debug, Deserialize, Serialize, Eq, PartialEq)]
+#[derive(CandidType, Clone, Debug, Deserialize, Serialize)]
 pub struct WebsocketEventMessage {
     #[serde(rename = "type")]
     pub ty: String,
@@ -32,15 +35,22 @@ impl WebsocketEventMessage {
 
     pub fn new_group_invited(group_id: &str) -> Self {
         Self {
-            ty: String::from("group-invited"),
+            ty: String::from("group_invited"),
             data: WebsocketEventMessageData::GroupInvited(group_id.to_string()),
         }
     }
 
-    fn new_ping() -> Self {
+    pub fn new_ping() -> Self {
         Self {
             ty: String::from("ping"),
             data: WebsocketEventMessageData::Ping,
+        }
+    }
+
+    pub fn new_chat(chat: Chat) -> Self {
+        Self {
+            ty: String::from("add_chat"),
+            data: WebsocketEventMessageData::AddChat(chat),
         }
     }
 }

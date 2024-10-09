@@ -29,21 +29,22 @@ type VideoFrame = record {
     "created_time_unix": nat;
 };
 
-type WebsocketEventMessageData = variant {
-    "ping": null;
-    "group_invited": text;
-};
-
-type WebsocketEventMessage = record {
-    "type": text;
-    "data": WebsocketEventMessageData;
-};
-
 type Chat = record {
     "id": text;
     "content": text;
     "username": text;
     "created_time_unix": nat;
+};
+
+type WebsocketEventMessageData = variant {
+    "ping": null;
+    "group_invited": text;
+    "add_chat": Chat;
+};
+
+type WebsocketEventMessage = record {
+    "type": text;
+    "data": WebsocketEventMessageData;
 };
 
 service : {
