@@ -10,6 +10,10 @@ import autoprefixer from "autoprefixer";
 
 dotenv.config({ path: "../../.env" });
 
+function resolve(dir) {
+    return fileURLToPath(new URL(dir, import.meta.url));
+}
+
 export default defineConfig({
     css: {
         postcss: {
@@ -44,17 +48,10 @@ export default defineConfig({
         setupFiles: "src/setupTests.js",
     },
     resolve: {
-        alias: [
-            {
-                find: "declarations",
-                replacement: fileURLToPath(
-                    new URL("../declarations", import.meta.url),
-                ),
-            },
-            {
-                find: "@",
-                replacement: fileURLToPath(new URL("./src", import.meta.url)),
-            },
-        ],
+        alias: {
+            "@": resolve("./src"),
+            "@components": resolve("./src/components"),
+            "@declarations": resolve("../declarations"),
+        },
     },
 });
