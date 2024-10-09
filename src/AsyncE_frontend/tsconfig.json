@@ -1,5 +1,6 @@
 {
     "compilerOptions": {
+        "baseUrl": "src",
         "allowJs": true,
         "allowSyntheticDefaultImports": true,
         "esModuleInterop": false,
@@ -15,7 +16,12 @@
         "strict": true,
         "target": "ESNext",
         "types": ["vite/client", "@testing-library/jest-dom"],
-        "useDefineForClassFields": true
+        "useDefineForClassFields": true,
+        "paths": {
+            "@/*": ["*"],
+            "@declarations/*": ["./../declarations/*"],
+            "@dfinity/*": ["./node_modules/@dfinity/*"]
+        }
     },
     "extends": "@vue/tsconfig/tsconfig.json",
     "include": ["src"]

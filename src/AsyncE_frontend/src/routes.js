@@ -1,12 +1,16 @@
 import { createRouter, createWebHistory } from "vue-router";
 
-import { Home } from "./lazy-loading-routes";
+import Home from "./pages/Home.vue";
+import Group from "./pages/Group.vue";
 
 const routes = [
     {
         path: "/",
-        name: "home",
         component: Home,
+    },
+    {
+        path: "/group",
+        component: Group,
     },
 ];
 
