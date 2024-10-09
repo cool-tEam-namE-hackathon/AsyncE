@@ -1,9 +1,11 @@
 <template>
-    <div class="h-dvh flex flex-col">
-        <Navbar />
-        <RouterView />
-        <Footer />
-    </div>
+    <main>
+        <div class="h-dvh flex flex-col">
+            <Navbar />
+            <RouterView />
+            <Footer />
+        </div>
+    </main>
 </template>
 
 <script setup lang="ts">
