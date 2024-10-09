@@ -103,11 +103,7 @@ import {
 } from "@declarations/AsyncE_backend/index";
 import { AuthClient } from "@dfinity/auth-client";
 import { HttpAgent } from "@dfinity/agent";
-
-interface LoginResponse {
-    username: string;
-    blob: Blob;
-}
+import type { User } from "@/types/api/model";
 
 let be = AsyncE_backend;
 async function login() {
@@ -137,7 +133,7 @@ async function login() {
         agent,
     });
 
-    await be.login().then((response: LoginResponse) => {
+    await be.login().then((response: User) => {
         console.log(response);
     });
 }
