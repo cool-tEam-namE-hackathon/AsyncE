@@ -13,9 +13,6 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v2
 
-      - name: Build docker image
-        run: docker build . --file docker/Dockerfile --tag asynce:$(date +%s)
-
       - name: Install dfx
         uses: dfinity/setup-dfx@main
 
