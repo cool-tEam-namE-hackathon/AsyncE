@@ -1,5 +1,5 @@
 type User = record {
-    "username": text;
+    "username": opt text;
     "profile_picture_blob": blob;
 };
 
