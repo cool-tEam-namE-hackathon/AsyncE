@@ -12,7 +12,9 @@ type Group = record {
 };
 
 type Video = record {
-    "blob_data": blob;
+    "id": text;
+    "webcam_blob": blob;
+    "screen_blob": blob;
 }
 
 service : {
@@ -22,12 +24,17 @@ service : {
     "get_selfname": () -> (opt text) query;
     "get_user": (text) -> (opt User) query;
     "get_username": () -> (opt text) query;
+    "query_username": (text) -> (vec text) query;
 
     "create_group": (text, blob) -> ();
     "get_all_groups": () -> (vec Group) query;
     "get_group": (text) -> (opt Group) query;
 
     "get_videos": (text) -> (vec Video) query;
-    "add_video": (text, blob) -> ();
-    "concat_video": (text, text, blob) -> ();
+    "add_video": (text, blob, blob) -> ();
+    "concat_video": (text, text, blob, blob) -> ();
+
+    "invite_user": (text) -> ();
+    "get_self_group_invites": () -> (vec text) query;
+    "update_group_invite": (text, bool) -> ();
 }

@@ -16,7 +16,7 @@ pub fn assert_user_logged_in() {
     }
 
     if USERS
-        .with_borrow(|users| users.get(&principal).map(|x| x.username.clone()).flatten())
+        .with_borrow(|users| users.get(&principal).and_then(|x| x.username.clone()))
         .is_none()
     {
         panic!("User needs to have a username to proceed!")
@@ -89,7 +89,7 @@ pub fn get_selfname() -> Option<String> {
     assert_user_logged_in();
 
     let principal = ic_cdk::caller();
-    USERS.with_borrow(|users| users.get(&principal).map(|x| x.username.clone()).flatten())
+    USERS.with_borrow(|users| users.get(&principal).and_then(|x| x.username.clone()))
 }
 
 #[ic_cdk::query]
@@ -105,5 +105,19 @@ pub fn get_username() -> Option<String> {
     assert_user_logged_in();
 
     let principal = ic_cdk::caller();
-    USERS.with_borrow(|users| users.get(&principal).map(|x| x.username.clone()).flatten())
+    USERS.with_borrow(|users| users.get(&principal).and_then(|x| x.username.clone()))
+}
+
+#[ic_cdk::query]
+pub fn query_username(keyword: String) -> Vec<String> {
+    assert_user_logged_in();
+
+    USERS.with_borrow(|users| {
+        users
+            .values()
+            .filter(|x| x.username.is_some())
+            .filter(|x| x.username.as_ref().unwrap().eq_ignore_ascii_case(&keyword))
+            .map(|x| x.username.as_ref().unwrap().clone())
+            .collect::<Vec<_>>()
+    })
 }

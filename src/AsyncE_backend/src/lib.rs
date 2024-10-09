@@ -2,6 +2,7 @@
 
 pub mod globals;
 pub mod group;
+pub mod invite;
 pub mod user;
 pub mod video;
 
@@ -10,7 +11,7 @@ use getrandom::register_custom_getrandom;
 use globals::{GROUPS, USERS, VIDEOS};
 
 fn custom_getrandom(_buf: &mut [u8]) -> Result<(), getrandom::Error> {
-    return Ok(());
+    Ok(())
 }
 
 register_custom_getrandom!(custom_getrandom);

@@ -51,11 +51,11 @@ pub fn get_all_groups() -> Vec<Group> {
 }
 
 #[ic_cdk::query]
-pub fn get_group(id: String) -> Option<Group> {
+pub fn get_group(group_id: String) -> Option<Group> {
     user::assert_user_logged_in();
 
     let selfname = user::get_selfname().unwrap();
-    let group = GROUPS.with_borrow(|groups| groups.get(&id).cloned());
+    let group = GROUPS.with_borrow(|groups| groups.get(&group_id).cloned());
     if let Some(group) = group.as_ref() {
         if group.owner != selfname && !group.users.contains(&selfname) {
             panic!("This user is not in this group!")

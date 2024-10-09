@@ -13,103 +13,111 @@ use crate::{globals::VIDEOS, group, user};
 #[derive(Clone, Debug, Default, CandidType, Deserialize)]
 pub struct Video {
     pub id: String,
-    pub blob_data: Vec<u8>,
+    pub webcam_blob: Vec<u8>,
+    pub screen_blob: Vec<u8>,
 }
 
 impl Video {
-    pub fn new(blob_data: Vec<u8>) -> Self {
-        let cursor = Cursor::new(&blob_data);
-        let mp4 = Mp4Reader::read_header(cursor, blob_data.len() as u64)
-            .expect("Failed to parse video as mp4");
+    pub fn new(webcam_blob: Vec<u8>, screen_blob: Vec<u8>) -> Self {
+        let cursor_webcam = Cursor::new(&webcam_blob);
+        let cursor_screen = Cursor::new(&screen_blob);
 
-        print_mp4_info(&mp4);
+        let mp4_webcam = Mp4Reader::read_header(cursor_webcam, webcam_blob.len() as u64)
+            .expect("Failed to parse webcam video as mp4");
+
+        let mp4_screen = Mp4Reader::read_header(cursor_screen, screen_blob.len() as u64)
+            .expect("Failed to parse screen video as mp4");
+
+        print_mp4_info(&mp4_webcam);
+        print_mp4_info(&mp4_screen);
 
         Self {
             id: Uuid::new_v4().to_string(),
-            blob_data,
+            webcam_blob,
+            screen_blob,
         }
     }
+}
 
-    fn add_track(
-        mp4_reader: &mut Mp4Reader<&mut Cursor<&Vec<u8>>>,
-        mp4_writer: &mut Mp4Writer<Cursor<Vec<u8>>>,
-    ) {
-        for track in mp4_reader.tracks().values() {
-            let media_conf = match track.media_type().unwrap() {
-                MediaType::H264 => MediaConfig::AvcConfig(AvcConfig {
-                    width: track.width(),
-                    height: track.height(),
-                    seq_param_set: track.sequence_parameter_set().unwrap().to_vec(),
-                    pic_param_set: track.picture_parameter_set().unwrap().to_vec(),
-                }),
+fn add_mp4_track<T: AsRef<[u8]>>(
+    mp4_reader: &mut Mp4Reader<&mut Cursor<T>>,
+    mp4_writer: &mut Mp4Writer<Cursor<Vec<u8>>>,
+) {
+    for track in mp4_reader.tracks().values() {
+        let media_conf = match track.media_type().unwrap() {
+            MediaType::H264 => MediaConfig::AvcConfig(AvcConfig {
+                width: track.width(),
+                height: track.height(),
+                seq_param_set: track.sequence_parameter_set().unwrap().to_vec(),
+                pic_param_set: track.picture_parameter_set().unwrap().to_vec(),
+            }),
 
-                MediaType::H265 => MediaConfig::HevcConfig(HevcConfig {
-                    width: track.width(),
-                    height: track.height(),
-                }),
+            MediaType::H265 => MediaConfig::HevcConfig(HevcConfig {
+                width: track.width(),
+                height: track.height(),
+            }),
 
-                MediaType::VP9 => MediaConfig::Vp9Config(Vp9Config {
-                    width: track.width(),
-                    height: track.height(),
-                }),
+            MediaType::VP9 => MediaConfig::Vp9Config(Vp9Config {
+                width: track.width(),
+                height: track.height(),
+            }),
 
-                MediaType::AAC => MediaConfig::AacConfig(AacConfig {
-                    bitrate: track.bitrate(),
-                    profile: track.audio_profile().unwrap(),
-                    freq_index: track.sample_freq_index().unwrap(),
-                    chan_conf: track.channel_config().unwrap(),
-                }),
+            MediaType::AAC => MediaConfig::AacConfig(AacConfig {
+                bitrate: track.bitrate(),
+                profile: track.audio_profile().unwrap(),
+                freq_index: track.sample_freq_index().unwrap(),
+                chan_conf: track.channel_config().unwrap(),
+            }),
 
-                MediaType::TTXT => MediaConfig::TtxtConfig(TtxtConfig {}),
-            };
-
-            let track_conf = TrackConfig {
-                track_type: track.track_type().unwrap(),
-                timescale: track.timescale(),
-                language: track.language().to_string(),
-                media_conf,
-            };
-
-            mp4_writer.add_track(&track_conf).unwrap();
-        }
-
-        for track_id in mp4_reader.tracks().keys().copied().collect::<Vec<u32>>() {
-            let sample_count = mp4_reader.sample_count(track_id).unwrap();
-            for sample_idx in 0..sample_count {
-                let sample_id = sample_idx + 1;
-                let sample = mp4_reader
-                    .read_sample(track_id, sample_id)
-                    .unwrap()
-                    .unwrap();
-                mp4_writer.write_sample(track_id, &sample).unwrap();
-            }
-        }
-    }
-
-    pub fn concat(&mut self, blob_data: Vec<u8>) {
-        let mut mp4_reader1_cursor = Cursor::new(&self.blob_data);
-        let mut mp4_reader1 =
-            Mp4Reader::read_header(&mut mp4_reader1_cursor, self.blob_data.len() as u64).unwrap();
-
-        let mut mp4_reader2_cursor = Cursor::new(&blob_data);
-        let mut mp4_reader2 =
-            Mp4Reader::read_header(&mut mp4_reader2_cursor, blob_data.len() as u64).unwrap();
-
-        let output = Cursor::new(Vec::new());
-        let mp4_config = Mp4Config {
-            major_brand: *mp4_reader1.major_brand(),
-            minor_version: mp4_reader1.minor_version(),
-            compatible_brands: mp4_reader1.compatible_brands().to_vec(),
-            timescale: mp4_reader1.timescale(),
+            MediaType::TTXT => MediaConfig::TtxtConfig(TtxtConfig {}),
         };
-        let mut mp4_writer = mp4::Mp4Writer::write_start(output, &mp4_config).unwrap();
 
-        Self::add_track(&mut mp4_reader1, &mut mp4_writer);
-        Self::add_track(&mut mp4_reader2, &mut mp4_writer);
+        let track_conf = TrackConfig {
+            track_type: track.track_type().unwrap(),
+            timescale: track.timescale(),
+            language: track.language().to_string(),
+            media_conf,
+        };
 
-        mp4_writer.write_end().unwrap();
-        self.blob_data = mp4_writer.into_writer().into_inner();
+        mp4_writer.add_track(&track_conf).unwrap();
     }
+
+    for track_id in mp4_reader.tracks().keys().copied().collect::<Vec<u32>>() {
+        let sample_count = mp4_reader.sample_count(track_id).unwrap();
+        for sample_idx in 0..sample_count {
+            let sample_id = sample_idx + 1;
+            let sample = mp4_reader
+                .read_sample(track_id, sample_id)
+                .unwrap()
+                .unwrap();
+            mp4_writer.write_sample(track_id, &sample).unwrap();
+        }
+    }
+}
+
+fn concat_mp4(self_blob_data: &mut Vec<u8>, blob_data: &[u8]) {
+    let mut mp4_reader1_cursor = Cursor::new(&self_blob_data);
+    let mut mp4_reader1 =
+        Mp4Reader::read_header(&mut mp4_reader1_cursor, self_blob_data.len() as u64).unwrap();
+
+    let mut mp4_reader2_cursor = Cursor::new(&blob_data);
+    let mut mp4_reader2 =
+        Mp4Reader::read_header(&mut mp4_reader2_cursor, blob_data.len() as u64).unwrap();
+
+    let output = Cursor::new(Vec::new());
+    let mp4_config = Mp4Config {
+        major_brand: *mp4_reader1.major_brand(),
+        minor_version: mp4_reader1.minor_version(),
+        compatible_brands: mp4_reader1.compatible_brands().to_vec(),
+        timescale: mp4_reader1.timescale(),
+    };
+    let mut mp4_writer = mp4::Mp4Writer::write_start(output, &mp4_config).unwrap();
+
+    add_mp4_track(&mut mp4_reader1, &mut mp4_writer);
+    add_mp4_track(&mut mp4_reader2, &mut mp4_writer);
+
+    mp4_writer.write_end().unwrap();
+    *self_blob_data = mp4_writer.into_writer().into_inner();
 }
 
 fn video_info(track: &Mp4Track) -> String {
@@ -142,12 +150,12 @@ fn audio_info(track: &Mp4Track) -> String {
         if mp4a.esds.is_some() {
             let profile = match track.audio_profile() {
                 Ok(val) => val.to_string(),
-                _ => "-".to_string(),
+                _ => String::from("-"),
             };
 
             let channel_config = match track.channel_config() {
                 Ok(val) => val.to_string(),
-                _ => "-".to_string(),
+                _ => String::from("-"),
             };
 
             format!(
@@ -168,7 +176,7 @@ fn audio_info(track: &Mp4Track) -> String {
             )
         }
     } else {
-        format!("mp4a box not found")
+        String::from("mp4a box not found")
     }
 }
 
@@ -180,7 +188,7 @@ fn subtitle_info(track: &Mp4Track) -> String {
             track.box_type().unwrap(),
         )
     } else {
-        format!("tx3g box not found")
+        String::from("tx3g box not found")
     }
 }
 
@@ -232,8 +240,8 @@ fn print_mp4_info(mp4: &Mp4Reader<Cursor<&Vec<u8>>>) {
     }
 }
 
-fn assert_check_group(group_id: &String) {
-    let group = match group::get_group(group_id.clone()) {
+fn assert_check_group(group_id: &str) {
+    let group = match group::get_group(group_id.to_owned()) {
         Some(group) => group,
         None => panic!("Group not found!"),
     };
@@ -265,11 +273,11 @@ pub fn get_videos(group_id: String) -> Vec<Video> {
 }
 
 #[ic_cdk::update]
-pub fn add_video(group_id: String, blob_data: Vec<u8>) {
+pub fn add_video(group_id: String, webcam_blob: Vec<u8>, screen_blob: Vec<u8>) {
     user::assert_user_logged_in();
     assert_check_group(&group_id);
 
-    let video = Video::new(blob_data);
+    let video = Video::new(webcam_blob, screen_blob);
     VIDEOS.with_borrow_mut(|videos| {
         videos
             .entry(group_id)
@@ -279,7 +287,12 @@ pub fn add_video(group_id: String, blob_data: Vec<u8>) {
 }
 
 #[ic_cdk::update]
-pub fn concat_video(group_id: String, video_id: String, blob_data: Vec<u8>) {
+pub fn concat_video(
+    group_id: String,
+    video_id: String,
+    webcam_blob: Vec<u8>,
+    screen_blob: Vec<u8>,
+) {
     user::assert_user_logged_in();
     assert_check_group(&group_id);
 
@@ -293,6 +306,8 @@ pub fn concat_video(group_id: String, video_id: String, blob_data: Vec<u8>) {
             Some(video) => video,
             None => panic!("No video found on this video ID!"),
         };
-        video.concat(blob_data);
+
+        concat_mp4(&mut video.webcam_blob, &webcam_blob);
+        concat_mp4(&mut video.screen_blob, &screen_blob);
     });
 }
