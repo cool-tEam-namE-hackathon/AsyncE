@@ -11,6 +11,7 @@
 <script setup>
 import { ref } from "vue";
 import { useUserStore } from "@/stores/user-store";
+import IcWebSocket, { generateRandomIdentity, createWsConfig } from "ic-websocket-js";
 
 const userStore = useUserStore();
 
@@ -33,6 +34,34 @@ async function login() {
     userCredentials.value = await userStore.login();
     if (!userCredentials.value.length) {
         isUsernameExist.value = true;
+
+        const gatewayUrl = "ws://127.0.0.1:8080";
+        const icUrl = "http://127.0.0.1:4943";
+
+        const wsConfig = createWsConfig({
+            canisterId: backendCanisterId,
+            canisterActor: ic_websocket_example_backend,
+            identity: generateRandomIdentity(),
+            networkUrl: icUrl,
+        });
+
+        const ws = new IcWebSocket(gatewayUrl, undefined, wsConfig);
+
+        ws.onopen = () => {
+            console.log("Connected to the canister");
+        };
+
+        ws.onmessage = async (event) => {
+            console.log("Received message:", event.data);
+        };
+
+        ws.onclose = () => {
+            console.log("Disconnected from the canister");
+        };
+
+        ws.onerror = (error) => {
+            console.log("Error:", error);
+        };
     }
 }
 

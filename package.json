@@ -16,6 +16,7 @@
         "src/AsyncE_frontend"
     ],
     "devDependencies": {
+        "crypto-browserify": "^3.12.0",
         "globals": "^15.10.0",
         "nodemon": "^3.1.7",
         "prettier": "^3.3.3"
@@ -23,6 +24,7 @@
     "dependencies": {
         "class-variance-authority": "^0.7.0",
         "clsx": "^2.1.1",
+        "ic-websocket-js": "^0.4.0",
         "lucide-vue-next": "^0.451.0",
         "radix-vue": "^1.9.7",
         "tailwind-merge": "^2.5.3",

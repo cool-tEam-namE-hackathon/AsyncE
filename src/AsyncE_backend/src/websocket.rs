@@ -74,6 +74,7 @@ pub fn on_open(args: OnOpenCallbackArgs) {
 pub fn on_message(args: OnMessageCallbackArgs) {
     let app_msg: WebsocketEventMessage = candid::decode_one(&args.message).unwrap();
     ic_cdk::println!("Received message: {:?}", app_msg);
+    send_app_message(args.client_principal, WebsocketEventMessage::new_ping());
     // send_app_message(args.client_principal, new_msg)
 }
 
