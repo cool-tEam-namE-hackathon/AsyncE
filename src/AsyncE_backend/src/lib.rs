@@ -1,5 +1,6 @@
 #![allow(non_snake_case)]
 
+pub mod chat;
 pub mod globals;
 pub mod group;
 pub mod invite;
@@ -7,7 +8,7 @@ pub mod user;
 pub mod video;
 pub mod websocket;
 
-use crate::{group::Group, user::User, video::Video, websocket::WebsocketEventMessage};
+use crate::{chat::Chat, group::Group, user::User, video::Video, websocket::WebsocketEventMessage};
 use getrandom::register_custom_getrandom;
 use globals::{GROUPS, GROUP_INVITES, USERS, VIDEOS};
 use ic_websocket_cdk::{

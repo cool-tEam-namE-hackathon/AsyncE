@@ -7,6 +7,8 @@ use ic_websocket_cdk::{
 };
 use serde::{Deserialize, Serialize};
 
+use crate::globals::WEBSOCKET_CLIENTS;
+
 #[derive(CandidType, Clone, Debug, Deserialize, Serialize, Eq, PartialEq)]
 pub enum WebsocketEventMessageData {
     #[serde(rename = "ping")]
@@ -68,7 +70,10 @@ fn ws_get_messages(args: CanisterWsGetMessagesArguments) -> CanisterWsGetMessage
 
 pub fn on_open(args: OnOpenCallbackArgs) {
     let msg = WebsocketEventMessage::new_ping();
-    send_app_message(args.client_principal, msg);
+    send_websocket_message(args.client_principal, msg);
+
+    WEBSOCKET_CLIENTS
+        .with_borrow_mut(|websocket_clients| websocket_clients.insert(args.client_principal));
 }
 
 pub fn on_message(args: OnMessageCallbackArgs) {
@@ -77,14 +82,30 @@ pub fn on_message(args: OnMessageCallbackArgs) {
     // send_app_message(args.client_principal, new_msg)
 }
 
-fn send_app_message(client_principal: ClientPrincipal, msg: WebsocketEventMessage) {
-    ic_cdk::println!("Sending message: {:?}", msg);
+pub fn broadcast_websocket_message(msg: WebsocketEventMessage) {
+    WEBSOCKET_CLIENTS.with_borrow(|websocket_clients| {
+        for &client_principal in websocket_clients.iter() {
+            send_websocket_message(client_principal, msg.clone());
+        }
+    })
+}
+
+pub fn send_websocket_message(client_principal: ClientPrincipal, msg: WebsocketEventMessage) {
+    ic_cdk::println!("Sending message to {}: {:?}", client_principal, msg);
 
     if let Err(e) = ic_websocket_cdk::send(client_principal, msg.candid_serialize()) {
-        ic_cdk::println!("Could not send message: {}", e);
+        ic_cdk::println!(
+            "Could not send message to {} with payload: {:?}: {}",
+            client_principal,
+            msg,
+            e
+        );
     }
 }
 
 pub fn on_close(args: OnCloseCallbackArgs) {
     ic_cdk::println!("Client {} disconnected", args.client_principal);
+
+    WEBSOCKET_CLIENTS
+        .with_borrow_mut(|websocket_clients| websocket_clients.remove(&args.client_principal));
 }

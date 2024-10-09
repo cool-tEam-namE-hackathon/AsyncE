@@ -15,8 +15,18 @@ type Group = record {
 
 type Video = record {
     "id": text;
+    "username": text;
     "webcam_blob": blob;
     "screen_blob": blob;
+    "created_time_unix": nat;
+};
+
+type VideoFrame = record {
+    "id": text;
+    "username": text;
+    "webcam_blob": blob;
+    "screen_blob": blob;
+    "created_time_unix": nat;
 };
 
 type WebsocketEventMessageData = variant {
@@ -27,6 +37,13 @@ type WebsocketEventMessageData = variant {
 type WebsocketEventMessage = record {
     "type": text;
     "data": WebsocketEventMessageData;
+};
+
+type Chat = record {
+    "id": text;
+    "content": text;
+    "username": text;
+    "created_time_unix": nat;
 };
 
 service : {

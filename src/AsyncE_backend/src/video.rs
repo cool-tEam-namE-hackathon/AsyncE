@@ -23,7 +23,7 @@ pub struct Video {
 }
 
 #[derive(Clone, Debug, Default, CandidType, Deserialize)]
-pub struct VideoFrames {
+pub struct VideoFrame {
     pub id: String,
     pub username: String,
     pub webcam_blob: Vec<u8>,
