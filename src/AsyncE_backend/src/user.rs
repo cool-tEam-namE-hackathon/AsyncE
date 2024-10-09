@@ -1,7 +1,7 @@
 use candid::{CandidType, Principal};
 use serde::Deserialize;
 
-use crate::globals::USERS;
+use crate::globals::{PRINCIPAL, USERS};
 
 #[derive(Clone, Debug, Default, CandidType, Deserialize)]
 pub struct User {
@@ -134,4 +134,14 @@ pub fn query_username(keyword: String) -> Vec<String> {
             .map(|x| x.username.as_ref().unwrap().clone())
             .collect::<Vec<_>>()
     })
+}
+
+#[ic_cdk::update]
+pub fn set_principal() {
+    PRINCIPAL.set(Some(ic_cdk::caller()));
+}
+
+#[ic_cdk::query]
+pub fn get_principal() -> Option<Principal> {
+    PRINCIPAL.get()
 }

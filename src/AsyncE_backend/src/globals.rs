@@ -1,5 +1,5 @@
 use std::{
-    cell::RefCell,
+    cell::{Cell, RefCell},
     collections::{BTreeMap, BTreeSet},
 };
 
@@ -17,4 +17,5 @@ thread_local! {
     pub static GROUPS: RefCell<GroupStore> = RefCell::default();
     pub static VIDEOS: RefCell<VideoStore> = RefCell::default();
     pub static GROUP_INVITES: RefCell<GroupInviteStore> = RefCell::default();
+    pub static PRINCIPAL: Cell<Option<Principal>> = Cell::new(None);
 }
