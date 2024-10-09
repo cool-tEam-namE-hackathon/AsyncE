@@ -1,3 +1,5 @@
+import "./ws_types.did";
+
 type User = record {
     "username": opt text;
     "profile_picture_blob": blob;
@@ -15,7 +17,17 @@ type Video = record {
     "id": text;
     "webcam_blob": blob;
     "screen_blob": blob;
-}
+};
+
+type WebsocketEventMessageData = variant {
+    "ping": null;
+    "group_invited": text;
+};
+
+type WebsocketEventMessage = record {
+    "type": text;
+    "data": WebsocketEventMessageData;
+};
 
 service : {
     "login": () -> (opt User) query;
@@ -37,4 +49,9 @@ service : {
     "invite_user": (text) -> ();
     "get_self_group_invites": () -> (vec text) query;
     "update_group_invite": (text, bool) -> ();
+
+    "ws_open" : (CanisterWsOpenArguments) -> (CanisterWsOpenResult);
+    "ws_close" : (CanisterWsCloseArguments) -> (CanisterWsCloseResult);
+    "ws_message" : (CanisterWsMessageArguments, opt WebsocketEventMessage) -> (CanisterWsMessageResult);
+    "ws_get_messages" : (CanisterWsGetMessagesArguments) -> (CanisterWsGetMessagesResult) query;
 }
