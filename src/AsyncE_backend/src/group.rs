@@ -1,12 +1,15 @@
 use candid::CandidType;
 use serde::Deserialize;
-use uuid::Uuid;
 
-use crate::{globals::GROUPS, user};
+use crate::{
+    globals::GROUPS,
+    primary_key::{self, PrimaryKeyType},
+    user,
+};
 
 #[derive(Clone, Debug, CandidType, Deserialize)]
 pub struct Group {
-    pub id: String,
+    pub id: u128,
     pub name: String,
     pub users: Vec<String>,
     pub owner: String,
@@ -17,7 +20,7 @@ impl Group {
     pub fn new(name: impl Into<String>, profile_picture_blob: Vec<u8>) -> Self {
         let owner = user::get_selfname().unwrap();
         Self {
-            id: Uuid::new_v4().to_string(),
+            id: primary_key::get_primary_key(PrimaryKeyType::Group),
             name: name.into(),
             owner: owner.clone(),
             users: Vec::from([owner]),
@@ -32,7 +35,7 @@ pub fn create_group(name: String, profile_picture_blob: Vec<u8>) {
 
     let group = Group::new(name, profile_picture_blob);
 
-    GROUPS.with_borrow_mut(|groups| groups.insert(group.id.clone(), group));
+    GROUPS.with_borrow_mut(|groups| groups.insert(group.id, group));
 }
 
 #[ic_cdk::query]
@@ -51,7 +54,7 @@ pub fn get_all_groups() -> Vec<Group> {
 }
 
 #[ic_cdk::query]
-pub fn get_group(group_id: String) -> Option<Group> {
+pub fn get_group(group_id: u128) -> Option<Group> {
     user::assert_user_logged_in();
 
     let selfname = user::get_selfname().unwrap();

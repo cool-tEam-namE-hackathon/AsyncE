@@ -4,7 +4,7 @@ use crate::{
 };
 
 #[ic_cdk::update]
-pub fn invite_user(group_id: String, username: String) {
+pub fn invite_user(group_id: u128, username: String) {
     let selfname = user::get_selfname().unwrap();
     let group = GROUPS
         .with_borrow(|groups| groups.get(&group_id).cloned())
@@ -29,7 +29,7 @@ pub fn invite_user(group_id: String, username: String) {
 }
 
 #[ic_cdk::query]
-pub fn get_self_group_invites() -> Vec<String> {
+pub fn get_self_group_invites() -> Vec<u128> {
     let selfname = user::get_selfname().unwrap();
 
     GROUP_INVITES.with_borrow(|group_invites| {
@@ -44,7 +44,7 @@ pub fn get_self_group_invites() -> Vec<String> {
 }
 
 #[ic_cdk::update]
-pub fn update_group_invite(group_id: String, approved: bool) {
+pub fn update_group_invite(group_id: u128, approved: bool) {
     user::assert_user_logged_in();
 
     let selfname = user::get_selfname().unwrap();

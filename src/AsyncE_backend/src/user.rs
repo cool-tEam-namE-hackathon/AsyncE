@@ -138,5 +138,10 @@ pub fn query_username(keyword: String) -> Vec<String> {
 
 #[ic_cdk::query]
 pub fn get_all_usernames() -> Vec<String> {
-    USERS.with_borrow(|users| users.values().map(|x| x.username.as_ref().unwrap().clone()).collect::<Vec<_>>())
+    USERS.with_borrow(|users| {
+        users
+            .values()
+            .map(|x| x.username.as_ref().unwrap().clone())
+            .collect::<Vec<_>>()
+    })
 }

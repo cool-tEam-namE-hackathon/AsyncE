@@ -17,20 +17,12 @@
                 <div class="space-y-2">
                     <Label>Group Image</Label>
                     <div class="flex items-center space-x-2">
-                        <Input
-                            type="file"
-                            accept="image/*"
-                            @on-file-change="onFileInput"
-                        />
+                        <Input type="file" accept="image/*" @on-file-change="onFileInput" />
                     </div>
                 </div>
             </div>
             <div class="mt-6">
-                <Button
-                    class="w-full"
-                    @click="createGroup"
-                    :disabled="isFormValid"
-                >
+                <Button class="w-full" @click="createGroup" :disabled="isFormValid">
                     Create Group
                 </Button>
             </div>
@@ -74,7 +66,7 @@ async function createGroup() {
     }
 
     const payload = {
-        name: "",
+        name: groupName.value,
         picture: new Uint8Array(await groupPicture.value?.arrayBuffer()),
     };
 

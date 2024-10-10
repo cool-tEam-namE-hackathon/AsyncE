@@ -15,6 +15,7 @@ export const useGroupStore = defineStore("group", () => {
 
     async function getAllGroups() {
         const response = await actor.value?.get_all_groups();
+        console.log("asd", response);
         if (response) {
             if (response[0].profile_picture_blob) {
                 groupPicture.value = blobToURL(
@@ -25,6 +26,7 @@ export const useGroupStore = defineStore("group", () => {
 
         return response;
     }
+
     async function createGroup({
         name,
         picture,

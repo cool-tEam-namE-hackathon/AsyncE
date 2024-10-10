@@ -4,7 +4,7 @@ interface User {
 }
 
 interface Group {
-    id: string;
+    id: bigint;
     name: string;
     users: string[];
     owner: string;
@@ -12,7 +12,7 @@ interface Group {
 }
 
 interface Video {
-    id: string;
+    id: bigint;
     webcam_blob: Blob;
     screen_blob: Blob;
 }
