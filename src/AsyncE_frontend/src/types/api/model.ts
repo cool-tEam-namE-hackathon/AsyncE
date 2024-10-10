@@ -17,4 +17,18 @@ interface Video {
     screen_blob: Blob;
 }
 
-export type { User, Group, Video };
+interface BaseDialogProps {
+    open?: boolean;
+    hideCloseButton?: boolean;
+}
+
+interface BaseDropdownProps {
+    options?: UserDropdownOption[];
+    label?: string;
+}
+
+interface UserDropdownOption {
+    name: string;
+}
+
+export type { User, Group, Video, BaseDialogProps, BaseDropdownProps };

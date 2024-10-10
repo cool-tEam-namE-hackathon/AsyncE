@@ -4,20 +4,25 @@ import { defineStore } from "pinia";
 import { createActor } from "@declarations/AsyncE_backend/index";
 
 import { AuthClient } from "@dfinity/auth-client";
-import { Identity } from "@dfinity/agent";
-import type { _SERVICE } from "../../../declarations/AsyncE_backend/AsyncE_backend.did";
+import { ActorSubclass, Identity } from "@dfinity/agent";
 import { User } from "@/types/api/model";
+import { _SERVICE } from "@declarations/AsyncE_backend/AsyncE_backend.did";
+import { blobToURL } from "@/utils/helpers";
 
-const client = ref<AuthClient | null>(null);
-const isAuthenticated = ref<boolean>(false);
-const identity = ref<Identity | null>(null);
-const actor = ref<_SERVICE | null>();
+const client = ref<AuthClient | null>();
+const isAuthenticated = ref<boolean>();
+const identity = ref<Identity | null>();
+const actor = ref<ActorSubclass<_SERVICE> | null>();
+const isReady = ref<boolean>(false);
 
 const username = ref<string | null>();
+const profilePicture = ref<string>("");
+
+const groupPicture = ref<string>("");
 
 export const getIdentityProvider = () => {
     let idpProvider;
-    // Safeguard against server rendering
+
     if (typeof window !== "undefined") {
         const isLocal = process.env.DFX_NETWORK !== "ic";
         // Safari does not support localhost subdomains
@@ -45,7 +50,7 @@ export const defaultOptions = {
 };
 
 function actorFromIdentity(identity: Identity) {
-    return createActor(process.env.CANISTER_ID_ASYNCE_BACKEND, {
+    return createActor(process.env.CANISTER_ID_ASYNCE_BACKEND || "", {
         agentOptions: {
             identity,
         },
@@ -60,6 +65,8 @@ export const useUserStore = defineStore("user", () => {
             ? client.value.getIdentity()
             : null;
         actor.value = identity.value ? actorFromIdentity(identity.value) : null;
+
+        isReady.value = true;
     }
 
     async function login() {
@@ -101,20 +108,13 @@ export const useUserStore = defineStore("user", () => {
         const response = await actor.value?.get_user_credentials();
         if (response) {
             username.value = response[0]?.username[0];
+
+            if (response[0]?.profile_picture_blob) {
+                profilePicture.value = blobToURL(
+                    response[0]?.profile_picture_blob,
+                );
+            }
         }
-
-        return response;
-    }
-
-    async function createGroup({
-        name,
-        picture,
-    }: {
-        name: string;
-        picture: Uint8Array;
-    }) {
-        const response = await actor.value?.create_group(name, picture);
-
         return response;
     }
 
@@ -122,13 +122,14 @@ export const useUserStore = defineStore("user", () => {
         isAuthenticated,
         identity,
         actor,
+        isReady,
         username,
+        profilePicture,
 
         init,
         login,
         logout,
         register,
-        createGroup,
         getUserCredentials,
     };
 });
