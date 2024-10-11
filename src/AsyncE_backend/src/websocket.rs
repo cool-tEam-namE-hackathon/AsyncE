@@ -11,19 +11,13 @@ use crate::{chat::Chat, globals::WEBSOCKET_CLIENTS};
 
 #[derive(CandidType, Clone, Debug, Deserialize, Serialize)]
 pub enum WebsocketEventMessageData {
-    #[serde(rename = "ping")]
     Ping,
-
-    #[serde(rename = "group_invited")]
     GroupInvited(String),
-
-    #[serde(rename = "add_chat")]
     AddChat(Chat),
 }
 
 #[derive(CandidType, Clone, Debug, Deserialize, Serialize)]
 pub struct WebsocketEventMessage {
-    #[serde(rename = "type")]
     pub ty: String,
     pub data: WebsocketEventMessageData,
 }

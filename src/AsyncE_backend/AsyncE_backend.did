@@ -1,77 +1,77 @@
 import "./ws_types.did";
 
 type User = record {
-    "username": opt text;
-    "profile_picture_blob": blob;
+    username: opt text;
+    profile_picture_blob: blob;
 };
 
 type Group = record {
-    "id": nat;
-    "name": text;
-    "users": vec text;
-    "owner": text;
-    "profile_picture_blob": blob;
+    id: nat;
+    name: text;
+    users: vec text;
+    owner: text;
+    profile_picture_blob: blob;
 };
 
 type Video = record {
-    "id": nat;
-    "webcam_blob": blob;
-    "screen_blob": blob;
-    "created_time_unix": nat;
+    id: nat;
+    webcam_blob: blob;
+    screen_blob: blob;
+    created_time_unix: nat;
 };
 
 type VideoFrame = record {
-    "id": text;
-    "username": text;
-    "webcam_blob": blob;
-    "screen_blob": blob;
-    "created_time_unix": nat;
+    id: text;
+    username: text;
+    webcam_blob: blob;
+    screen_blob: blob;
+    created_time_unix: nat;
 };
 
 type Chat = record {
-    "id": nat;
-    "content": text;
-    "username": text;
-    "created_time_unix": nat;
+    id: nat;
+    content: text;
+    username: text;
+    created_time_unix: nat;
 };
 
 type WebsocketEventMessageData = variant {
-    "ping": null;
-    "group_invited": text;
-    "add_chat": Chat;
+    Ping: null;
+    GroupInvited: text;
+    AddChat: Chat;
 };
 
 type WebsocketEventMessage = record {
-    "type": text;
-    "data": WebsocketEventMessageData;
+    ty: text;
+    data: WebsocketEventMessageData;
 };
 
 service : {
-    "get_user_credentials": () -> (opt User) query;
-    "register": (User) -> ();
-    "get_self": () -> (opt User) query;
-    "get_selfname": () -> (opt text) query;
-    "get_user": (text) -> (opt User) query;
-    "get_username": () -> (opt text) query;
-    "query_username": (text) -> (vec text) query;
+    get_user_credentials: () -> (opt User) query;
+    register: (User) -> ();
+    get_self: () -> (opt User) query;
+    get_selfname: () -> (opt text) query;
+    get_user: (text) -> (opt User) query;
+    get_username: () -> (opt text) query;
+    query_username: (text) -> (vec text) query;
 
-    "create_group": (text, blob) -> ();
-    "get_all_groups": () -> (vec Group) query;
-    "get_group": (nat) -> (opt Group) query;
+    create_group: (text, blob) -> ();
+    get_all_groups: () -> (vec Group) query;
+    get_group: (nat) -> (opt Group) query;
 
-    "get_videos": (nat) -> (vec Video) query;
-    "add_video": (nat, blob, blob) -> ();
-    "concat_video": (nat, nat, blob, blob) -> ();
+    get_videos: (nat) -> (vec Video) query;
+    add_video: (nat, blob, blob) -> ();
+    concat_video: (nat, nat, blob, blob) -> ();
 
-    "invite_user": (text) -> ();
-    "get_self_group_invites": () -> (vec nat) query;
-    "update_group_invite": (nat, bool) -> ();
+    invite_user: (text) -> ();
+    get_self_group_invites: () -> (vec nat) query;
+    update_group_invite: (nat, bool) -> ();
 
-    "ws_open" : (CanisterWsOpenArguments) -> (CanisterWsOpenResult);
-    "ws_close" : (CanisterWsCloseArguments) -> (CanisterWsCloseResult);
-    "ws_message" : (CanisterWsMessageArguments, opt WebsocketEventMessage) -> (CanisterWsMessageResult);
-    "ws_get_messages" : (CanisterWsGetMessagesArguments) -> (CanisterWsGetMessagesResult) query;
+    ws_open : (CanisterWsOpenArguments) -> (CanisterWsOpenResult);
+    ws_close : (CanisterWsCloseArguments) -> (CanisterWsCloseResult);
+    ws_message : (CanisterWsMessageArguments, opt WebsocketEventMessage) -> (CanisterWsMessageResult);
+    ws_get_messages : (CanisterWsGetMessagesArguments) -> (CanisterWsGetMessagesResult) query;
 
-    "add_chat": (nat, text) -> ();
-    "get_chats": (nat) -> (vec Chat);
+    add_chat: (nat, text) -> ();
+    get_chats: (nat) -> (vec Chat);
 }
