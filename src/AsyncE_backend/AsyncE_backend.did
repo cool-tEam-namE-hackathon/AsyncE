@@ -40,15 +40,15 @@ service : {
 
     "create_group": (text, blob) -> ();
     "get_all_groups": () -> (vec Group) query;
-    "get_group": (int) -> (opt Group) query;
+    "get_group": (nat) -> (opt Group) query;
 
-    "get_videos": (int) -> (vec Video) query;
-    "add_video": (int, blob, blob) -> ();
-    "concat_video": (int, int, blob, blob) -> ();
+    "get_videos": (nat) -> (vec Video) query;
+    "add_video": (nat, blob, blob) -> ();
+    "concat_video": (nat, nat, blob, blob) -> ();
 
     "invite_user": (text) -> ();
-    "get_self_group_invites": () -> (vec int) query;
-    "update_group_invite": (int, bool) -> ();
+    "get_self_group_invites": () -> (vec nat) query;
+    "update_group_invite": (nat, bool) -> ();
 
     "ws_open" : (CanisterWsOpenArguments) -> (CanisterWsOpenResult);
     "ws_close" : (CanisterWsCloseArguments) -> (CanisterWsCloseResult);

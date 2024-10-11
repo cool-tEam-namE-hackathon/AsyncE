@@ -16,6 +16,7 @@
         "src/AsyncE_frontend"
     ],
     "devDependencies": {
+        "@iconify/vue": "^4.1.2",
         "globals": "^15.10.0",
         "nodemon": "^3.1.7",
         "prettier": "^3.3.3"

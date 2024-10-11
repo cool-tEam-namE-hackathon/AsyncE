@@ -6,27 +6,20 @@ import { useUserStore } from "@stores/user-store";
 
 import { storeToRefs } from "pinia";
 
-import { blobToURL } from "@/utils/helpers";
+import { Group } from "@/types/api/model";
 
 export const useGroupStore = defineStore("group", () => {
     const { actor } = storeToRefs(useUserStore());
 
-    const groupPicture = ref<string>("null");
+    const groupPicture = ref<string>("");
+    const groupList = ref<Group[]>([]);
 
     async function getAllGroups() {
         const response = await actor.value?.get_all_groups();
-        console.log("asd", response);
         if (response) {
-            if (response[0].profile_picture_blob) {
-                groupPicture.value = blobToURL(
-                    response[0]?.profile_picture_blob,
-                );
-            }
+            groupList.value = response;
         }
-
-        return response;
     }
-
     async function createGroup({
         name,
         picture,
@@ -39,6 +32,12 @@ export const useGroupStore = defineStore("group", () => {
         return response;
     }
 
+    async function getGroup(id: bigint) {
+        const response = await actor.value?.get_group(id);
+
+        return response;
+    }
+
     // async function addVideo() {
     //     const response = await actor.value?.add_video();
 
@@ -46,9 +45,11 @@ export const useGroupStore = defineStore("group", () => {
     // }
 
     return {
+        groupList,
         groupPicture,
 
         getAllGroups,
+        getGroup,
         createGroup,
     };
 });

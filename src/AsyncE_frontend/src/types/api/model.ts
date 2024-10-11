@@ -5,10 +5,10 @@ interface User {
 
 interface Group {
     id: bigint;
+    profile_picture_blob: Uint8Array | number[];
+    owner: string;
     name: string;
     users: string[];
-    owner: string;
-    profile_picture_blob: Blob;
 }
 
 interface Video {

@@ -13,12 +13,9 @@ const client = ref<AuthClient | null>();
 const isAuthenticated = ref<boolean>();
 const identity = ref<Identity | null>();
 const actor = ref<ActorSubclass<_SERVICE> | null>();
-const isReady = ref<boolean>(false);
 
 const username = ref<string | null>();
 const profilePicture = ref<string>("");
-
-const groupPicture = ref<string>("");
 
 export const getIdentityProvider = () => {
     let idpProvider;
@@ -65,8 +62,6 @@ export const useUserStore = defineStore("user", () => {
             ? client.value.getIdentity()
             : null;
         actor.value = identity.value ? actorFromIdentity(identity.value) : null;
-
-        isReady.value = true;
     }
 
     async function login() {
@@ -122,7 +117,6 @@ export const useUserStore = defineStore("user", () => {
         isAuthenticated,
         identity,
         actor,
-        isReady,
         username,
         profilePicture,
 

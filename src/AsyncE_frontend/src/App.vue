@@ -1,7 +1,15 @@
 <template>
-    <div v-if="isReady" class="h-dvh flex flex-col">
+    <div v-if="isInitialized" class="h-dvh flex flex-col">
         <Navbar />
-        <RouterView />
+        <router-view v-slot="{ Component }">
+            <Suspense>
+                <component :is="Component" />
+
+                <template #fallback>
+                    <base-spinner />
+                </template>
+            </Suspense>
+        </router-view>
         <Footer />
 
         <base-dialog :open="isOpen" :hide-close-button="true">
@@ -36,7 +44,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watchEffect, watch } from "vue";
+import { ref, computed, watchEffect, onMounted } from "vue";
 import { storeToRefs } from "pinia";
 
 import Navbar from "@components/layout/Navbar.vue";
@@ -46,6 +54,7 @@ import Button from "@components/ui/button/Button.vue";
 import Input from "@components/ui/input/Input.vue";
 import Label from "@components/ui/label/Label.vue";
 
+import BaseSpinner from "@components/shared/BaseSpinner.vue";
 import BaseDialog from "@components/shared/BaseDialog.vue";
 
 import { useUserStore } from "@stores/user-store";
@@ -53,9 +62,10 @@ import { fileToBlob } from "./utils/helpers";
 import { User } from "./types/api/model";
 
 const userStore = useUserStore();
-const { isAuthenticated, isReady } = storeToRefs(userStore);
+const { isAuthenticated } = storeToRefs(userStore);
 
 const isOpen = ref<boolean>(false);
+const isInitialized = ref<boolean>(false);
 
 const username = ref<string>("");
 const imageBlob = ref<Blob | null>(null);
@@ -92,24 +102,21 @@ function onFileInput(e: Event) {
 
 async function init() {
     await userStore.init();
+    isInitialized.value = true;
 
     console.log("is auth", isAuthenticated.value);
 }
 
-watch(
-    isReady,
-    async () => {
-        console.log(isReady.value);
-        if (isReady.value) {
+onMounted(() => {
+    watchEffect(async () => {
+        if (isInitialized.value) {
             const response = await userStore.getUserCredentials();
-            console.log(response);
             if (!response?.length && isAuthenticated.value) {
                 isOpen.value = true;
             }
         }
-    },
-    { immediate: true },
-);
+    });
+});
 
 init();
 </script>

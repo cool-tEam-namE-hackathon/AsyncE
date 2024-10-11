@@ -1,9 +1,9 @@
 <template>
-    <header className="p-4 lg:p-6 h-14 flex items-center">
-        <router-link to="/" className="flex items-center justify-center">
-            <span>AsyncE</span>
+    <header class="p-4 lg:p-6 h-14 flex items-center">
+        <router-link to="/" class="flex items-center justify-center">
+            <Icon icon="mynaui:globe" width="24" height="24" />
         </router-link>
-        <nav className="ml-auto flex gap-4 sm:gap-6">
+        <nav class="ml-auto flex gap-4 sm:gap-6">
             <button
                 v-if="!isAuthenticated"
                 class="text-sm font-medium hover:underline underline-offset-4"
@@ -12,12 +12,7 @@
                 Login
             </button>
             <div v-else class="flex items-center gap-3">
-                <router-link
-                    to="/group"
-                    class="text-sm font-medium hover:underline underline-offset-4"
-                >
-                    Create Group
-                </router-link>
+                <router-link to="/group-list"> Dashboard </router-link>
                 <base-dropdown
                     label="Your account"
                     :options="USER_DROPDOWN_OPTIONS"
@@ -49,6 +44,8 @@ import { useRouter } from "vue-router";
 import { USER_DROPDOWN_OPTIONS } from "@data/user-constants";
 
 import BaseDropdown from "@shared/BaseDropdown.vue";
+
+import { Icon } from "@iconify/vue";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@components/ui/avatar";
 

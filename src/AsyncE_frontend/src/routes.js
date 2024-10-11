@@ -1,8 +1,8 @@
 import { createRouter, createWebHistory } from "vue-router";
 
 import Home from "./pages/Home.vue";
-import Group from "./pages/Group.vue";
-import Video from "./pages/Video.vue";
+import CreateGroup from "./pages/CreateGroup.vue";
+import GroupPage from "./pages/GroupPage.vue";
 import GroupList from "./pages/GroupList.vue";
 
 const routes = [
@@ -11,12 +11,12 @@ const routes = [
         component: Home,
     },
     {
-        path: "/group",
-        component: Group,
+        path: "/create-group",
+        component: CreateGroup,
     },
     {
-        path: "/create-video",
-        component: Video,
+        path: "/group/:id",
+        component: GroupPage,
     },
     {
         path: "/group-list",
