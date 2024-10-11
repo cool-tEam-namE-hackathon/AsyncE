@@ -1,10 +1,18 @@
 <template>
-    <div class="h-dvh flex flex-col">
+    <div v-if="isInitialized" class="h-dvh flex flex-col">
         <Navbar />
-        <RouterView />
+        <router-view v-slot="{ Component }">
+            <Suspense>
+                <component :is="Component" />
+
+                <template #fallback>
+                    <base-spinner />
+                </template>
+            </Suspense>
+        </router-view>
         <Footer />
 
-        <base-modal :open="isOpen">
+        <base-dialog :open="isOpen" :hide-close-button="true">
             <template #title> Input your username </template>
 
             <template #description> Username must be unique </template>
@@ -31,31 +39,33 @@
                     >Submit</Button
                 >
             </template>
-        </base-modal>
+        </base-dialog>
     </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from "vue";
+import { ref, computed, watchEffect, onMounted } from "vue";
 import { storeToRefs } from "pinia";
 
 import Navbar from "@components/layout/Navbar.vue";
 import Footer from "@components/layout/Footer.vue";
 
-import Button from "./components/ui/button/Button.vue";
-import Input from "./components/ui/input/Input.vue";
-import Label from "./components/ui/label/Label.vue";
+import Button from "@components/ui/button/Button.vue";
+import Input from "@components/ui/input/Input.vue";
+import Label from "@components/ui/label/Label.vue";
 
-import BaseModal from "./components/shared/BaseModal.vue";
+import BaseSpinner from "@components/shared/BaseSpinner.vue";
+import BaseDialog from "@components/shared/BaseDialog.vue";
 
-import { useUserStore } from "./stores/user-store";
+import { useUserStore } from "@stores/user-store";
 import { fileToBlob } from "./utils/helpers";
 import { User } from "./types/api/model";
 
 const userStore = useUserStore();
-const { isAuthenticated, identity, actor } = storeToRefs(userStore);
+const { isAuthenticated } = storeToRefs(userStore);
 
 const isOpen = ref<boolean>(false);
+const isInitialized = ref<boolean>(false);
 
 const username = ref<string>("");
 const imageBlob = ref<Blob | null>(null);
@@ -88,23 +98,25 @@ function onFileInput(e: Event) {
     if (file) {
         imageBlob.value = fileToBlob(file);
     }
-    console.log(imageBlob.value);
 }
 
 async function init() {
     await userStore.init();
+    isInitialized.value = true;
 
     console.log("is auth", isAuthenticated.value);
-    console.log("identity", identity.value);
-    console.log("actor", actor.value);
-
-    const response = await userStore.getUserCredentials();
-    console.log(response);
-
-    if (!response?.length && isAuthenticated.value) {
-        isOpen.value = true;
-    }
 }
+
+onMounted(() => {
+    watchEffect(async () => {
+        if (isInitialized.value) {
+            const response = await userStore.getUserCredentials();
+            if (!response?.length && isAuthenticated.value) {
+                isOpen.value = true;
+            }
+        }
+    });
+});
 
 init();
 </script>

@@ -6,7 +6,7 @@ type User = record {
 };
 
 type Group = record {
-    "id": text;
+    "id": nat;
     "name": text;
     "users": vec text;
     "owner": text;
@@ -14,7 +14,7 @@ type Group = record {
 };
 
 type Video = record {
-    "id": text;
+    "id": nat;
     "webcam_blob": blob;
     "screen_blob": blob;
 };
@@ -40,15 +40,15 @@ service : {
 
     "create_group": (text, blob) -> ();
     "get_all_groups": () -> (vec Group) query;
-    "get_group": (text) -> (opt Group) query;
+    "get_group": (nat) -> (opt Group) query;
 
-    "get_videos": (text) -> (vec Video) query;
-    "add_video": (text, blob, blob) -> ();
-    "concat_video": (text, text, blob, blob) -> ();
+    "get_videos": (nat) -> (vec Video) query;
+    "add_video": (nat, blob, blob) -> ();
+    "concat_video": (nat, nat, blob, blob) -> ();
 
     "invite_user": (text) -> ();
-    "get_self_group_invites": () -> (vec text) query;
-    "update_group_invite": (text, bool) -> ();
+    "get_self_group_invites": () -> (vec nat) query;
+    "update_group_invite": (nat, bool) -> ();
 
     "ws_open" : (CanisterWsOpenArguments) -> (CanisterWsOpenResult);
     "ws_close" : (CanisterWsCloseArguments) -> (CanisterWsCloseResult);

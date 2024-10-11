@@ -9,10 +9,26 @@ import tailwind from "tailwindcss";
 import autoprefixer from "autoprefixer";
 
 dotenv.config({ path: "../../.env" });
-
 function resolve(dir) {
     return fileURLToPath(new URL(dir, import.meta.url));
 }
+
+const UI_ENV_VARS = [
+    "DFX_NETWORK",
+    "CANISTER_ID_ASYNCE_BACKEND",
+    "CANISTER_ID_INTERNET_IDENTITY",
+];
+
+process.env = {
+    ...process.env,
+    ...UI_ENV_VARS.reduce(
+        (accum, entry) => ({
+            ...accum,
+            [`VITE_${entry}`]: process.env[entry],
+        }),
+        {},
+    ),
+};
 
 export default defineConfig({
     css: {
@@ -38,6 +54,14 @@ export default defineConfig({
             },
         },
     },
+    define: {
+        "process.env": {
+            DFX_NETWORK: process.env.DFX_NETWORK,
+            CANISTER_ID_ASYNCE_BACKEND: process.env.CANISTER_ID_ASYNCE_BACKEND,
+            CANISTER_ID_INTERNET_IDENTITY:
+                process.env.CANISTER_ID_INTERNET_IDENTITY,
+        },
+    },
     plugins: [
         vue(),
         environment("all", { prefix: "CANISTER_" }),
@@ -50,7 +74,12 @@ export default defineConfig({
     resolve: {
         alias: {
             "@": resolve("./src"),
+            "@types": resolve("./src/types"),
             "@components": resolve("./src/components"),
+            "@ui": resolve("./src/components/ui"),
+            "@shared": resolve("./src/components/shared"),
+            "@stores": resolve("./src/stores"),
+            "@data": resolve("./src/data"),
             "@declarations": resolve("../declarations"),
         },
     },

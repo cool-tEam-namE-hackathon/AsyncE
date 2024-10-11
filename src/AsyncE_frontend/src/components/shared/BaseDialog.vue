@@ -1,18 +1,18 @@
 <template>
     <Dialog v-model:open="isOpen">
-        <DialogContent class="sm:max-w-md">
+        <DialogContent :hide-close-button="hideCloseButton" class="sm:max-w-md">
             <DialogHeader>
                 <DialogTitle>
-                    <slot name="title"></slot>
+                    <slot name="title" />
                 </DialogTitle>
                 <DialogDescription>
-                    <slot name="description"></slot>
+                    <slot name="description" />
                 </DialogDescription>
             </DialogHeader>
-            <slot name="content"></slot>
+            <slot name="content" />
             <DialogFooter>
                 <DialogClose as-child>
-                    <slot name="footer"></slot>
+                    <slot name="footer" />
                 </DialogClose>
             </DialogFooter>
         </DialogContent>
@@ -21,6 +21,7 @@
 
 <script setup lang="ts">
 import { computed } from "vue";
+import { BaseDialogProps } from "@/types/api/model";
 
 import {
     Dialog,
@@ -30,15 +31,9 @@ import {
     DialogFooter,
     DialogHeader,
     DialogTitle,
-} from "../ui/dialog";
+} from "@ui/dialog";
 
-const props = defineProps({
-    open: {
-        type: Boolean,
-        default: false,
-    },
-});
-
+const props = defineProps<BaseDialogProps>();
 const emits = defineEmits(["on-close-dialog"]);
 
 const isOpen = computed({
