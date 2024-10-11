@@ -48,7 +48,7 @@ pub fn add_chat(group_id: u128, content: String) {
         chats
             .entry(group_id)
             .or_default()
-            .insert(chat.id.clone(), chat.clone());
+            .insert(chat.id, chat.clone());
 
         websocket::broadcast_websocket_message(WebsocketEventMessage::new_chat(chat));
     })
