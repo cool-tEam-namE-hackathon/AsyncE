@@ -2,17 +2,17 @@ use std::time::{SystemTime, UNIX_EPOCH};
 
 use candid::CandidType;
 use serde::{Deserialize, Serialize};
-use uuid::Uuid;
 
 use crate::{
     globals::{CHATS, GROUPS},
+    primary_key::{self, PrimaryKeyType},
     user,
     websocket::{self, WebsocketEventMessage},
 };
 
 #[derive(Clone, Debug, CandidType, Serialize, Deserialize)]
 pub struct Chat {
-    pub id: String,
+    pub id: u128,
     pub content: String,
     pub username: String,
     pub created_time_unix: u128,
@@ -21,7 +21,7 @@ pub struct Chat {
 impl Chat {
     pub fn new(username: String, content: String) -> Self {
         Self {
-            id: Uuid::new_v4().to_string(),
+            id: primary_key::get_primary_key(PrimaryKeyType::Chat),
             content,
             username,
             created_time_unix: SystemTime::now()
@@ -33,7 +33,7 @@ impl Chat {
 }
 
 #[ic_cdk::update]
-pub fn add_chat(group_id: String, content: String) {
+pub fn add_chat(group_id: u128, content: String) {
     let selfname = user::get_selfname().unwrap();
     let group = GROUPS
         .with_borrow(|groups| groups.get(&group_id).cloned())
@@ -55,7 +55,7 @@ pub fn add_chat(group_id: String, content: String) {
 }
 
 #[ic_cdk::query]
-pub fn get_chats(group_id: String) -> Vec<Chat> {
+pub fn get_chats(group_id: u128) -> Vec<Chat> {
     let selfname = user::get_selfname().unwrap();
     let group = GROUPS
         .with_borrow(|groups| groups.get(&group_id).cloned())

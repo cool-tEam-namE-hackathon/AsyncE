@@ -9,13 +9,17 @@ use mp4::{
     Mp4Writer, TrackConfig, TrackType, TtxtConfig, Vp9Config,
 };
 use serde::Deserialize;
-use uuid::Uuid;
 
-use crate::{globals::VIDEOS, group, user};
+use crate::{
+    globals::VIDEOS,
+    group,
+    primary_key::{self, PrimaryKeyType},
+    user,
+};
 
 #[derive(Clone, Debug, Default, CandidType, Deserialize)]
 pub struct Video {
-    pub id: String,
+    pub id: u128,
     pub username: String,
     pub webcam_blob: Vec<u8>,
     pub screen_blob: Vec<u8>,
@@ -23,8 +27,8 @@ pub struct Video {
 }
 
 #[derive(Clone, Debug, Default, CandidType, Deserialize)]
-pub struct VideoFrame {
-    pub id: String,
+pub struct VideoFrames {
+    pub id: u128,
     pub username: String,
     pub webcam_blob: Vec<u8>,
     pub screen_blob: Vec<u8>,
@@ -46,7 +50,7 @@ impl Video {
         print_mp4_info(&mp4_screen);
 
         Self {
-            id: Uuid::new_v4().to_string(),
+            id: primary_key::get_primary_key(PrimaryKeyType::Video),
             username,
             webcam_blob,
             screen_blob,
@@ -259,8 +263,8 @@ fn print_mp4_info(mp4: &Mp4Reader<Cursor<&Vec<u8>>>) {
     }
 }
 
-fn assert_check_group(group_id: &str) {
-    let group = match group::get_group(group_id.to_owned()) {
+fn assert_check_group(group_id: u128) {
+    let group = match group::get_group(group_id) {
         Some(group) => group,
         None => panic!("Group not found!"),
     };
@@ -276,9 +280,9 @@ fn assert_check_group(group_id: &str) {
 }
 
 #[ic_cdk::query]
-pub fn get_videos(group_id: String) -> Vec<Video> {
+pub fn get_videos(group_id: u128) -> Vec<Video> {
     user::assert_user_logged_in();
-    assert_check_group(&group_id);
+    assert_check_group(group_id);
 
     VIDEOS.with_borrow(|videos| {
         videos
@@ -292,29 +296,19 @@ pub fn get_videos(group_id: String) -> Vec<Video> {
 }
 
 #[ic_cdk::update]
-pub fn add_video(group_id: String, webcam_blob: Vec<u8>, screen_blob: Vec<u8>) {
+pub fn add_video(group_id: u128, webcam_blob: Vec<u8>, screen_blob: Vec<u8>) {
     user::assert_user_logged_in();
-    assert_check_group(&group_id);
+    assert_check_group(group_id);
 
     let selfname = user::get_selfname().unwrap();
     let video = Video::new(selfname, webcam_blob, screen_blob);
-    VIDEOS.with_borrow_mut(|videos| {
-        videos
-            .entry(group_id)
-            .or_default()
-            .insert(video.id.clone(), video)
-    });
+    VIDEOS.with_borrow_mut(|videos| videos.entry(group_id).or_default().insert(video.id, video));
 }
 
 #[ic_cdk::update]
-pub fn concat_video(
-    group_id: String,
-    video_id: String,
-    webcam_blob: Vec<u8>,
-    screen_blob: Vec<u8>,
-) {
+pub fn concat_video(group_id: u128, video_id: u128, webcam_blob: Vec<u8>, screen_blob: Vec<u8>) {
     user::assert_user_logged_in();
-    assert_check_group(&group_id);
+    assert_check_group(group_id);
 
     VIDEOS.with_borrow_mut(|videos| {
         let videos = match videos.get_mut(&group_id) {
