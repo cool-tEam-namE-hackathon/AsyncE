@@ -3,7 +3,7 @@
         <DropdownMenuTrigger>
             <slot name="trigger" />
         </DropdownMenuTrigger>
-        <DropdownMenuContent>
+        <DropdownMenuContent :side-offset="20">
             <DropdownMenuLabel>
                 <span v-if="props.label">{{ props.label }}</span>
             </DropdownMenuLabel>

@@ -12,9 +12,19 @@ interface Group {
 }
 
 interface Video {
-    id: bigint;
-    webcam_blob: Blob;
-    screen_blob: Blob;
+    id?: bigint;
+    screen: Uint8Array | null;
+    camera: Uint8Array | null;
+}
+
+interface RecordedChunks {
+    screen: Blob[];
+    camera: Blob[];
+}
+
+interface MediaRecorders {
+    screen: MediaRecorder | null;
+    camera: MediaRecorder | null;
 }
 
 interface BaseDialogProps {
@@ -23,12 +33,29 @@ interface BaseDialogProps {
 }
 
 interface BaseDropdownProps {
-    options?: UserDropdownOption[];
+    options?: Option[];
     label?: string;
+    side?: "top" | "right" | "bottom" | "left";
 }
 
-interface UserDropdownOption {
+interface BaseSelectProps {
+    modelValue?: string;
+    placeholder: string;
+    options?: Option[];
+}
+
+interface Option {
+    deviceId: string;
     name: string;
 }
 
-export type { User, Group, Video, BaseDialogProps, BaseDropdownProps };
+export type {
+    User,
+    Group,
+    Video,
+    BaseDialogProps,
+    BaseDropdownProps,
+    BaseSelectProps,
+    RecordedChunks,
+    MediaRecorders,
+};

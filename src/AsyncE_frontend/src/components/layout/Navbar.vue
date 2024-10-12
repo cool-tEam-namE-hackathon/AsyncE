@@ -1,5 +1,5 @@
 <template>
-    <header class="p-4 lg:p-6 h-14 flex items-center">
+    <header class="container py-4 flex items-center">
         <router-link to="/" class="flex items-center justify-center">
             <Icon icon="mynaui:globe" width="24" height="24" />
         </router-link>
