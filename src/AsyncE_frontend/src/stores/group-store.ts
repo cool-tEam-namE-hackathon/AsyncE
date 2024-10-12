@@ -30,16 +30,19 @@ export const useGroupStore = defineStore("group", () => {
                 };
 
                 const profilePictureBlobSize = Number(await actor.value?.get_group_profile_picture_size(group.id)!);
+                const profilePictureData = new Uint8Array(profilePictureBlobSize);
 
+                const promises = [];
                 for (let i = 0; i < Math.ceil(profilePictureBlobSize / MB); ++i) {
-                    const chunk = await actor.value?.get_group_profile_picture_chunk_blob(group.id, BigInt(i))!;
-                    const newData = new Uint8Array(group.profile_picture_blob.length + chunk.length);
-                    newData.set(group.profile_picture_blob, 0);
-                    newData.set(chunk, group.profile_picture_blob.length);
-                    group.profile_picture_blob = newData;
+                    promises.push(actor.value?.get_group_profile_picture_chunk_blob(group.id, BigInt(i)).then((chunk) => {
+                        profilePictureData.set(chunk, i * MB);
+                    }));
                 }
 
-                groupList.value.push(group)
+                await Promise.all(promises);
+
+                group.profile_picture_blob = profilePictureData;
+                groupList.value.push(group);
             }
         }
     }

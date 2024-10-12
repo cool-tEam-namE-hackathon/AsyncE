@@ -111,16 +111,16 @@ export const useUserStore = defineStore("user", () => {
             username.value = response[0];
 
             const profilePictureBlobSize = Number(await actor.value?.get_profile_picture_size()!);
+            const profilePictureData = new Uint8Array(profilePictureBlobSize);
 
-            let profilePictureData = new Uint8Array();
+            const promises = [];
             for (let i = 0; i < Math.ceil(profilePictureBlobSize / MB); ++i) {
-                const chunk = await actor.value?.get_profile_picture_chunk_blob(BigInt(i))!;
-                const newData = new Uint8Array(profilePictureData.length + chunk.length);
-                newData.set(profilePictureData, 0);
-                newData.set(chunk, profilePictureData.length);
-                profilePictureData = newData;
+                promises.push(actor.value?.get_profile_picture_chunk_blob(BigInt(i)).then((chunk) => {
+                    profilePictureData.set(chunk, i * MB);
+                }));
             }
 
+            await Promise.all(promises);
             profilePicture.value = blobToURL(profilePictureData);
         }
         return response;
