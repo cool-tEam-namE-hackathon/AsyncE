@@ -20,7 +20,8 @@ export const useGroupStore = defineStore("group", () => {
         if (response) {
             groupList.value = [];
 
-            for (const groupResponse of response) {
+            for (let i = 0; i < response.length; ++i) {
+                const groupResponse = response[i];
                 const group: Group = {
                     id: groupResponse.id,
                     name: groupResponse.name,
@@ -28,21 +29,23 @@ export const useGroupStore = defineStore("group", () => {
                     users: groupResponse.users,
                     profile_picture_blob: new Uint8Array(),
                 };
-
-                const profilePictureBlobSize = Number(await actor.value?.get_group_profile_picture_size(group.id)!);
-                const profilePictureData = new Uint8Array(profilePictureBlobSize);
-
-                const promises = [];
-                for (let i = 0; i < Math.ceil(profilePictureBlobSize / MB); ++i) {
-                    promises.push(actor.value?.get_group_profile_picture_chunk_blob(group.id, BigInt(i)).then((chunk) => {
-                        profilePictureData.set(chunk, i * MB);
-                    }));
-                }
-
-                await Promise.all(promises);
-
-                group.profile_picture_blob = profilePictureData;
                 groupList.value.push(group);
+
+                actor.value?.get_group_profile_picture_size(group.id)!.then(async (groupPictureBlobSizeBigInt) => {
+                    const profilePictureBlobSize = Number(groupPictureBlobSizeBigInt);
+                    const profilePictureData = new Uint8Array(profilePictureBlobSize);
+
+                    const promises = [];
+                    for (let i = 0; i < Math.ceil(profilePictureBlobSize / MB); ++i) {
+                        promises.push(actor.value?.get_group_profile_picture_chunk_blob(group.id, BigInt(i)).then((chunk) => {
+                            profilePictureData.set(chunk, i * MB);
+                        }));
+                    }
+
+                    await Promise.all(promises);
+
+                    groupList.value[i].profile_picture_blob = profilePictureData;
+                });
             }
         }
     }
