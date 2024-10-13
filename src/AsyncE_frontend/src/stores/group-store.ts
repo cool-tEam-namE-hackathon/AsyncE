@@ -13,6 +13,7 @@ export const useGroupStore = defineStore("group", () => {
 
     const groupPicture = ref<string>("");
     const groupList = ref<Group[]>([]);
+    const currentGroup = ref<Group>();
 
     async function getAllGroups() {
         const response = await actor.value?.get_all_groups();
@@ -34,22 +35,41 @@ export const useGroupStore = defineStore("group", () => {
 
     async function getGroup(id: bigint) {
         const response = await actor.value?.get_group(id);
+        if (response) {
+            currentGroup.value = response[0];
+        }
 
         return response;
     }
 
-    // async function addVideo() {
-    //     const response = await actor.value?.add_video();
+    async function addVideo({
+        id,
+        screen,
+        camera,
+    }: {
+        id: bigint;
+        screen: Uint8Array;
+        camera: Uint8Array;
+    }) {
+        const response = await actor.value?.add_video(id, screen, camera);
 
-    //     return response;
-    // }
+        return response;
+    }
+
+    async function inviteUser(name: string) {
+        const response = await actor.value?.invite_user(name);
+        return response;
+    }
 
     return {
+        currentGroup,
         groupList,
         groupPicture,
 
+        addVideo,
         getAllGroups,
         getGroup,
         createGroup,
+        inviteUser,
     };
 });

@@ -1,7 +1,10 @@
 import { ref, toRaw } from "vue";
 import { defineStore } from "pinia";
 
-import { createActor } from "@declarations/AsyncE_backend/index";
+import {
+    createActor,
+    canisterId as backendCanisterId,
+} from "@declarations/AsyncE_backend/index";
 
 import { AuthClient } from "@dfinity/auth-client";
 import { ActorSubclass, Identity } from "@dfinity/agent";
@@ -9,9 +12,14 @@ import { User } from "@/types/api/model";
 import { _SERVICE } from "@declarations/AsyncE_backend/AsyncE_backend.did";
 import { blobToURL } from "@/utils/helpers";
 
-const client = ref<AuthClient | null>();
-const isAuthenticated = ref<boolean>();
-const identity = ref<Identity | null>();
+import IcWebSocket, {
+    generateRandomIdentity,
+    createWsConfig,
+} from "ic-websocket-js";
+
+const client = ref<AuthClient | null>(null);
+const isAuthenticated = ref<boolean>(false);
+const identity = ref<Identity | null>(null);
 const actor = ref<ActorSubclass<_SERVICE> | null>();
 
 const username = ref<string | null>();
@@ -113,6 +121,36 @@ export const useUserStore = defineStore("user", () => {
         return response;
     }
 
+    async function setWebsockets() {
+        const gatewayUrl = "ws://127.0.0.1:8080";
+        const icUrl = "http://127.0.0.1:4943";
+
+        const wsConfig = createWsConfig<_SERVICE>({
+            canisterId: backendCanisterId,
+            canisterActor: actor.value!,
+            identity: generateRandomIdentity(),
+            networkUrl: icUrl,
+        });
+
+        const ws = new IcWebSocket(gatewayUrl, undefined, wsConfig);
+
+        ws.onopen = () => {
+            console.log("Connected to the canister");
+        };
+
+        ws.onmessage = async (event) => {
+            console.log("Received message:", event.data);
+        };
+
+        ws.onclose = () => {
+            console.log("Disconnected from the canister");
+        };
+
+        ws.onerror = (error) => {
+            console.log("Error:", error);
+        };
+    }
+
     return {
         isAuthenticated,
         identity,
@@ -125,5 +163,7 @@ export const useUserStore = defineStore("user", () => {
         logout,
         register,
         getUserCredentials,
+
+        setWebsockets,
     };
 });

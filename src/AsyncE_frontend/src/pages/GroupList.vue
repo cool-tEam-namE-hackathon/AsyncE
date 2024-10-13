@@ -24,7 +24,7 @@
                     @click="router.push(`/group/${group.id}`)"
                 >
                     <img
-                        class="flex-1 object-contain w-full h-auto"
+                        class="flex-1 object-cover w-full h-auto"
                         :src="blobToURL(group.profile_picture_blob)"
                     />
                     <div class="p-4">
