@@ -1,5 +1,3 @@
-use std::{cell::RefCell, collections::HashSet};
-
 use candid::CandidType;
 use ic_websocket_cdk::{
     CanisterWsCloseArguments, CanisterWsCloseResult, CanisterWsGetMessagesArguments,

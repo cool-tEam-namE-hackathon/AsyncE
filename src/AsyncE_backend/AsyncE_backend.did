@@ -70,7 +70,8 @@ service : {
     get_group_profile_picture_chunk_blob: (nat, nat) -> (blob) query;
 
     get_videos: (nat) -> (vec Video) query;
-    add_video: (nat, blob, blob) -> ();
+    create_video: (nat) -> (nat);
+    upload_video: (nat, nat, blob, bool) -> ();
     concat_video: (nat, nat, blob, blob) -> ();
 
     invite_user: (text) -> ();
