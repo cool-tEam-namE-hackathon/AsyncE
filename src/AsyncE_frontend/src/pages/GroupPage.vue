@@ -95,18 +95,18 @@
                                 <video
                                     ref="cameraRef"
                                     :class="[
-                                        enabledScreen
+                                        displayStream
                                             ? `select-none top-0 left-0`
                                             : 'inset-0 w-full h-full object-cover',
                                         'absolute',
                                     ]"
                                     :width="
-                                        enabledScreen
+                                        displayStream
                                             ? cameraDimensions.width
                                             : 'auto'
                                     "
                                     :height="
-                                        enabledScreen
+                                        displayStream
                                             ? cameraDimensions.height
                                             : 'auto'
                                     "
@@ -242,12 +242,14 @@ const recordingPhaseText = computed(() => {
     return recordedChunks.value.length > 0 ? "Save" : "Record";
 });
 
-const cameraDimensions = computed(() => {
-    return {
-        width: screenWidth.value * 0.25,
-        height: screenHeight.value * 0.25,
-    };
-});
+const cameraDimensions = computed(() => ({
+    width: displayStream.value
+        ? screenWidth.value * 0.25
+        : canvasRef.value?.width ?? 0,
+    height: displayStream.value
+        ? screenHeight.value * 0.25
+        : canvasRef.value?.height ?? 0,
+}));
 
 const cameraProgress = computed(() => {
     return (
@@ -410,8 +412,8 @@ function startDrawing() {
             if (cameraVideo) {
                 ctx.value.drawImage(
                     cameraVideo,
-                    x.value,
-                    y.value,
+                    0,
+                    0,
                     cameraDimensions.value.width,
                     cameraDimensions.value.height,
                 );
