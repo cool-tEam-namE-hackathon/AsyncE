@@ -8,8 +8,10 @@ crate-type = ["cdylib"]
 
 [dependencies]
 mp4 = "0.14.0"
+hex = "*"
 candid = "0.10"
 ic-cdk = "0.16"
+# ffmpeg-next = "7.1.0"
 ic-cdk-timers = "0.10"
 ic-websocket-cdk = "0.4.0"
 

@@ -19,6 +19,7 @@ use ic_websocket_cdk::{
     CanisterWsGetMessagesResult, CanisterWsMessageArguments, CanisterWsMessageResult,
     CanisterWsOpenArguments, CanisterWsOpenResult, WsHandlers, WsInitParams,
 };
+// extern crate ffmpeg_next as ffmpeg;
 
 #[ic_cdk::init]
 fn init() {
@@ -29,6 +30,7 @@ fn init() {
     };
 
     ic_websocket_cdk::init(WsInitParams::new(handlers));
+    // ffmpeg::init().unwrap();
 }
 
 #[ic_cdk::pre_upgrade]

@@ -1,5 +1,3 @@
-use std::time::{SystemTime, UNIX_EPOCH};
-
 use candid::CandidType;
 use serde::{Deserialize, Serialize};
 
@@ -24,10 +22,7 @@ impl Chat {
             id: primary_key::get_primary_key(PrimaryKeyType::Chat),
             content,
             username,
-            created_time_unix: SystemTime::now()
-                .duration_since(UNIX_EPOCH)
-                .expect("Time went backwards")
-                .as_millis(),
+            created_time_unix: ic_cdk::api::time() as u128,
         }
     }
 }
