@@ -27,6 +27,30 @@ interface MediaRecorders {
     camera: MediaRecorder | null;
 }
 
+interface RecordingStatus {
+    screen: boolean;
+    camera: boolean;
+}
+
+interface Elements {
+    container: HTMLElement | null;
+    video: HTMLElement | null;
+}
+
+interface VideoRefs {
+    screen: HTMLVideoElement | null;
+    camera: HTMLVideoElement | null;
+}
+
+interface VideoControlProps {
+    selectedCamera?: string;
+    cameraList: Option[];
+    enabledCamera: boolean;
+    enabledScreen: boolean;
+    isRecordingDisabled: boolean;
+    recordingPhaseText: string;
+}
+
 interface BaseDialogProps {
     open?: boolean;
     hideCloseButton?: boolean;
@@ -44,6 +68,10 @@ interface BaseSelectProps {
     options?: Option[];
 }
 
+interface BaseProgress {
+    modelValue: number;
+}
+
 interface Option {
     deviceId: string;
     name: string;
@@ -56,6 +84,11 @@ export type {
     BaseDialogProps,
     BaseDropdownProps,
     BaseSelectProps,
+    VideoControlProps,
+    BaseProgress,
     RecordedChunks,
     MediaRecorders,
+    RecordingStatus,
+    Elements,
+    VideoRefs,
 };

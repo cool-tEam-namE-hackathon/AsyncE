@@ -56,6 +56,11 @@ export const useGroupStore = defineStore("group", () => {
         return response;
     }
 
+    async function inviteUser(name: string) {
+        const response = await actor.value?.invite_user(name);
+        return response;
+    }
+
     return {
         currentGroup,
         groupList,
@@ -65,5 +70,6 @@ export const useGroupStore = defineStore("group", () => {
         getAllGroups,
         getGroup,
         createGroup,
+        inviteUser,
     };
 });

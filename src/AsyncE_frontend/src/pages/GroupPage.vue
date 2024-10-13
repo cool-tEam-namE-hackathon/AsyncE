@@ -1,6 +1,31 @@
 <template>
     <div class="container relative h-full">
+        <!-- UPLOAD PROGRESS MODAL -->
+        <base-dialog :open="isOpen" :hide-close-button="true">
+            <template #title>
+                <span class="text-lg font-semibold mb-4">
+                    Uploading Recordings
+                </span>
+            </template>
+            <template #content>
+                <div class="flex justify-between">
+                    <span>Screen Recording</span>
+                    <span>{{ screenProgress.toFixed(1) }}%</span>
+                </div>
+                <base-progress v-model="screenProgress" />
+
+                <div class="flex justify-between">
+                    <span>Camera Recording</span>
+                    <span>{{ cameraProgress.toFixed(1) }}%</span>
+                </div>
+                <base-progress v-model="cameraProgress" />
+            </template>
+        </base-dialog>
+
+        <!-- GROUP NAME -->
         <span> {{ currentGroup?.name }}</span>
+
+        <!-- MEDIA -->
         <div class="mx-auto py-8">
             <div class="flex flex-col lg:flex-row gap-8">
                 <!-- VIDEO -->
@@ -10,90 +35,83 @@
                             <h2 class="text-xl font-semibold">
                                 Record New Video
                             </h2>
-                            <div class="flex gap-3">
-                                <base-select
-                                    v-model="selectedCamera"
-                                    placeholder="Select camera"
-                                    :options="cameraList"
-                                />
-
-                                <Button
-                                    :variant="
-                                        enabledScreen ? 'default' : 'outline'
-                                    "
-                                    :disabled="isSharingDisabled"
-                                    @click="enabledScreen = !enabledScreen"
-                                >
-                                    <Icon
-                                        class="mr-2"
-                                        icon="gg:screen"
-                                        width="24"
-                                        height="24"
-                                    />
-                                    Screen
-                                </Button>
-                                <Button
-                                    :variant="
-                                        enabledCamera ? 'default' : 'outline'
-                                    "
-                                    :disabled="isSharingDisabled"
-                                    @click="enabledCamera = !enabledCamera"
-                                >
-                                    <Icon
-                                        class="mr-2"
-                                        icon="flowbite:video-camera-outline"
-                                        width="24"
-                                        height="24"
-                                    />
-                                    Camera
-                                </Button>
-                                <Button
-                                    :disabled="
-                                        !(enabledCamera && enabledScreen)
-                                    "
-                                    @click="handleRecord"
-                                >
-                                    <Icon
-                                        :class="[
-                                            recordingPhaseText === 'Stop'
-                                                ? 'text-red-500 animate-pulse'
-                                                : '',
-                                            'mr-2',
-                                        ]"
-                                        icon="fluent:record-20-regular"
-                                        width="24"
-                                        height="24"
-                                    />
-                                    {{ recordingPhaseText }}
-                                </Button>
-                            </div>
+                            <VideoControls
+                                v-model:selectedCamera="selectedCamera"
+                                :camera-list="cameraList"
+                                :enabled-camera="enabledCamera"
+                                :enabled-screen="enabledScreen"
+                                :is-recording-disabled="isRecordingDisabled"
+                                :recording-phase-text="recordingPhaseText"
+                                @on-toggle-camera="
+                                    enabledCamera = !enabledCamera
+                                "
+                                @on-toggle-screen="
+                                    enabledScreen = !enabledScreen
+                                "
+                                @on-record="handleRecord"
+                            />
                         </div>
+
+                        <!-- RESULT VIDEO -->
+                        <canvas
+                            ref="canvasRef"
+                            class="rounded-lg w-full hidden"
+                        ></canvas>
+
+                        <!-- NO CAMERA OR SCREEN YET -->
                         <div
-                            ref="containerEl"
-                            class="aspect-w-16 aspect-h-9 bg-gray-200 rounded-lg mb-4"
+                            v-if="!displayCamera && !displayStream"
+                            class="flex flex-col items-center justify-center bg-gray-200 rounded-lg h-96"
                         >
+                            <Icon
+                                icon="fluent:video-off-32-regular"
+                                width="64"
+                                height="64"
+                                style="color: black"
+                            />
+                            <p className="text-xl font-semibold">
+                                Video stream unavailable
+                            </p>
+                            <p className="text-sm mt-2">
+                                Please start your camera or screen share
+                            </p>
+                        </div>
+
+                        <div
+                            v-else
+                            ref="containerEl"
+                            class="bg-gray-200 rounded-lg mb-4 w-full relative overflow-hidden"
+                        >
+                            <!-- SCREEN -->
                             <video
                                 ref="videoRef"
-                                class="rounded-lg object-cover w-full max-w-full max-h-[1000px]"
-                                controls
+                                class="rounded-lg w-full h-full object-cover"
                                 autoplay
                                 muted
                             />
-                            <div
-                                ref="videoEl"
-                                :style="{
-                                    userSelect: 'none',
-                                    position: 'fixed',
-                                    top: `${restrictedY}px`,
-                                    left: `${restrictedX}px`,
-                                }"
-                            >
+
+                            <!-- CAMERA -->
+                            <div ref="videoEl">
                                 <video
                                     ref="cameraRef"
+                                    :class="[
+                                        enabledScreen
+                                            ? `select-none top-0 left-0`
+                                            : 'inset-0 w-full h-full object-cover',
+                                        'absolute',
+                                    ]"
+                                    :width="
+                                        enabledScreen
+                                            ? cameraDimensions.width
+                                            : 'auto'
+                                    "
+                                    :height="
+                                        enabledScreen
+                                            ? cameraDimensions.height
+                                            : 'auto'
+                                    "
                                     muted
                                     autoplay
-                                    :width="cameraDimensions.width"
-                                    :height="cameraDimensions.height"
                                 />
                             </div>
                         </div>
@@ -102,16 +120,19 @@
             </div>
         </div>
     </div>
+
+    <video v-if="url" autoplay muted controls>
+        <source :src="url" type="video/webm" />
+        Your browser does not support the video tag.
+    </video>
 </template>
 
 <script setup lang="ts">
-import { ref, watchEffect, computed } from "vue";
+import { ref, watchEffect, computed, onMounted } from "vue";
 
 import { useRoute } from "vue-router";
 import { useGroupStore } from "@stores/group-store";
 import { storeToRefs } from "pinia";
-
-import { Icon } from "@iconify/vue";
 
 import {
     useDisplayMedia,
@@ -123,51 +144,68 @@ import {
     clamp,
 } from "@vueuse/core";
 
-import BaseSelect from "@components/shared/BaseSelect.vue";
+import { Icon } from "@iconify/vue";
 
-import { Button } from "@components/ui/button";
+import VideoControls from "@components/VideoControls.vue";
 
-import { MediaRecorders, RecordedChunks, Video } from "@/types/api/model";
+import BaseDialog from "@/components/shared/BaseDialog.vue";
+import BaseProgress from "@/components/shared/BaseProgress.vue";
+
+import { RecordedChunks } from "@/types/api/model";
+import { generateUUID, createChunks } from "@/utils/helpers";
 
 const route = useRoute();
 const groupStore = useGroupStore();
 
 const selectedCamera = ref<string>();
+const uploadedChunk = ref<{
+    screen: number;
+    camera: number;
+}>({
+    screen: 0,
+    camera: 0,
+});
+const totalUploadSize = ref<{
+    screen: number;
+    camera: number;
+}>({
+    screen: 0,
+    camera: 0,
+});
 
-const isScreenRecording = ref<boolean>(false);
-const isCameraRecording = ref<boolean>(false);
+const isOpen = ref<boolean>(false);
 
-const videoRef = ref<HTMLVideoElement>();
-const cameraRef = ref<HTMLVideoElement>();
+const url = ref<string>("");
+
+const canvasRef = ref<HTMLCanvasElement | null>(null);
+const ctx = ref<CanvasRenderingContext2D | null>(null);
+const videoRef = ref<HTMLVideoElement | null>(null);
+const cameraRef = ref<HTMLVideoElement | null>(null);
+const animationFrameId = ref<number | null>(null);
 
 const containerEl = ref<HTMLElement | null>(null);
 const videoEl = ref<HTMLElement | null>(null);
 
-const recordedChunks = ref<RecordedChunks>({
-    screen: [],
-    camera: [],
-});
-const mediaRecorders = ref<MediaRecorders>({
-    screen: null,
-    camera: null,
-});
-
-const recordedVideo = ref<Video>({
-    screen: null,
-    camera: null,
-});
+const mediaRecorder = ref<MediaRecorder | null>(null);
+const isRecording = ref<boolean>(false);
+const recordedChunks = ref<Blob[]>([]);
+const recordedVideo = ref<Uint8Array | null>(null);
 
 const { currentGroup } = storeToRefs(groupStore);
 
-const { enabled: enabledScreen, stream: displayStream } = useDisplayMedia();
+const { enabled: enabledScreen, stream: displayStream } = useDisplayMedia({
+    audio: true,
+});
 
 const { videoInputs: cameras, audioInputs: microphones } = useDevicesList({
     requestPermissions: true,
 });
 
+const currentMicrophone = computed(() => microphones.value[0]?.deviceId);
 const { stream: displayCamera, enabled: enabledCamera } = useUserMedia({
     constraints: {
         video: { deviceId: selectedCamera },
+        audio: { deviceId: currentMicrophone },
     },
 });
 
@@ -175,7 +213,9 @@ const { left, right, top, bottom } = useElementBounding(containerEl);
 const { width, height } = useElementBounding(videoEl);
 const { width: screenWidth, height: screenHeight } =
     useElementSize(containerEl);
-const { x, y } = useDraggable(videoEl);
+const { x, y } = useDraggable(videoEl, {
+    initialValue: { x: 450, y: 900 },
+});
 
 const restrictedX = computed(() =>
     clamp(left.value, x.value, right.value - width.value),
@@ -184,8 +224,8 @@ const restrictedY = computed(() =>
     clamp(top.value, y.value, bottom.value - height.value),
 );
 
-const isSharingDisabled = computed(() => {
-    return isCameraRecording.value || isScreenRecording.value;
+const isRecordingDisabled = computed(() => {
+    return !enabledCamera.value && !enabledScreen.value;
 });
 
 const cameraList = computed(() => {
@@ -196,13 +236,10 @@ const cameraList = computed(() => {
 });
 
 const recordingPhaseText = computed(() => {
-    if (isScreenRecording.value || isCameraRecording.value) {
+    if (isRecording.value) {
         return "Stop";
     }
-    return recordedChunks.value.camera.length > 0 ||
-        recordedChunks.value.screen.length > 0
-        ? "Save"
-        : "Record";
+    return recordedChunks.value.length > 0 ? "Save" : "Record";
 });
 
 const cameraDimensions = computed(() => {
@@ -212,58 +249,101 @@ const cameraDimensions = computed(() => {
     };
 });
 
-function startRecording(type: keyof MediaRecorders) {
-    const mediaStream =
-        type === "screen" ? displayStream.value : displayCamera.value;
+const cameraProgress = computed(() => {
+    return (
+        (uploadedChunk.value.camera / totalUploadSize.value.camera) * 100 || 0
+    );
+});
 
-    if (!mediaStream) return;
+const screenProgress = computed(() => {
+    return (
+        (uploadedChunk.value.screen / totalUploadSize.value.screen) * 100 || 0
+    );
+});
 
-    mediaRecorders.value[type] = new MediaRecorder(mediaStream);
+function startRecording() {
+    if (!canvasRef.value) return;
 
-    mediaRecorders.value[type].ondataavailable = (e) => {
+    const canvasStream = canvasRef.value.captureStream(60);
+    const audioTrack = displayCamera.value?.getAudioTracks()[0];
+
+    if (!audioTrack) return;
+
+    const combinedStream = new MediaStream([
+        ...canvasStream.getVideoTracks(),
+        audioTrack,
+    ]);
+
+    mediaRecorder.value = new MediaRecorder(combinedStream);
+
+    mediaRecorder.value.ondataavailable = (e) => {
         if (e.data.size > 0) {
-            recordedChunks.value[type].push(e.data);
+            recordedChunks.value.push(e.data);
         }
     };
 
-    mediaRecorders.value[type].start();
+    mediaRecorder.value.start();
+    isRecording.value = true;
+}
 
-    if (type === "screen") {
-        isScreenRecording.value = true;
-    } else {
-        isCameraRecording.value = true;
+function stopRecording() {
+    if (!mediaRecorder.value) return;
+
+    mediaRecorder.value.stop();
+    isRecording.value = false;
+}
+
+async function sendPerChunk(chunk: Uint8Array, index: number, fileId: string) {
+    return new Promise<void>((resolve) => {
+        setTimeout(() => {
+            // Simulate upload action
+            console.log(`Uploaded chunk ${index + 1}`);
+            resolve();
+        }, 500);
+    });
+}
+
+async function prepareChunks(
+    videoData: Uint8Array,
+    type: keyof RecordedChunks,
+) {
+    const chunkSize = 1024 * 1024; // 1 mb
+    const chunks = createChunks(videoData, chunkSize);
+
+    const fileId = generateUUID();
+
+    uploadedChunk.value[type] = 0;
+
+    for (let i = 0; i < chunks.length; i++) {
+        const chunk = chunks[i];
+
+        await sendPerChunk(chunk, i, fileId);
+
+        uploadedChunk.value[type] += chunk.byteLength;
     }
 }
 
-function stopRecording(type: keyof MediaRecorders) {
-    if (!mediaRecorders.value[type]) return;
+async function saveRecording() {
+    const blob = new Blob(recordedChunks.value, { type: "video/webm" });
+    recordedVideo.value = new Uint8Array(await blob.arrayBuffer());
 
-    mediaRecorders.value[type].stop();
+    url.value = URL.createObjectURL(blob);
+    // totalUploadSize.value[type] = recordedVideo.value[type].byteLength;
+    // await prepareChunks(recordedVideo.value[type], type);
 
-    if (type === "screen") {
-        isScreenRecording.value = false;
-    } else {
-        isCameraRecording.value = false;
-    }
-}
-
-async function saveRecording(type: keyof RecordedChunks) {
-    const blob = new Blob(recordedChunks.value[type], { type: "video/webm" });
-    recordedVideo.value[type] = new Uint8Array(await blob.arrayBuffer());
-
-    recordedChunks.value[type] = [];
+    recordedChunks.value = [];
 }
 
 async function handleRecord() {
     if (recordingPhaseText.value === "Record") {
-        startRecording("screen");
-        startRecording("camera");
+        startRecording();
     } else if (recordingPhaseText.value === "Stop") {
-        stopRecording("screen");
-        stopRecording("camera");
+        stopRecording();
     } else {
-        await Promise.all([saveRecording("screen"), saveRecording("camera")]);
-        uploadRecording();
+        // isOpen.value = true;
+        await saveRecording();
+        // isOpen.value = false;
+        // uploadRecording();
     }
 }
 async function fetchGroupDetails() {
@@ -273,38 +353,101 @@ async function fetchGroupDetails() {
     await groupStore.getGroup(groupId);
 }
 
-async function uploadRecording() {
-    const { id } = route.params;
-    const groupId = BigInt(id as string);
-
-    if (!recordedVideo.value.screen || !recordedVideo.value.camera) {
-        return;
-    }
-
-    const payload = {
-        id: groupId,
-        screen: recordedVideo.value.screen,
-        camera: recordedVideo.value.camera,
-    };
-
-    const response = await groupStore.addVideo(payload);
+async function inviteUser() {
+    const response = await groupStore.inviteUser("Dylan123");
 
     console.log(response);
 }
+
+// async function uploadRecording() {
+//     const { id } = route.params;
+//     const groupId = BigInt(id as string);
+
+//     if (!recordedVideo.value.screen || !recordedVideo.value.camera) {
+//         return;
+//     }
+
+//     const payload = {
+//         id: groupId,
+//         screen: recordedVideo.value.screen,
+//         camera: recordedVideo.value.camera,
+//     };
+
+//     const response = await groupStore.addVideo(payload);
+
+//     console.log(response);
+// }
+
+function startDrawing() {
+    if (!ctx.value) return;
+
+    const draw = () => {
+        if (!ctx.value || !canvasRef.value) return;
+        ctx.value.clearRect(
+            0,
+            0,
+            canvasRef.value.width,
+            canvasRef.value.height,
+        );
+
+        // Draw screen capture
+        if (enabledScreen.value && displayStream.value) {
+            const screenVideo = videoRef.value;
+            if (screenVideo) {
+                ctx.value.drawImage(
+                    screenVideo,
+                    0,
+                    0,
+                    canvasRef.value.width,
+                    canvasRef.value.height,
+                );
+            }
+        }
+
+        // Draw camera feed
+        if (enabledCamera.value && displayCamera.value) {
+            const cameraVideo = cameraRef.value;
+            if (cameraVideo) {
+                ctx.value.drawImage(
+                    cameraVideo,
+                    x.value,
+                    y.value,
+                    cameraDimensions.value.width,
+                    cameraDimensions.value.height,
+                );
+            }
+        }
+
+        animationFrameId.value = requestAnimationFrame(draw);
+    };
+
+    draw();
+}
+
+onMounted(() => {
+    if (canvasRef.value) {
+        canvasRef.value.width = 1920;
+        canvasRef.value.height = 1080;
+        ctx.value = canvasRef.value.getContext("2d");
+        startDrawing();
+    }
+});
 
 watchEffect(() => {
     if (videoRef.value) {
         videoRef.value.srcObject = displayStream.value!;
     }
-
     if (cameraRef.value) {
         cameraRef.value.srcObject = displayCamera.value!;
     }
 });
 
 async function init() {
+    // inviteUser();
     await fetchGroupDetails();
 }
 
 await init();
 </script>
+
+<style scoped></style>
