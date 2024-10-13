@@ -12,6 +12,7 @@
         </router-view>
         <Footer />
 
+        <!-- REGISTER -->
         <base-dialog :open="isOpen" :hide-close-button="true">
             <template #title> Input your username </template>
 
@@ -103,8 +104,6 @@ function onFileInput(e: Event) {
 async function init() {
     await userStore.init();
     isInitialized.value = true;
-
-    console.log("is auth", isAuthenticated.value);
 }
 
 onMounted(() => {
