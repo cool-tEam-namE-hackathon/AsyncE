@@ -81,7 +81,7 @@ async function register() {
     }
 
     const payload: User = {
-        username: [username.value],
+        username: username.value,
         profile_picture_blob: new Uint8Array(
             await imageBlob.value.arrayBuffer(),
         ),

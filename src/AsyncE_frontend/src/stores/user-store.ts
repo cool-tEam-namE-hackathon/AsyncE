@@ -11,6 +11,7 @@ import { ActorSubclass, Identity } from "@dfinity/agent";
 import { User } from "@/types/api/model";
 import { _SERVICE } from "@declarations/AsyncE_backend/AsyncE_backend.did";
 import { blobToURL } from "@/utils/helpers";
+import { MB } from "@/data/user-constants";
 
 import IcWebSocket, {
     generateRandomIdentity,
@@ -102,21 +103,35 @@ export const useUserStore = defineStore("user", () => {
     }
 
     async function register(payload: User) {
-        const response = await actor.value?.register(payload);
+        await actor.value?.register(payload.username);
 
-        return response;
+        for (let i = 0; i < Math.ceil(payload.profile_picture_blob.length / MB); ++i) {
+            const start = i * MB;
+            const end = Math.min(start + MB, payload.profile_picture_blob.length);
+            const chunk = payload.profile_picture_blob.slice(start, end);
+            await actor.value?.upload_profile_picture(chunk);
+        }
     }
 
     async function getUserCredentials() {
         const response = await actor.value?.get_user_credentials();
-        if (response) {
-            username.value = response[0]?.username[0];
+        if (response?.length) {
+            username.value = response[0];
 
-            if (response[0]?.profile_picture_blob) {
-                profilePicture.value = blobToURL(
-                    response[0]?.profile_picture_blob,
-                );
-            }
+            actor.value?.get_profile_picture_size()!.then(async (profilePictureBlobSizeBigint) => {
+                const profilePictureBlobSize = Number(profilePictureBlobSizeBigint);
+                const profilePictureData = new Uint8Array(profilePictureBlobSize);
+
+                const promises = [];
+                for (let i = 0; i < Math.ceil(profilePictureBlobSize / MB); ++i) {
+                    promises.push(actor.value?.get_profile_picture_chunk_blob(BigInt(i)).then((chunk) => {
+                        profilePictureData.set(chunk, i * MB);
+                    }));
+                }
+
+                await Promise.all(promises);
+                profilePicture.value = blobToURL(profilePictureData);
+            })
         }
         return response;
     }

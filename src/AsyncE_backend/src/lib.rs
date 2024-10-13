@@ -1,6 +1,7 @@
 #![allow(non_snake_case)]
 
 pub mod chat;
+pub mod chunk;
 pub mod globals;
 pub mod group;
 pub mod invite;
@@ -9,7 +10,9 @@ pub mod user;
 pub mod video;
 pub mod websocket;
 
-use crate::{chat::Chat, group::Group, user::User, video::Video, websocket::WebsocketEventMessage};
+use crate::{
+    chat::Chat, group::GroupQueryResponse, video::Video, websocket::WebsocketEventMessage,
+};
 use globals::{CHATS, GROUPS, GROUP_INVITES, PRIMARY_KEY_CONTAINERS, USERS, VIDEOS};
 use ic_websocket_cdk::{
     CanisterWsCloseArguments, CanisterWsCloseResult, CanisterWsGetMessagesArguments,
