@@ -9,6 +9,7 @@ use crate::globals::PRIMARY_KEY_CONTAINERS;
 pub enum PrimaryKeyType {
     Group,
     Video,
+    Chat,
 }
 
 pub type PrimaryKeyContainer = BTreeMap<PrimaryKeyType, u128>;

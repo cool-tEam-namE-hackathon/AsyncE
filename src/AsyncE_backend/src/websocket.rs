@@ -9,22 +9,17 @@ use ic_websocket_cdk::{
 };
 use serde::{Deserialize, Serialize};
 
-thread_local! {
-    pub static CLIENTS: RefCell<HashSet<ClientPrincipal>> = RefCell::default();
-}
+use crate::{chat::Chat, globals::WEBSOCKET_CLIENTS};
 
-#[derive(CandidType, Clone, Debug, Deserialize, Serialize, Eq, PartialEq)]
+#[derive(CandidType, Clone, Debug, Deserialize, Serialize)]
 pub enum WebsocketEventMessageData {
-    #[serde(rename = "ping")]
     Ping,
-
-    #[serde(rename = "group_invited")]
     GroupInvited(String),
+    AddChat(Chat),
 }
 
-#[derive(CandidType, Clone, Debug, Deserialize, Serialize, Eq, PartialEq)]
+#[derive(CandidType, Clone, Debug, Deserialize, Serialize)]
 pub struct WebsocketEventMessage {
-    #[serde(rename = "type")]
     pub ty: String,
     pub data: WebsocketEventMessageData,
 }
@@ -45,6 +40,13 @@ impl WebsocketEventMessage {
         Self {
             ty: String::from("ping"),
             data: WebsocketEventMessageData::Ping,
+        }
+    }
+
+    pub fn new_chat(chat: Chat) -> Self {
+        Self {
+            ty: String::from("add_chat"),
+            data: WebsocketEventMessageData::AddChat(chat),
         }
     }
 }
@@ -73,17 +75,11 @@ fn ws_get_messages(args: CanisterWsGetMessagesArguments) -> CanisterWsGetMessage
 }
 
 pub fn on_open(args: OnOpenCallbackArgs) {
-    ic_cdk::println!("Client connected");
-    CLIENTS.with_borrow_mut(|clients| clients.insert(args.client_principal));
+    let msg = WebsocketEventMessage::new_ping();
+    send_websocket_message(args.client_principal, msg);
 
-    CLIENTS.with_borrow(|clients| {
-        for &client_principal in clients.iter() {
-            send_app_message(
-                client_principal,
-                WebsocketEventMessage::new_group_invited("lol"),
-            );
-        }
-    })
+    WEBSOCKET_CLIENTS
+        .with_borrow_mut(|websocket_clients| websocket_clients.insert(args.client_principal));
 }
 
 pub fn on_message(args: OnMessageCallbackArgs) {
@@ -92,15 +88,30 @@ pub fn on_message(args: OnMessageCallbackArgs) {
     // send_app_message(args.client_principal, new_msg)
 }
 
-fn send_app_message(client_principal: ClientPrincipal, msg: WebsocketEventMessage) {
-    ic_cdk::println!("Sending message: {:?}", msg);
+pub fn broadcast_websocket_message(msg: WebsocketEventMessage) {
+    WEBSOCKET_CLIENTS.with_borrow(|websocket_clients| {
+        for &client_principal in websocket_clients.iter() {
+            send_websocket_message(client_principal, msg.clone());
+        }
+    })
+}
+
+pub fn send_websocket_message(client_principal: ClientPrincipal, msg: WebsocketEventMessage) {
+    ic_cdk::println!("Sending message to {}: {:?}", client_principal, msg);
 
     if let Err(e) = ic_websocket_cdk::send(client_principal, msg.candid_serialize()) {
-        ic_cdk::println!("Could not send message: {}", e);
+        ic_cdk::println!(
+            "Could not send message to {} with payload: {:?}: {}",
+            client_principal,
+            msg,
+            e
+        );
     }
 }
 
 pub fn on_close(args: OnCloseCallbackArgs) {
     ic_cdk::println!("Client {} disconnected", args.client_principal);
-    CLIENTS.with_borrow_mut(|clients| clients.remove(&args.client_principal));
+
+    WEBSOCKET_CLIENTS
+        .with_borrow_mut(|websocket_clients| websocket_clients.remove(&args.client_principal));
 }
