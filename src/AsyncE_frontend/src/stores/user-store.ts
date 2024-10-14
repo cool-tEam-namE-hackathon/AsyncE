@@ -7,7 +7,7 @@ import {
 } from "@declarations/AsyncE_backend/index";
 
 import { AuthClient } from "@dfinity/auth-client";
-import { ActorSubclass, Identity } from "@dfinity/agent";
+import { ActorSubclass, Identity, SignIdentity } from "@dfinity/agent";
 import { User } from "@/types/api/model";
 import {
     _SERVICE,
@@ -152,16 +152,17 @@ export const useUserStore = defineStore("user", () => {
         const gatewayUrl = "ws://127.0.0.1:8080";
         const icUrl = "http://127.0.0.1:4943";
 
-        const wsConfig = createWsConfig<_SERVICE>({
+        const wsConfig = createWsConfig({
             canisterId: backendCanisterId,
             canisterActor: actor.value!,
-            identity: generateRandomIdentity(),
+            identity: identity.value! as SignIdentity,
             networkUrl: icUrl,
         });
 
         ws.value = new IcWebSocket(gatewayUrl, undefined, wsConfig);
 
         ws.value.onopen = () => {
+            console.log("Add chat")
             ws.value?.send({
                 AddChat: {
                     id: BigInt(0),

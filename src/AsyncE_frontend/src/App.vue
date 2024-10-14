@@ -107,19 +107,6 @@ async function init() {
     isInitialized.value = true;
 
     await userStore.setWebsockets();
-
-    console.log(ws.value);
-
-    console.log(
-        ws.value?.send({
-            AddChat: {
-                id: BigInt(0),
-                username: "",
-                created_time_unix: BigInt(0),
-                content: "",
-            },
-        }),
-    );
 }
 
 onMounted(() => {
