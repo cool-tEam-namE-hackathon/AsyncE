@@ -74,7 +74,7 @@ service : {
     upload_video: (nat, nat, blob, bool) -> ();
     concat_video: (nat, nat, blob, blob) -> ();
 
-    invite_user: (text) -> ();
+    invite_user: (nat, text) -> ();
     get_self_group_invites: () -> (vec nat) query;
     update_group_invite: (nat, bool) -> ();
 

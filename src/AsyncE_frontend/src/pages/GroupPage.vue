@@ -361,6 +361,9 @@ async function fetchGroupDetails() {
 }
 
 async function inviteUser() {
+    const { id } = route.params;
+    const groupId = BigInt(id as string);
+
     const response = await groupStore.inviteUser("Dylan123");
 
     console.log(response);

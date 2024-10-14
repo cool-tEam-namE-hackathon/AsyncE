@@ -109,8 +109,8 @@ export const useGroupStore = defineStore("group", () => {
         }
     }
 
-    async function inviteUser(name: string) {
-        const response = await actor.value?.invite_user(name);
+    async function inviteUser(id: bigint, name: string) {
+        const response = await actor.value?.invite_user(id, name);
         return response;
     }
 
