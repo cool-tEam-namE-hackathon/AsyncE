@@ -138,10 +138,7 @@ import {
     useDisplayMedia,
     useUserMedia,
     useDevicesList,
-    useDraggable,
-    useElementBounding,
     useElementSize,
-    clamp,
 } from "@vueuse/core";
 
 import { Icon } from "@iconify/vue";
@@ -173,22 +170,23 @@ const totalUploadSize = ref<{
     camera: 0,
 });
 
-const isOpen = ref<boolean>(false);
+const animationFrameId = ref<number | null>(null);
 
 const url = ref<string>("");
 
-const canvasRef = ref<HTMLCanvasElement | null>(null);
-const ctx = ref<CanvasRenderingContext2D | null>(null);
-const videoRef = ref<HTMLVideoElement | null>(null);
-const cameraRef = ref<HTMLVideoElement | null>(null);
-const animationFrameId = ref<number | null>(null);
+const isRecording = ref<boolean>(false);
+const isOpen = ref<boolean>(false);
 
+const recordedChunks = ref<Blob[]>([]);
+
+const ctx = ref<CanvasRenderingContext2D | null>(null);
+const canvasRef = ref<HTMLCanvasElement | null>(null);
 const containerEl = ref<HTMLElement | null>(null);
 const videoEl = ref<HTMLElement | null>(null);
+const videoRef = ref<HTMLVideoElement | null>(null);
+const cameraRef = ref<HTMLVideoElement | null>(null);
 
 const mediaRecorder = ref<MediaRecorder | null>(null);
-const isRecording = ref<boolean>(false);
-const recordedChunks = ref<Blob[]>([]);
 const recordedVideo = ref<Uint8Array | null>(null);
 
 const { currentGroup } = storeToRefs(groupStore);
@@ -202,6 +200,7 @@ const { videoInputs: cameras, audioInputs: microphones } = useDevicesList({
 });
 
 const currentMicrophone = computed(() => microphones.value[0]?.deviceId);
+
 const { stream: displayCamera, enabled: enabledCamera } = useUserMedia({
     constraints: {
         video: { deviceId: selectedCamera },
@@ -209,20 +208,8 @@ const { stream: displayCamera, enabled: enabledCamera } = useUserMedia({
     },
 });
 
-const { left, right, top, bottom } = useElementBounding(containerEl);
-const { width, height } = useElementBounding(videoEl);
 const { width: screenWidth, height: screenHeight } =
     useElementSize(containerEl);
-const { x, y } = useDraggable(videoEl, {
-    initialValue: { x: 450, y: 900 },
-});
-
-const restrictedX = computed(() =>
-    clamp(left.value, x.value, right.value - width.value),
-);
-const restrictedY = computed(() =>
-    clamp(top.value, y.value, bottom.value - height.value),
-);
 
 const isRecordingDisabled = computed(() => {
     return !enabledCamera.value && !enabledScreen.value;
@@ -267,13 +254,16 @@ function startRecording() {
     if (!canvasRef.value) return;
 
     const canvasStream = canvasRef.value.captureStream(60);
-    const audioTrack = displayCamera.value?.getAudioTracks()[0];
+    const audioTracks = [
+        displayCamera.value?.getAudioTracks()[0],
+        displayStream.value?.getAudioTracks()[0],
+    ];
 
-    if (!audioTrack) return;
+    const validAudioTracks = audioTracks.filter(Boolean);
 
     const combinedStream = new MediaStream([
         ...canvasStream.getVideoTracks(),
-        audioTrack,
+        ...(validAudioTracks as MediaStreamTrack[]),
     ]);
 
     mediaRecorder.value = new MediaRecorder(combinedStream);

@@ -8,6 +8,7 @@
         />
         <Button
             :variant="enabledCamera ? 'default' : 'outline'"
+            :disabled="!selectedCamera"
             @click="emits('on-toggle-camera')"
         >
             <Icon class="mr-2" icon="lucide:camera" width="24" height="24" />
