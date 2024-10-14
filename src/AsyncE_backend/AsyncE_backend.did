@@ -37,6 +37,7 @@ type VideoFrame = record {
 
 type Chat = record {
     id: nat;
+    group_id: nat;
     content: text;
     username: text;
     created_time_unix: nat;

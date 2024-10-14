@@ -64,6 +64,7 @@ import { User } from "./types/api/model";
 
 const userStore = useUserStore();
 const { isAuthenticated } = storeToRefs(userStore);
+const { ws } = storeToRefs(userStore);
 
 const isOpen = ref<boolean>(false);
 const isInitialized = ref<boolean>(false);
@@ -104,6 +105,21 @@ function onFileInput(e: Event) {
 async function init() {
     await userStore.init();
     isInitialized.value = true;
+
+    await userStore.setWebsockets();
+
+    console.log(ws.value);
+
+    console.log(
+        ws.value?.send({
+            AddChat: {
+                id: BigInt(0),
+                username: "",
+                created_time_unix: BigInt(0),
+                content: "",
+            },
+        }),
+    );
 }
 
 onMounted(() => {

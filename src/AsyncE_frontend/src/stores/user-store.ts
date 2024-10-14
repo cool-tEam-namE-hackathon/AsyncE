@@ -9,7 +9,10 @@ import {
 import { AuthClient } from "@dfinity/auth-client";
 import { ActorSubclass, Identity } from "@dfinity/agent";
 import { User } from "@/types/api/model";
-import { _SERVICE } from "@declarations/AsyncE_backend/AsyncE_backend.did";
+import {
+    _SERVICE,
+    WebsocketEventMessage,
+} from "@declarations/AsyncE_backend/AsyncE_backend.did";
 import { blobToURL } from "@/utils/helpers";
 import { MB } from "@/data/user-constants";
 
@@ -25,6 +28,8 @@ const actor = ref<ActorSubclass<_SERVICE> | null>();
 
 const username = ref<string | null>();
 const profilePicture = ref<string>("");
+
+const ws = ref<IcWebSocket<_SERVICE, WebsocketEventMessage>>();
 
 export const getIdentityProvider = () => {
     let idpProvider;
@@ -105,9 +110,16 @@ export const useUserStore = defineStore("user", () => {
     async function register(payload: User) {
         await actor.value?.register(payload.username);
 
-        for (let i = 0; i < Math.ceil(payload.profile_picture_blob.length / MB); ++i) {
+        for (
+            let i = 0;
+            i < Math.ceil(payload.profile_picture_blob.length / MB);
+            ++i
+        ) {
             const start = i * MB;
-            const end = Math.min(start + MB, payload.profile_picture_blob.length);
+            const end = Math.min(
+                start + MB,
+                payload.profile_picture_blob.length,
+            );
             const chunk = payload.profile_picture_blob.slice(start, end);
             await actor.value?.upload_profile_picture(chunk);
         }
@@ -118,14 +130,17 @@ export const useUserStore = defineStore("user", () => {
         if (response?.length) {
             username.value = response[0];
 
-            const profilePictureBlobSizeBigint = await actor.value?.get_profile_picture_size()!;
+            const profilePictureBlobSizeBigint =
+                await actor.value?.get_profile_picture_size()!;
             const profilePictureBlobSize = Number(profilePictureBlobSizeBigint);
             const profilePictureData = new Uint8Array(profilePictureBlobSize);
 
             for (let i = 0; i < Math.ceil(profilePictureBlobSize / MB); ++i) {
-                await actor.value?.get_profile_picture_chunk_blob(BigInt(i)).then((chunk) => {
-                    profilePictureData.set(chunk, i * MB);
-                });
+                await actor.value
+                    ?.get_profile_picture_chunk_blob(BigInt(i))
+                    .then((chunk) => {
+                        profilePictureData.set(chunk, i * MB);
+                    });
             }
 
             profilePicture.value = blobToURL(profilePictureData);
@@ -144,27 +159,35 @@ export const useUserStore = defineStore("user", () => {
             networkUrl: icUrl,
         });
 
-        const ws = new IcWebSocket(gatewayUrl, undefined, wsConfig);
+        ws.value = new IcWebSocket(gatewayUrl, undefined, wsConfig);
 
-        ws.onopen = () => {
-            console.log("Connected to the canister");
+        ws.value.onopen = () => {
+            ws.value?.send({
+                AddChat: {
+                    id: BigInt(0),
+                    username: "",
+                    created_time_unix: BigInt(0),
+                    content: "",
+                    group_id: BigInt(0),
+                },
+            });
         };
 
-        ws.onmessage = async (event) => {
+        ws.value.onmessage = async (event) => {
             console.log("Received message:", event.data);
 
             const message = event.data;
             switch (true) {
-                case 'AddChat' in message:
+                case "AddChat" in message:
                     const chatData = message.AddChat;
                     console.log(chatData);
                     break;
 
-                case 'Ping' in message:
+                case "Ping" in message:
                     console.log("Received a Ping");
                     break;
 
-                case 'GroupInvited' in message:
+                case "GroupInvited" in message:
                     const group = message.GroupInvited;
                     console.log(`Group invited: ${group}`);
                     break;
@@ -174,11 +197,11 @@ export const useUserStore = defineStore("user", () => {
             }
         };
 
-        ws.onclose = () => {
+        ws.value.onclose = () => {
             console.log("Disconnected from the canister");
         };
 
-        ws.onerror = (error) => {
+        ws.value.onerror = (error) => {
             console.log("Error:", error);
         };
     }
@@ -187,6 +210,7 @@ export const useUserStore = defineStore("user", () => {
         isAuthenticated,
         identity,
         actor,
+        ws,
         username,
         profilePicture,
 

@@ -37,21 +37,39 @@ export const useGroupStore = defineStore("group", () => {
                 const group = convertGroupFromResponse(groupResponse);
                 groupList.value.push(group);
 
-                await actor.value?.get_group_profile_picture_size(group.id)!.then(async (groupPictureBlobSizeBigInt) => {
-                    const profilePictureBlobSize = Number(groupPictureBlobSizeBigInt);
-                    const profilePictureData = new Uint8Array(profilePictureBlobSize);
+                await actor.value
+                    ?.get_group_profile_picture_size(group.id)!
+                    .then(async (groupPictureBlobSizeBigInt) => {
+                        const profilePictureBlobSize = Number(
+                            groupPictureBlobSizeBigInt,
+                        );
+                        const profilePictureData = new Uint8Array(
+                            profilePictureBlobSize,
+                        );
 
-                    const promises = [];
-                    for (let i = 0; i < Math.ceil(profilePictureBlobSize / MB); ++i) {
-                        promises.push(actor.value?.get_group_profile_picture_chunk_blob(group.id, BigInt(i)).then((chunk) => {
-                            profilePictureData.set(chunk, i * MB);
-                        }));
-                    }
+                        const promises = [];
+                        for (
+                            let i = 0;
+                            i < Math.ceil(profilePictureBlobSize / MB);
+                            ++i
+                        ) {
+                            promises.push(
+                                actor.value
+                                    ?.get_group_profile_picture_chunk_blob(
+                                        group.id,
+                                        BigInt(i),
+                                    )
+                                    .then((chunk) => {
+                                        profilePictureData.set(chunk, i * MB);
+                                    }),
+                            );
+                        }
 
-                    await Promise.all(promises);
+                        await Promise.all(promises);
 
-                    groupList.value[i].profile_picture_blob = profilePictureData;
-                });
+                        groupList.value[i].profile_picture_blob =
+                            profilePictureData;
+                    });
             }
         }
     }
@@ -62,7 +80,9 @@ export const useGroupStore = defineStore("group", () => {
         name: string;
         picture: Uint8Array;
     }) {
-        const groupId = await actor.value?.create_group(name)!;
+        const groupId = await actor.value?.create_group(name);
+
+        if (!groupId) return;
 
         for (let i = 0; i < Math.ceil(picture.length / MB); ++i) {
             const start = i * MB;
@@ -77,37 +97,62 @@ export const useGroupStore = defineStore("group", () => {
         if (response) {
             currentGroup.value = convertGroupFromResponse(response[0]!);
 
-            await actor.value?.get_group_profile_picture_size(currentGroup.value.id)!.then(async (groupPictureBlobSizeBigInt) => {
-                const profilePictureBlobSize = Number(groupPictureBlobSizeBigInt);
-                const profilePictureData = new Uint8Array(profilePictureBlobSize);
+            await actor.value
+                ?.get_group_profile_picture_size(currentGroup.value.id)!
+                .then(async (groupPictureBlobSizeBigInt) => {
+                    const profilePictureBlobSize = Number(
+                        groupPictureBlobSizeBigInt,
+                    );
+                    const profilePictureData = new Uint8Array(
+                        profilePictureBlobSize,
+                    );
 
-                const promises = [];
-                for (let i = 0; i < Math.ceil(profilePictureBlobSize / MB); ++i) {
-                    promises.push(actor.value?.get_group_profile_picture_chunk_blob(currentGroup.value!.id, BigInt(i)).then((chunk) => {
-                        profilePictureData.set(chunk, i * MB);
-                    }));
-                }
+                    const promises = [];
+                    for (
+                        let i = 0;
+                        i < Math.ceil(profilePictureBlobSize / MB);
+                        ++i
+                    ) {
+                        promises.push(
+                            actor.value
+                                ?.get_group_profile_picture_chunk_blob(
+                                    currentGroup.value!.id,
+                                    BigInt(i),
+                                )
+                                .then((chunk) => {
+                                    profilePictureData.set(chunk, i * MB);
+                                }),
+                        );
+                    }
 
-                await Promise.all(promises);
+                    await Promise.all(promises);
 
-                currentGroup.value!.profile_picture_blob = profilePictureData;
-            });
+                    currentGroup.value!.profile_picture_blob =
+                        profilePictureData;
+                });
         }
 
         return response;
     }
 
-    async function addVideo(data: Uint8Array) {
-        const videoId = await actor.value?.create_video(currentGroup.value?.id!)!;
-        const totalChunks = Math.ceil(data.length / MB);
+    // async function addVideo(data: Uint8Array) {
+    //     const videoId = await actor.value?.create_video(
+    //         currentGroup.value?.id!,
+    //     );
+    //     const totalChunks = Math.ceil(data.length / MB);
 
-        for (let i = 0; i < totalChunks; ++i) {
-            const start = i * MB;
-            const end = Math.min(start + MB, data.length);
-            const chunk = data.slice(start, end);
-            await actor.value?.upload_video(currentGroup.value?.id!, videoId, chunk, i == totalChunks - 1);
-        }
-    }
+    //     for (let i = 0; i < totalChunks; ++i) {
+    //         const start = i * MB;
+    //         const end = Math.min(start + MB, data.length);
+    //         const chunk = data.slice(start, end);
+    //         await actor.value?.upload_video(
+    //             currentGroup.value?.id!,
+    //             videoId,
+    //             chunk,
+    //             i == totalChunks - 1,
+    //         );
+    //     }
+    // }
 
     async function inviteUser(id: bigint, name: string) {
         const response = await actor.value?.invite_user(id, name);
@@ -119,7 +164,7 @@ export const useGroupStore = defineStore("group", () => {
         groupList,
         groupPicture,
 
-        addVideo,
+        // addVideo,
         getAllGroups,
         getGroup,
         createGroup,

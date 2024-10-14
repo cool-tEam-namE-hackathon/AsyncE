@@ -271,7 +271,7 @@ function startRecording() {
     ]);
 
     mediaRecorder.value = new MediaRecorder(combinedStream, {
-        mimeType: "video/mp4"
+        mimeType: "video/mp4",
     });
 
     mediaRecorder.value.ondataavailable = (e) => {
@@ -358,7 +358,7 @@ async function inviteUser() {
     const { id } = route.params;
     const groupId = BigInt(id as string);
 
-    const response = await groupStore.inviteUser(groupId, "Dylan123");
+    const response = await groupStore.inviteUser(groupId, "Dylan");
 
     console.log(response);
 }
@@ -428,15 +428,6 @@ function startDrawing() {
     draw();
 }
 
-onMounted(() => {
-    if (canvasRef.value) {
-        canvasRef.value.width = 1920;
-        canvasRef.value.height = 1080;
-        ctx.value = canvasRef.value.getContext("2d");
-        startDrawing();
-    }
-});
-
 async function onToggleCamera() {
     enabledCamera.value = !enabledCamera.value;
 
@@ -448,10 +439,10 @@ async function onToggleCamera() {
 
     if (enabledCamera.value) {
         mediaRecorder.value?.stream.addTrack(audioTrack);
-        console.log("added toggle camera track")
+        console.log("added toggle camera track");
     } else {
         mediaRecorder.value?.stream.removeTrack(audioTrack);
-        console.log("removed toggle camera track")
+        console.log("removed toggle camera track");
     }
 }
 
@@ -477,8 +468,17 @@ watchEffect(() => {
     }
 });
 
+onMounted(async () => {
+    if (canvasRef.value) {
+        canvasRef.value.width = 1920;
+        canvasRef.value.height = 1080;
+        ctx.value = canvasRef.value.getContext("2d");
+        startDrawing();
+    }
+});
+
 async function init() {
-    // inviteUser();
+    inviteUser();
     await fetchGroupDetails();
 }
 
