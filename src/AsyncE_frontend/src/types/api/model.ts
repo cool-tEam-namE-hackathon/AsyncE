@@ -1,6 +1,6 @@
 interface User {
     profile_picture_blob: Uint8Array;
-    username: [string];
+    username: string;
 }
 
 interface Group {

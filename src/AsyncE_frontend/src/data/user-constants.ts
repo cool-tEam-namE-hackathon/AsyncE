@@ -1,3 +1,4 @@
+const MB = 1048576;
 const USER_DROPDOWN_OPTIONS = [
     {
         name: "View Profile",
@@ -7,4 +8,4 @@ const USER_DROPDOWN_OPTIONS = [
     },
 ];
 
-export { USER_DROPDOWN_OPTIONS };
+export { USER_DROPDOWN_OPTIONS, MB };

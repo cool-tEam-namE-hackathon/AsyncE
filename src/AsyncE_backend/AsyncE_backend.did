@@ -1,7 +1,7 @@
 import "./ws_types.did";
 
 type User = record {
-    username: opt text;
+    username: text;
     profile_picture_blob: blob;
 };
 
@@ -11,6 +11,13 @@ type Group = record {
     users: vec text;
     owner: text;
     profile_picture_blob: blob;
+};
+
+type GroupQueryResponse = record {
+    id: nat;
+    name: text;
+    users: vec text;
+    owner: text;
 };
 
 type Video = record {
@@ -47,23 +54,27 @@ type WebsocketEventMessage = record {
 };
 
 service : {
-    get_user_credentials: () -> (opt User) query;
-    register: (User) -> ();
-    get_self: () -> (opt User) query;
+    get_user_credentials: () -> (opt text) query;
+    register: (text) -> ();
     get_selfname: () -> (opt text) query;
-    get_user: (text) -> (opt User) query;
-    get_username: () -> (opt text) query;
     query_username: (text) -> (vec text) query;
+    upload_profile_picture: (blob) -> ();
+    get_profile_picture_size: () -> (nat) query;
+    get_profile_picture_chunk_blob: (nat) -> (blob) query;
 
-    create_group: (text, blob) -> ();
-    get_all_groups: () -> (vec Group) query;
-    get_group: (nat) -> (opt Group) query;
+    create_group: (text) -> (nat);
+    get_all_groups: () -> (vec GroupQueryResponse) query;
+    get_group: (nat) -> (opt GroupQueryResponse) query;
+    upload_group_profile_picture: (nat, blob) -> ();
+    get_group_profile_picture_size: (nat) -> (nat) query;
+    get_group_profile_picture_chunk_blob: (nat, nat) -> (blob) query;
 
     get_videos: (nat) -> (vec Video) query;
-    add_video: (nat, blob, blob) -> ();
+    create_video: (nat) -> (nat);
+    upload_video: (nat, nat, blob, bool) -> ();
     concat_video: (nat, nat, blob, blob) -> ();
 
-    invite_user: (text) -> ();
+    invite_user: (nat, text) -> ();
     get_self_group_invites: () -> (vec nat) query;
     update_group_invite: (nat, bool) -> ();
 

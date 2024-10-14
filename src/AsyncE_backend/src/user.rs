@@ -1,11 +1,11 @@
 use candid::{CandidType, Principal};
 use serde::Deserialize;
 
-use crate::globals::USERS;
+use crate::{chunk, globals::USERS};
 
 #[derive(Clone, Debug, Default, CandidType, Deserialize)]
 pub struct User {
-    pub username: Option<String>,
+    pub username: String,
     pub profile_picture_blob: Vec<u8>,
 }
 
@@ -16,7 +16,7 @@ pub fn assert_user_logged_in() {
     }
 
     if USERS
-        .with_borrow(|users| users.get(&principal).and_then(|x| x.username.clone()))
+        .with_borrow(|users| users.get(&principal).map(|x| x.username.clone()))
         .is_none()
     {
         panic!("User needs to have a username to proceed!")
@@ -24,28 +24,24 @@ pub fn assert_user_logged_in() {
 }
 
 #[ic_cdk::query]
-pub fn get_user_credentials() -> Option<User> {
+pub fn get_user_credentials() -> Option<String> {
     let principal = ic_cdk::caller();
     if principal == Principal::anonymous() {
         panic!("User needs to login to proceed!")
     }
 
     let principal = ic_cdk::caller();
-    USERS.with_borrow(|users| users.get(&principal).cloned())
+    USERS.with_borrow(|users| users.get(&principal).map(|x| x.username.clone()))
 }
 
-fn validate_user_register(user: &mut User, principal: Principal) {
+fn validate_user_register(name: &str, principal: Principal) {
     USERS.with_borrow(|users| {
         if users.contains_key(&principal) {
             panic!("User is already registered!")
         }
     });
 
-    if user.username.is_none() {
-        panic!("Username must be filled!")
-    }
-
-    let username = user.username.as_ref().unwrap().trim().to_string();
+    let username = name.trim().to_string();
     if username.len() < 3 || username.len() > 20 {
         panic!("Username must between 3 to 20 characters!")
     }
@@ -55,21 +51,17 @@ fn validate_user_register(user: &mut User, principal: Principal) {
     }
 
     USERS.with_borrow(|users| {
-        if users.values().any(|x| {
-            x.username
-                .as_ref()
-                .map(|x| x.eq_ignore_ascii_case(&username))
-                .unwrap_or(false)
-        }) {
+        if users
+            .values()
+            .any(|x| x.username.eq_ignore_ascii_case(&username))
+        {
             panic!("User is already registered!")
         }
     });
-
-    user.username = Some(username);
 }
 
 #[ic_cdk::update]
-pub fn register(mut user: User) {
+pub fn register(name: String) {
     // we don't use `assert_user_logged_in` since that function
     // also checks for `null username` which we definitely have
     // at this moment since it's "registering"
@@ -78,24 +70,13 @@ pub fn register(mut user: User) {
         panic!("User needs to login to proceed!")
     }
 
-    validate_user_register(&mut user, principal);
+    validate_user_register(&name, principal);
 
+    let user = User {
+        username: name,
+        profile_picture_blob: Vec::new(),
+    };
     USERS.with_borrow_mut(|users| users.insert(principal, user));
-}
-
-#[ic_cdk::query]
-pub fn get_self() -> Option<User> {
-    // we don't use `assert_user_logged_in` since that function
-    // also checks for `null username`
-    // and at this point when user refreshes the page when on `creating username` part
-    // this function won't return err
-    let principal = ic_cdk::caller();
-    if principal != Principal::anonymous() {
-        panic!("User needs to login to proceed!")
-    }
-
-    let principal = ic_cdk::caller();
-    USERS.with_borrow(|users| users.get(&principal).cloned())
 }
 
 #[ic_cdk::query]
@@ -103,23 +84,7 @@ pub fn get_selfname() -> Option<String> {
     assert_user_logged_in();
 
     let principal = ic_cdk::caller();
-    USERS.with_borrow(|users| users.get(&principal).and_then(|x| x.username.clone()))
-}
-
-#[ic_cdk::query]
-pub fn get_user(username: String) -> Option<User> {
-    assert_user_logged_in();
-
-    let username = Some(username);
-    USERS.with_borrow(|users| users.values().find(|x| x.username == username).cloned())
-}
-
-#[ic_cdk::query]
-pub fn get_username() -> Option<String> {
-    assert_user_logged_in();
-
-    let principal = ic_cdk::caller();
-    USERS.with_borrow(|users| users.get(&principal).and_then(|x| x.username.clone()))
+    USERS.with_borrow(|users| users.get(&principal).map(|x| x.username.clone()))
 }
 
 #[ic_cdk::query]
@@ -129,9 +94,8 @@ pub fn query_username(keyword: String) -> Vec<String> {
     USERS.with_borrow(|users| {
         users
             .values()
-            .filter(|x| x.username.is_some())
-            .filter(|x| x.username.as_ref().unwrap().eq_ignore_ascii_case(&keyword))
-            .map(|x| x.username.as_ref().unwrap().clone())
+            .filter(|x| x.username.eq_ignore_ascii_case(&keyword))
+            .map(|x| x.username.clone())
             .collect::<Vec<_>>()
     })
 }
@@ -141,7 +105,47 @@ pub fn get_all_usernames() -> Vec<String> {
     USERS.with_borrow(|users| {
         users
             .values()
-            .map(|x| x.username.as_ref().unwrap().clone())
+            .map(|x| x.username.clone())
             .collect::<Vec<_>>()
+    })
+}
+
+#[ic_cdk::update]
+pub fn upload_profile_picture(chunk_data: Vec<u8>) {
+    assert_user_logged_in();
+
+    let principal = ic_cdk::caller();
+    USERS.with_borrow_mut(|users| {
+        users
+            .get_mut(&principal)
+            .unwrap()
+            .profile_picture_blob
+            .extend(chunk_data);
+    });
+}
+
+#[ic_cdk::query]
+pub fn get_profile_picture_size() -> u128 {
+    assert_user_logged_in();
+
+    let principal = ic_cdk::caller();
+    USERS.with_borrow(|users| users.get(&principal).unwrap().profile_picture_blob.len() as u128)
+}
+
+#[ic_cdk::query]
+pub fn get_profile_picture_chunk_blob(index: u128) -> Vec<u8> {
+    assert_user_logged_in();
+
+    let principal = ic_cdk::caller();
+    USERS.with_borrow(|users| {
+        users
+            .get(&principal)
+            .unwrap()
+            .profile_picture_blob
+            .iter()
+            .skip(index as usize * chunk::MB)
+            .take(chunk::MB)
+            .cloned()
+            .collect()
     })
 }

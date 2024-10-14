@@ -1,17 +1,14 @@
-use std::{
-    io::Cursor,
-    time::{SystemTime, UNIX_EPOCH},
-};
+use std::io::Cursor;
 
 use candid::CandidType;
 use mp4::{
-    AacConfig, AvcConfig, HevcConfig, MediaConfig, MediaType, Mp4Config, Mp4Reader, Mp4Track,
-    Mp4Writer, TrackConfig, TrackType, TtxtConfig, Vp9Config,
+    AacConfig, AvcConfig, HevcConfig, MediaConfig, MediaType, Mp4Config, Mp4Reader, Mp4Writer,
+    TrackConfig, TtxtConfig, Vp9Config,
 };
 use serde::Deserialize;
 
 use crate::{
-    globals::VIDEOS,
+    globals::{VIDEOS, VIDEO_UPLOADS},
     group,
     primary_key::{self, PrimaryKeyType},
     user,
@@ -20,45 +17,48 @@ use crate::{
 #[derive(Clone, Debug, Default, CandidType, Deserialize)]
 pub struct Video {
     pub id: u128,
+    pub data: Vec<u8>,
     pub username: String,
-    pub webcam_blob: Vec<u8>,
-    pub screen_blob: Vec<u8>,
     pub created_time_unix: u128,
 }
 
 #[derive(Clone, Debug, Default, CandidType, Deserialize)]
 pub struct VideoFrames {
     pub id: u128,
+    pub data: Vec<u8>,
     pub username: String,
-    pub webcam_blob: Vec<u8>,
-    pub screen_blob: Vec<u8>,
     pub created_time_unix: u128,
 }
 
 impl Video {
-    pub fn new(username: String, webcam_blob: Vec<u8>, screen_blob: Vec<u8>) -> Self {
-        let cursor_webcam = Cursor::new(&webcam_blob);
-        let cursor_screen = Cursor::new(&screen_blob);
-
-        let mp4_webcam = Mp4Reader::read_header(cursor_webcam, webcam_blob.len() as u64)
-            .expect("Failed to parse webcam video as mp4");
-
-        let mp4_screen = Mp4Reader::read_header(cursor_screen, screen_blob.len() as u64)
-            .expect("Failed to parse screen video as mp4");
-
-        print_mp4_info(&mp4_webcam);
-        print_mp4_info(&mp4_screen);
-
+    pub fn new(username: String) -> Self {
         Self {
             id: primary_key::get_primary_key(PrimaryKeyType::Video),
+            data: Vec::new(),
             username,
-            webcam_blob,
-            screen_blob,
-            created_time_unix: SystemTime::now()
-                .duration_since(UNIX_EPOCH)
-                .expect("Time went backwards")
-                .as_millis(),
+            created_time_unix: ic_cdk::api::time() as u128,
         }
+    }
+
+    pub fn set_data(&mut self, data: Vec<u8>) {
+        Mp4Reader::read_header(Cursor::new(&data), data.len() as u64).unwrap();
+        self.data = data;
+    }
+}
+
+fn assert_check_group(group_id: u128) {
+    let group = match group::get_group(group_id) {
+        Some(group) => group,
+        None => panic!("Group not found!"),
+    };
+
+    let name = match user::get_selfname() {
+        Some(name) => name,
+        None => panic!("Current user does not have a name!"),
+    };
+
+    if group.owner != name && !group.users.contains(&name) {
+        panic!("Current user does not belong to this group!")
     }
 }
 
@@ -143,142 +143,6 @@ fn concat_mp4(self_blob_data: &mut Vec<u8>, blob_data: &[u8]) {
     *self_blob_data = mp4_writer.into_writer().into_inner();
 }
 
-fn video_info(track: &Mp4Track) -> String {
-    if track.trak.mdia.minf.stbl.stsd.avc1.is_some() {
-        format!(
-            "{} ({}) ({:?}), {}x{}, {} kb/s, {:.2} fps",
-            track.media_type().unwrap(),
-            track.video_profile().unwrap(),
-            track.box_type().unwrap(),
-            track.width(),
-            track.height(),
-            track.bitrate() / 1000,
-            track.frame_rate()
-        )
-    } else {
-        format!(
-            "{} ({:?}), {}x{}, {} kb/s, {:.2} fps",
-            track.media_type().unwrap(),
-            track.box_type().unwrap(),
-            track.width(),
-            track.height(),
-            track.bitrate() / 1000,
-            track.frame_rate()
-        )
-    }
-}
-
-fn audio_info(track: &Mp4Track) -> String {
-    if let Some(ref mp4a) = track.trak.mdia.minf.stbl.stsd.mp4a {
-        if mp4a.esds.is_some() {
-            let profile = match track.audio_profile() {
-                Ok(val) => val.to_string(),
-                _ => String::from("-"),
-            };
-
-            let channel_config = match track.channel_config() {
-                Ok(val) => val.to_string(),
-                _ => String::from("-"),
-            };
-
-            format!(
-                "{} ({}) ({:?}), {} Hz, {}, {} kb/s",
-                track.media_type().unwrap(),
-                profile,
-                track.box_type().unwrap(),
-                track.sample_freq_index().unwrap().freq(),
-                channel_config,
-                track.bitrate() / 1000
-            )
-        } else {
-            format!(
-                "{} ({:?}), {} kb/s",
-                track.media_type().unwrap(),
-                track.box_type().unwrap(),
-                track.bitrate() / 1000
-            )
-        }
-    } else {
-        String::from("mp4a box not found")
-    }
-}
-
-fn subtitle_info(track: &Mp4Track) -> String {
-    if track.trak.mdia.minf.stbl.stsd.tx3g.is_some() {
-        format!(
-            "{} ({:?})",
-            track.media_type().unwrap(),
-            track.box_type().unwrap(),
-        )
-    } else {
-        String::from("tx3g box not found")
-    }
-}
-
-fn creation_time(creation_time: u64) -> u64 {
-    // convert from MP4 epoch (1904-01-01) to Unix epoch (1970-01-01)
-    if creation_time >= 2082844800 {
-        creation_time - 2082844800
-    } else {
-        creation_time
-    }
-}
-
-fn print_mp4_info(mp4: &Mp4Reader<Cursor<&Vec<u8>>>) {
-    ic_cdk::println!("File:");
-    ic_cdk::println!("  file size:          {}", mp4.size());
-    ic_cdk::println!("  major_brand:        {}", mp4.major_brand());
-    let mut compatible_brands = String::new();
-    for brand in mp4.compatible_brands().iter() {
-        compatible_brands.push_str(&brand.to_string());
-        compatible_brands.push(' ');
-    }
-    ic_cdk::println!("  compatible_brands:  {}\n", compatible_brands);
-
-    ic_cdk::println!("Movie:");
-    ic_cdk::println!("  version:        {}", mp4.moov.mvhd.version);
-    ic_cdk::println!(
-        "  creation time:  {}",
-        creation_time(mp4.moov.mvhd.creation_time)
-    );
-    ic_cdk::println!("  duration:       {:?}", mp4.duration());
-    ic_cdk::println!("  fragments:      {:?}", mp4.is_fragmented());
-    ic_cdk::println!("  timescale:      {:?}\n", mp4.timescale());
-
-    ic_cdk::println!("Found {} Tracks", mp4.tracks().len());
-    for track in mp4.tracks().values() {
-        let media_info = match track.track_type().unwrap() {
-            TrackType::Video => video_info(track),
-            TrackType::Audio => audio_info(track),
-            TrackType::Subtitle => subtitle_info(track),
-        };
-
-        ic_cdk::println!(
-            "  Track: #{}({}) {}: {}",
-            track.track_id(),
-            track.language(),
-            track.track_type().unwrap(),
-            media_info
-        );
-    }
-}
-
-fn assert_check_group(group_id: u128) {
-    let group = match group::get_group(group_id) {
-        Some(group) => group,
-        None => panic!("Group not found!"),
-    };
-
-    let name = match user::get_selfname() {
-        Some(name) => name,
-        None => panic!("Current user does not have a name!"),
-    };
-
-    if group.owner != name && !group.users.contains(&name) {
-        panic!("Current user does not belong to this group!")
-    }
-}
-
 #[ic_cdk::query]
 pub fn get_videos(group_id: u128) -> Vec<Video> {
     user::assert_user_logged_in();
@@ -296,17 +160,43 @@ pub fn get_videos(group_id: u128) -> Vec<Video> {
 }
 
 #[ic_cdk::update]
-pub fn add_video(group_id: u128, webcam_blob: Vec<u8>, screen_blob: Vec<u8>) {
+pub fn create_video(group_id: u128) -> u128 {
     user::assert_user_logged_in();
     assert_check_group(group_id);
 
     let selfname = user::get_selfname().unwrap();
-    let video = Video::new(selfname, webcam_blob, screen_blob);
+    let video = Video::new(selfname);
+    let video_id = video.id;
     VIDEOS.with_borrow_mut(|videos| videos.entry(group_id).or_default().insert(video.id, video));
+    VIDEO_UPLOADS.with_borrow_mut(|video_uploads| video_uploads.insert(video_id, Vec::new()));
+    video_id
 }
 
 #[ic_cdk::update]
-pub fn concat_video(group_id: u128, video_id: u128, webcam_blob: Vec<u8>, screen_blob: Vec<u8>) {
+pub fn upload_video(group_id: u128, video_id: u128, data: Vec<u8>, finish: bool) {
+    user::assert_user_logged_in();
+    assert_check_group(group_id);
+
+    VIDEO_UPLOADS.with_borrow_mut(|video_uploads| {
+        video_uploads.get_mut(&video_id).unwrap().extend(data);
+
+        if finish {
+            let data = video_uploads.remove(&video_id).unwrap();
+
+            VIDEOS.with_borrow_mut(|videos| {
+                videos
+                    .get_mut(&group_id)
+                    .unwrap()
+                    .get_mut(&video_id)
+                    .unwrap()
+                    .set_data(data)
+            })
+        }
+    });
+}
+
+#[ic_cdk::update]
+pub fn concat_video(group_id: u128, video_id: u128, data: Vec<u8>) {
     user::assert_user_logged_in();
     assert_check_group(group_id);
 
@@ -321,7 +211,6 @@ pub fn concat_video(group_id: u128, video_id: u128, webcam_blob: Vec<u8>, screen
             None => panic!("No video found on this video ID!"),
         };
 
-        concat_mp4(&mut video.webcam_blob, &webcam_blob);
-        concat_mp4(&mut video.screen_blob, &screen_blob);
+        concat_mp4(&mut video.data, &data);
     });
 }

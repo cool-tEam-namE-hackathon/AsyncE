@@ -122,7 +122,7 @@
     </div>
 
     <video v-if="url" autoplay muted controls>
-        <source :src="url" type="video/webm" />
+        <source :src="url" type="video/mp4" />
         Your browser does not support the video tag.
     </video>
 </template>
@@ -266,7 +266,9 @@ function startRecording() {
         ...(validAudioTracks as MediaStreamTrack[]),
     ]);
 
-    mediaRecorder.value = new MediaRecorder(combinedStream);
+    mediaRecorder.value = new MediaRecorder(combinedStream, {
+        mimeType: "video/mp4"
+    });
 
     mediaRecorder.value.ondataavailable = (e) => {
         if (e.data.size > 0) {
@@ -316,9 +318,12 @@ async function prepareChunks(
 }
 
 async function saveRecording() {
-    const blob = new Blob(recordedChunks.value, { type: "video/webm" });
-    recordedVideo.value = new Uint8Array(await blob.arrayBuffer());
+    const blob = new Blob(recordedChunks.value, { type: "video/mp4" });
+    const data = new Uint8Array(await blob.arrayBuffer());
 
+    await groupStore.addVideo(data);
+
+    recordedVideo.value = data;
     url.value = URL.createObjectURL(blob);
     // totalUploadSize.value[type] = recordedVideo.value[type].byteLength;
     // await prepareChunks(recordedVideo.value[type], type);
@@ -346,7 +351,10 @@ async function fetchGroupDetails() {
 }
 
 async function inviteUser() {
-    const response = await groupStore.inviteUser("Dylan123");
+    const { id } = route.params;
+    const groupId = BigInt(id as string);
+
+    const response = await groupStore.inviteUser(groupId, "Dylan123");
 
     console.log(response);
 }
