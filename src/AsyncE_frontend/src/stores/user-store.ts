@@ -162,16 +162,7 @@ export const useUserStore = defineStore("user", () => {
         ws.value = new IcWebSocket(gatewayUrl, undefined, wsConfig);
 
         ws.value.onopen = () => {
-            console.log("Add chat")
-            ws.value?.send({
-                AddChat: {
-                    id: BigInt(0),
-                    username: "",
-                    created_time_unix: BigInt(0),
-                    content: "",
-                    group_id: BigInt(0),
-                },
-            });
+            console.log("Add chat");
         };
 
         ws.value.onmessage = async (event) => {

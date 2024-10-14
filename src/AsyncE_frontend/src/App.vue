@@ -104,9 +104,10 @@ function onFileInput(e: Event) {
 
 async function init() {
     await userStore.init();
+    await userStore.setWebsockets();
     isInitialized.value = true;
 
-    await userStore.setWebsockets();
+    console.log(ws.value);
 }
 
 onMounted(() => {

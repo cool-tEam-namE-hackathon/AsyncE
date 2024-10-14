@@ -146,6 +146,7 @@ import BaseProgress from "@/components/shared/BaseProgress.vue";
 
 import { RecordedChunks } from "@/types/api/model";
 import { generateUUID, createChunks } from "@/utils/helpers";
+import { useUserStore } from "@/stores/user-store";
 
 const route = useRoute();
 const groupStore = useGroupStore();
@@ -189,6 +190,7 @@ const recordedVideo = ref<Uint8Array | null>(null);
 // const mediaStreamAudioDestinationNode = ref<MediaStreamAudioDestinationNode | null>(null);
 
 const { currentGroup } = storeToRefs(groupStore);
+const { ws } = storeToRefs(useUserStore());
 
 const { enabled: enabledScreen, stream: displayStream } = useDisplayMedia({
     audio: true,
@@ -252,7 +254,7 @@ const screenProgress = computed(() => {
 function startRecording() {
     if (!canvasRef.value) return;
 
-    const canvasStream = canvasRef.value.captureStream(60);
+    const canvasStream = canvasRef.value.captureStream(30);
     // const audioTracks = [
     //     displayCamera.value?.getAudioTracks()[0],
     //     displayStream.value?.getAudioTracks()[0],
@@ -475,10 +477,20 @@ onMounted(async () => {
         ctx.value = canvasRef.value.getContext("2d");
         startDrawing();
     }
+
+    ws.value?.send({
+        AddChat: {
+            id: BigInt(0),
+            content: "bitch",
+            created_time_unix: BigInt(0),
+            username: "Dylan",
+            group_id: BigInt(route.params.id[0]),
+        },
+    });
 });
 
 async function init() {
-    inviteUser();
+    // inviteUser();
     await fetchGroupDetails();
 }
 
