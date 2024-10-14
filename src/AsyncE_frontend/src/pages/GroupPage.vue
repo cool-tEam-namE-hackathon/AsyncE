@@ -477,7 +477,12 @@ onMounted(async () => {
         ctx.value = canvasRef.value.getContext("2d");
         startDrawing();
     }
+});
 
+async function init() {
+    // inviteUser();
+    await fetchGroupDetails();
+    
     ws.value?.send({
         AddChat: {
             id: BigInt(0),
@@ -487,11 +492,6 @@ onMounted(async () => {
             group_id: BigInt(route.params.id[0]),
         },
     });
-});
-
-async function init() {
-    // inviteUser();
-    await fetchGroupDetails();
 }
 
 await init();

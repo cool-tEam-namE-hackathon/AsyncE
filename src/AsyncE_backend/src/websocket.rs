@@ -85,6 +85,9 @@ pub fn on_message(args: OnMessageCallbackArgs) {
                 }
 
                 chat.id = primary_key::get_primary_key(PrimaryKeyType::Chat);
+                chat.username = name;
+                chat.created_time_unix = ic_cdk::api::time() as u128;
+
                 CHATS.with_borrow_mut(|chats| {
                     chats
                         .entry(chat.group_id)

@@ -161,10 +161,20 @@ export const useUserStore = defineStore("user", () => {
 
         ws.value = new IcWebSocket(gatewayUrl, undefined, wsConfig);
 
-        ws.value.onopen = () => {
-            console.log("Add chat");
-        };
+        // Await until the WebSocket connection is opened
+        await new Promise((resolve, reject) => {
+            ws.value!.onopen = () => {
+                console.log("Websocket is opened");
+                resolve(null);
+            };
 
+            ws.value!.onerror = (error) => {
+                console.log("Websocket error:", error);
+                reject(error);
+            };
+        });
+
+        // Setup the message handler after the connection is established
         ws.value.onmessage = async (event) => {
             console.log("Received message:", event.data);
 
