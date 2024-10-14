@@ -1,6 +1,6 @@
 use crate::{
-    globals::{GROUPS, GROUP_INVITES},
-    user,
+    globals::{GROUPS, GROUP_INVITES, USERS},
+    user, websocket,
 };
 
 #[ic_cdk::update]
@@ -20,12 +20,21 @@ pub fn invite_user(group_id: u128, username: String) {
         }
 
         GROUP_INVITES.with_borrow_mut(|group_invites| {
-            let group_invites = group_invites.entry(username).or_default();
+            let group_invites = group_invites.entry(username.clone()).or_default();
             if group_invites.contains(&group_id) {
                 panic!("Chosen user is already invited to this group!")
             }
 
-            group_invites.insert(group_id);
+            USERS.with_borrow(|users| {
+                let principal = users
+                    .iter()
+                    .find(|user| user.1.username.eq_ignore_ascii_case(&username))
+                    .map(|x| x.0.clone())
+                    .expect("Cannot find user with this username!");
+                group_invites.insert(group_id);
+
+                websocket::send_group_invited_notif(principal, group.id, &group.name);
+            })
         })
     })
 }

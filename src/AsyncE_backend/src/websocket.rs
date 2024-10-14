@@ -1,4 +1,4 @@
-use candid::CandidType;
+use candid::{CandidType, Principal};
 use ic_websocket_cdk::{
     CanisterWsCloseArguments, CanisterWsCloseResult, CanisterWsGetMessagesArguments,
     CanisterWsGetMessagesResult, CanisterWsMessageArguments, CanisterWsMessageResult,
@@ -17,7 +17,7 @@ use crate::{
 #[derive(CandidType, Clone, Debug, Deserialize, Serialize)]
 pub enum WebsocketEventMessage {
     Ping,
-    GroupInvited(String),
+    GroupInvited { group_id: u128, group_name: String },
     AddChat(Chat),
 }
 
@@ -65,7 +65,7 @@ pub fn on_message(args: OnMessageCallbackArgs) {
     match app_msg {
         WebsocketEventMessage::Ping => {}
 
-        WebsocketEventMessage::GroupInvited(_) => {}
+        WebsocketEventMessage::GroupInvited { .. } => {}
 
         WebsocketEventMessage::AddChat(mut chat) => {
             let name = USERS
@@ -124,4 +124,14 @@ pub fn on_close(args: OnCloseCallbackArgs) {
 
     WEBSOCKET_CLIENTS
         .with_borrow_mut(|websocket_clients| websocket_clients.remove(&args.client_principal));
+}
+
+pub fn send_group_invited_notif(principal: Principal, group_id: u128, group_name: &str) {
+    send_websocket_message(
+        principal,
+        WebsocketEventMessage::GroupInvited {
+            group_id,
+            group_name: group_name.to_string(),
+        },
+    );
 }
