@@ -42,15 +42,10 @@ type Chat = record {
     created_time_unix: nat;
 };
 
-type WebsocketEventMessageData = variant {
+type WebsocketEventMessage = variant {
     Ping: null;
     GroupInvited: text;
     AddChat: Chat;
-};
-
-type WebsocketEventMessage = record {
-    ty: text;
-    data: WebsocketEventMessageData;
 };
 
 service : {
@@ -83,6 +78,5 @@ service : {
     ws_message : (CanisterWsMessageArguments, opt WebsocketEventMessage) -> (CanisterWsMessageResult);
     ws_get_messages : (CanisterWsGetMessagesArguments) -> (CanisterWsGetMessagesResult) query;
 
-    add_chat: (nat, text) -> ();
     get_chats: (nat) -> (vec Chat);
 }

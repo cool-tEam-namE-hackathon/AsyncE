@@ -118,20 +118,17 @@ export const useUserStore = defineStore("user", () => {
         if (response?.length) {
             username.value = response[0];
 
-            actor.value?.get_profile_picture_size()!.then(async (profilePictureBlobSizeBigint) => {
-                const profilePictureBlobSize = Number(profilePictureBlobSizeBigint);
-                const profilePictureData = new Uint8Array(profilePictureBlobSize);
+            const profilePictureBlobSizeBigint = await actor.value?.get_profile_picture_size()!;
+            const profilePictureBlobSize = Number(profilePictureBlobSizeBigint);
+            const profilePictureData = new Uint8Array(profilePictureBlobSize);
 
-                const promises = [];
-                for (let i = 0; i < Math.ceil(profilePictureBlobSize / MB); ++i) {
-                    promises.push(actor.value?.get_profile_picture_chunk_blob(BigInt(i)).then((chunk) => {
-                        profilePictureData.set(chunk, i * MB);
-                    }));
-                }
+            for (let i = 0; i < Math.ceil(profilePictureBlobSize / MB); ++i) {
+                await actor.value?.get_profile_picture_chunk_blob(BigInt(i)).then((chunk) => {
+                    profilePictureData.set(chunk, i * MB);
+                });
+            }
 
-                await Promise.all(promises);
-                profilePicture.value = blobToURL(profilePictureData);
-            })
+            profilePicture.value = blobToURL(profilePictureData);
         }
         return response;
     }
@@ -155,6 +152,26 @@ export const useUserStore = defineStore("user", () => {
 
         ws.onmessage = async (event) => {
             console.log("Received message:", event.data);
+
+            const message = event.data;
+            switch (true) {
+                case 'AddChat' in message:
+                    const chatData = message.AddChat;
+                    console.log(chatData);
+                    break;
+
+                case 'Ping' in message:
+                    console.log("Received a Ping");
+                    break;
+
+                case 'GroupInvited' in message:
+                    const group = message.GroupInvited;
+                    console.log(`Group invited: ${group}`);
+                    break;
+
+                default:
+                    console.log("Unknown variant");
+            }
         };
 
         ws.onclose = () => {

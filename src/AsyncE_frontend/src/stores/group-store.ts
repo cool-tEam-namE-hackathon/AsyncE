@@ -37,7 +37,7 @@ export const useGroupStore = defineStore("group", () => {
                 const group = convertGroupFromResponse(groupResponse);
                 groupList.value.push(group);
 
-                actor.value?.get_group_profile_picture_size(group.id)!.then(async (groupPictureBlobSizeBigInt) => {
+                await actor.value?.get_group_profile_picture_size(group.id)!.then(async (groupPictureBlobSizeBigInt) => {
                     const profilePictureBlobSize = Number(groupPictureBlobSizeBigInt);
                     const profilePictureData = new Uint8Array(profilePictureBlobSize);
 
@@ -77,7 +77,7 @@ export const useGroupStore = defineStore("group", () => {
         if (response) {
             currentGroup.value = convertGroupFromResponse(response[0]!);
 
-            actor.value?.get_group_profile_picture_size(currentGroup.value.id)!.then(async (groupPictureBlobSizeBigInt) => {
+            await actor.value?.get_group_profile_picture_size(currentGroup.value.id)!.then(async (groupPictureBlobSizeBigInt) => {
                 const profilePictureBlobSize = Number(groupPictureBlobSizeBigInt);
                 const profilePictureData = new Uint8Array(profilePictureBlobSize);
 

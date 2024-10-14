@@ -7,45 +7,23 @@ use ic_websocket_cdk::{
 };
 use serde::{Deserialize, Serialize};
 
-use crate::{chat::Chat, globals::WEBSOCKET_CLIENTS};
+use crate::{
+    chat::Chat,
+    globals::{CHATS, GROUPS, USERS, WEBSOCKET_CLIENTS},
+    primary_key::{self, PrimaryKeyType},
+    user,
+};
 
 #[derive(CandidType, Clone, Debug, Deserialize, Serialize)]
-pub enum WebsocketEventMessageData {
+pub enum WebsocketEventMessage {
     Ping,
     GroupInvited(String),
     AddChat(Chat),
 }
 
-#[derive(CandidType, Clone, Debug, Deserialize, Serialize)]
-pub struct WebsocketEventMessage {
-    pub ty: String,
-    pub data: WebsocketEventMessageData,
-}
-
 impl WebsocketEventMessage {
     fn candid_serialize(&self) -> Vec<u8> {
         candid::encode_one(self).unwrap()
-    }
-
-    pub fn new_group_invited(group_id: &str) -> Self {
-        Self {
-            ty: String::from("group_invited"),
-            data: WebsocketEventMessageData::GroupInvited(group_id.to_string()),
-        }
-    }
-
-    pub fn new_ping() -> Self {
-        Self {
-            ty: String::from("ping"),
-            data: WebsocketEventMessageData::Ping,
-        }
-    }
-
-    pub fn new_chat(chat: Chat) -> Self {
-        Self {
-            ty: String::from("add_chat"),
-            data: WebsocketEventMessageData::AddChat(chat),
-        }
     }
 }
 
@@ -73,8 +51,7 @@ fn ws_get_messages(args: CanisterWsGetMessagesArguments) -> CanisterWsGetMessage
 }
 
 pub fn on_open(args: OnOpenCallbackArgs) {
-    let msg = WebsocketEventMessage::new_ping();
-    send_websocket_message(args.client_principal, msg);
+    send_websocket_message(args.client_principal, WebsocketEventMessage::Ping);
 
     WEBSOCKET_CLIENTS
         .with_borrow_mut(|websocket_clients| websocket_clients.insert(args.client_principal));
@@ -82,8 +59,43 @@ pub fn on_open(args: OnOpenCallbackArgs) {
 
 pub fn on_message(args: OnMessageCallbackArgs) {
     let app_msg: WebsocketEventMessage = candid::decode_one(&args.message).unwrap();
+    user::assert_user_logged_in_from(args.client_principal);
     ic_cdk::println!("Received message: {:?}", app_msg);
-    // send_app_message(args.client_principal, new_msg)
+
+    match app_msg {
+        WebsocketEventMessage::Ping => {}
+
+        WebsocketEventMessage::GroupInvited(_) => {}
+
+        WebsocketEventMessage::AddChat(mut chat) => {
+            let name = USERS
+                .with_borrow(|users| {
+                    users
+                        .get(&args.client_principal)
+                        .map(|x| x.username.clone())
+                })
+                .unwrap();
+
+            GROUPS.with_borrow(|groups| {
+                let group = groups
+                    .get(&chat.group_id)
+                    .expect("Cannot find group with this ID!");
+                if group.owner != name && !group.users.contains(&name) {
+                    panic!("This user is not in this group!")
+                }
+
+                chat.id = primary_key::get_primary_key(PrimaryKeyType::Chat);
+                CHATS.with_borrow_mut(|chats| {
+                    chats
+                        .entry(chat.group_id)
+                        .or_default()
+                        .insert(chat.id, chat.clone());
+
+                    broadcast_websocket_message(WebsocketEventMessage::AddChat(chat));
+                })
+            });
+        }
+    }
 }
 
 pub fn broadcast_websocket_message(msg: WebsocketEventMessage) {

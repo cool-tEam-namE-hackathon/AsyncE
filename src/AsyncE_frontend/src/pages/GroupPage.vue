@@ -42,12 +42,8 @@
                                 :enabled-screen="enabledScreen"
                                 :is-recording-disabled="isRecordingDisabled"
                                 :recording-phase-text="recordingPhaseText"
-                                @on-toggle-camera="
-                                    enabledCamera = !enabledCamera
-                                "
-                                @on-toggle-screen="
-                                    enabledScreen = !enabledScreen
-                                "
+                                @on-toggle-camera="onToggleCamera"
+                                @on-toggle-screen="onToggleScreen"
                                 @on-record="handleRecord"
                             />
                         </div>
@@ -189,6 +185,9 @@ const cameraRef = ref<HTMLVideoElement | null>(null);
 const mediaRecorder = ref<MediaRecorder | null>(null);
 const recordedVideo = ref<Uint8Array | null>(null);
 
+// const audioContext = ref<AudioContext>(new AudioContext());
+// const mediaStreamAudioDestinationNode = ref<MediaStreamAudioDestinationNode | null>(null);
+
 const { currentGroup } = storeToRefs(groupStore);
 
 const { enabled: enabledScreen, stream: displayStream } = useDisplayMedia({
@@ -254,16 +253,21 @@ function startRecording() {
     if (!canvasRef.value) return;
 
     const canvasStream = canvasRef.value.captureStream(60);
-    const audioTracks = [
-        displayCamera.value?.getAudioTracks()[0],
-        displayStream.value?.getAudioTracks()[0],
-    ];
+    // const audioTracks = [
+    //     displayCamera.value?.getAudioTracks()[0],
+    //     displayStream.value?.getAudioTracks()[0],
+    // ];
 
-    const validAudioTracks = audioTracks.filter(Boolean);
+    // const validAudioTracks = audioTracks.filter(Boolean);
+
+    console.log("display camera", displayCamera.value?.getAudioTracks());
+    console.log("display stream", displayStream.value?.getAudioTracks());
+
+    // mediaStreamAudioDestinationNode.value = new MediaStreamAudioDestinationNode(audioContext.value);
 
     const combinedStream = new MediaStream([
         ...canvasStream.getVideoTracks(),
-        ...(validAudioTracks as MediaStreamTrack[]),
+        // mediaStreamAudioDestinationNode.value.stream.getAudioTracks()[0]
     ]);
 
     mediaRecorder.value = new MediaRecorder(combinedStream, {
@@ -321,7 +325,7 @@ async function saveRecording() {
     const blob = new Blob(recordedChunks.value, { type: "video/mp4" });
     const data = new Uint8Array(await blob.arrayBuffer());
 
-    await groupStore.addVideo(data);
+    // await groupStore.addVideo(data);
 
     recordedVideo.value = data;
     url.value = URL.createObjectURL(blob);
@@ -432,6 +436,37 @@ onMounted(() => {
         startDrawing();
     }
 });
+
+async function onToggleCamera() {
+    enabledCamera.value = !enabledCamera.value;
+
+    const audioTrack = displayCamera.value?.getAudioTracks()[0]!;
+    // const anotherMediaStreamAudioSourceNode = new MediaStreamAudioSourceNode(
+    //     audioContext.value,
+    //     { mediaStream: displayCamera.value! }
+    // );
+
+    if (enabledCamera.value) {
+        mediaRecorder.value?.stream.addTrack(audioTrack);
+        console.log("added toggle camera track")
+    } else {
+        mediaRecorder.value?.stream.removeTrack(audioTrack);
+        console.log("removed toggle camera track")
+    }
+}
+
+async function onToggleScreen() {
+    enabledScreen.value = !enabledScreen.value;
+
+    const audioTrack = displayStream.value?.getAudioTracks()[0]!;
+    if (enabledScreen.value) {
+        mediaRecorder.value?.stream.addTrack(audioTrack);
+        console.log("added toggle screen track");
+    } else {
+        mediaRecorder.value?.stream.removeTrack(audioTrack);
+        console.log("removed toggle screen track");
+    }
+}
 
 watchEffect(() => {
     if (videoRef.value) {

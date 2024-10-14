@@ -1,4 +1,4 @@
-const MB = 1048576;
+const MB = 1024 * 1024;
 const USER_DROPDOWN_OPTIONS = [
     {
         name: "View Profile",

@@ -6,26 +6,28 @@ use crate::{
 #[ic_cdk::update]
 pub fn invite_user(group_id: u128, username: String) {
     let selfname = user::get_selfname().unwrap();
-    let group = GROUPS
-        .with_borrow(|groups| groups.get(&group_id).cloned())
-        .expect("Cannot find group with this ID!");
 
-    if group.owner != selfname && !group.users.contains(&selfname) {
-        panic!("This user is not in this group!")
-    }
-
-    if group.users.contains(&username) {
-        panic!("Chosen user is already in this group!")
-    }
-
-    GROUP_INVITES.with_borrow_mut(|group_invites| {
-        let group_invites = group_invites.entry(username).or_default();
-        if group_invites.contains(&group_id) {
-            panic!("Chosen user is already invited to this group!")
+    GROUPS.with_borrow(|groups| {
+        let group = groups
+            .get(&group_id)
+            .expect("Cannot find group with this ID!");
+        if group.owner != selfname && !group.users.contains(&selfname) {
+            panic!("This user is not in this group!")
         }
 
-        group_invites.insert(group_id);
-    });
+        if group.users.contains(&username) {
+            panic!("Chosen user is already in this group!")
+        }
+
+        GROUP_INVITES.with_borrow_mut(|group_invites| {
+            let group_invites = group_invites.entry(username).or_default();
+            if group_invites.contains(&group_id) {
+                panic!("Chosen user is already invited to this group!")
+            }
+
+            group_invites.insert(group_id);
+        })
+    })
 }
 
 #[ic_cdk::query]

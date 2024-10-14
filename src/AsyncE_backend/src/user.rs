@@ -10,7 +10,10 @@ pub struct User {
 }
 
 pub fn assert_user_logged_in() {
-    let principal = ic_cdk::caller();
+    assert_user_logged_in_from(ic_cdk::caller());
+}
+
+pub fn assert_user_logged_in_from(principal: Principal) {
     if principal == Principal::anonymous() {
         panic!("User needs to login to proceed!")
     }

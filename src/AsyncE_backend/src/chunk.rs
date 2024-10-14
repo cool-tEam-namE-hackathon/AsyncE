@@ -1,1 +1,1 @@
-pub const MB: usize = 1048576;
+pub const MB: usize = 1024 * 1024;
