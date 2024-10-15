@@ -1,7 +1,16 @@
+use candid::CandidType;
+use serde::{Deserialize, Serialize};
+
 use crate::{
     globals::{GROUPS, GROUP_INVITES, USERS},
     user, websocket,
 };
+
+#[derive(CandidType, Deserialize, Serialize, Clone, Debug)]
+pub struct GroupInviteResponse {
+    pub group_id: u128,
+    pub group_name: String,
+}
 
 #[ic_cdk::update]
 pub fn invite_user(group_id: u128, username: String) -> Result<(), String> {
@@ -47,7 +56,7 @@ pub fn invite_user(group_id: u128, username: String) -> Result<(), String> {
 }
 
 #[ic_cdk::query]
-pub fn get_self_group_invites() -> Result<Vec<u128>, String> {
+pub fn get_self_group_invites() -> Result<Vec<GroupInviteResponse>, String> {
     user::assert_user_logged_in()?;
 
     let selfname = user::get_selfname_force()?;
@@ -58,7 +67,10 @@ pub fn get_self_group_invites() -> Result<Vec<u128>, String> {
             .cloned()
             .unwrap_or_default()
             .iter()
-            .cloned()
+            .map(|x| GroupInviteResponse {
+                group_id: *x,
+                group_name: GROUPS.with_borrow(|groups| groups.get(x).unwrap().name.clone()),
+            })
             .collect::<Vec<_>>()
     }))
 }

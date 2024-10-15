@@ -43,12 +43,14 @@ type Chat = record {
     created_time_unix: nat;
 };
 
+type GroupInviteResponse = record {
+    group_id: nat;
+    group_name: text;
+};
+
 type WebsocketEventMessage = variant {
     Ping: null;
-    GroupInvited: record {
-        group_id: nat;
-        group_name: text;
-    };
+    GroupInvited: GroupInviteResponse;
     AddChat: Chat;
 };
 
@@ -144,7 +146,7 @@ service : {
     });
 
     get_self_group_invites: () -> (variant {
-        Ok: vec nat;
+        Ok: vec GroupInviteResponse;
         Err: text;
     }) query;
 

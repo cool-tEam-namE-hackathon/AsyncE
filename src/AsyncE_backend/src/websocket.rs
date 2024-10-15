@@ -10,6 +10,7 @@ use serde::{Deserialize, Serialize};
 use crate::{
     chat::Chat,
     globals::{CHATS, GROUPS, USERS, WEBSOCKET_CLIENTS},
+    invite::GroupInviteResponse,
     primary_key::{self, PrimaryKeyType},
     user,
 };
@@ -17,7 +18,7 @@ use crate::{
 #[derive(CandidType, Clone, Debug, Deserialize, Serialize)]
 pub enum WebsocketEventMessage {
     Ping,
-    GroupInvited { group_id: u128, group_name: String },
+    GroupInvited(GroupInviteResponse),
     AddChat(Chat),
 }
 
@@ -133,9 +134,9 @@ pub fn on_close(args: OnCloseCallbackArgs) {
 pub fn send_group_invited_notif(principal: Principal, group_id: u128, group_name: &str) {
     send_websocket_message(
         principal,
-        WebsocketEventMessage::GroupInvited {
+        WebsocketEventMessage::GroupInvited(GroupInviteResponse {
             group_id,
             group_name: group_name.to_string(),
-        },
+        }),
     );
 }
