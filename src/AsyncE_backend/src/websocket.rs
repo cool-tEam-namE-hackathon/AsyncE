@@ -59,8 +59,9 @@ pub fn on_open(args: OnOpenCallbackArgs) {
 
 pub fn on_message(args: OnMessageCallbackArgs) {
     let app_msg: WebsocketEventMessage = candid::decode_one(&args.message).unwrap();
-    user::assert_user_logged_in_from(args.client_principal);
     ic_cdk::println!("Received message: {:?}", app_msg);
+
+    user::assert_user_logged_in_from(args.client_principal).unwrap();
 
     match app_msg {
         WebsocketEventMessage::Ping => {}

@@ -53,35 +53,113 @@ type WebsocketEventMessage = variant {
 };
 
 service : {
-    get_user_credentials: () -> (opt text) query;
-    register: (text) -> ();
-    get_selfname: () -> (opt text) query;
-    query_username: (text) -> (vec text) query;
-    validate_username: (text) -> (bool) query;
-    upload_profile_picture: (blob) -> ();
-    get_profile_picture_size: () -> (nat) query;
-    get_profile_picture_chunk_blob: (nat) -> (blob) query;
+    get_user_credentials: () -> (variant {
+        Ok: opt text;
+        Err: text;
+    }) query;
 
-    create_group: (text) -> (nat);
-    get_all_groups: () -> (vec GroupQueryResponse) query;
-    get_group: (nat) -> (opt GroupQueryResponse) query;
-    upload_group_profile_picture: (nat, blob) -> ();
-    get_group_profile_picture_size: (nat) -> (nat) query;
-    get_group_profile_picture_chunk_blob: (nat, nat) -> (blob) query;
+    register: (text) -> (variant {
+        Ok: null;
+        Err: text;
+    });
 
-    get_videos: (nat) -> (vec Video) query;
-    create_video: (nat) -> (nat);
-    upload_video: (nat, nat, blob, bool) -> ();
-    concat_video: (nat, nat, blob, blob) -> ();
+    get_selfname: () -> (variant {
+        Ok: opt text;
+        Err: text;
+    }) query;
+    
+    validate_username: (text) -> (variant {
+        Ok: bool;
+        Err: text;
+    }) query;
 
-    invite_user: (nat, text) -> ();
-    get_self_group_invites: () -> (vec nat) query;
-    update_group_invite: (nat, bool) -> ();
+    upload_profile_picture: (blob) -> (variant {
+        Ok: null;
+        Err: text;
+    });
+
+    get_profile_picture_size: () -> (variant {
+        Ok: nat;
+        Err: text;
+    }) query;
+
+    get_profile_picture_chunk_blob: (nat) -> (variant {
+        Ok: blob;
+        Err: text;
+    }) query;
+
+    create_group: (text) -> (variant {
+        Ok: nat;
+        Err: text;
+    });
+
+    get_all_groups: () -> (variant {
+        Ok: vec GroupQueryResponse;
+        Err: text;
+    }) query;
+
+    get_group: (nat) -> (variant {
+        Ok: opt GroupQueryResponse;
+        Err: text;
+    }) query;
+
+    upload_group_profile_picture: (nat, blob) -> (variant {
+        Ok: null;
+        Err: text;
+    });
+
+    get_group_profile_picture_size: (nat) -> (variant {
+        Ok: nat;
+        Err: text;
+    }) query;
+
+    get_group_profile_picture_chunk_blob: (nat, nat) -> (variant {
+        Ok: blob;
+        Err: text;
+    }) query;
+
+    get_videos: (nat) -> (variant {
+        Ok: vec Video;
+        Err: text;
+    }) query;
+
+    create_video: (nat) -> (variant {
+        Ok: nat;
+        Err: text;
+    });
+
+    upload_video: (nat, nat, blob, bool) -> (variant {
+        Ok: null;
+        Err: text;
+    });
+
+    concat_video: (nat, nat, blob, blob) -> (variant {
+        Ok: null;
+        Err: text;
+    });
+
+    invite_user: (nat, text) -> (variant {
+        Ok: null;
+        Err: text;
+    });
+
+    get_self_group_invites: () -> (variant {
+        Ok: vec nat;
+        Err: text;
+    }) query;
+
+    update_group_invite: (nat, bool) -> (variant {
+        Ok: null;
+        Err: text;
+    });
 
     ws_open : (CanisterWsOpenArguments) -> (CanisterWsOpenResult);
     ws_close : (CanisterWsCloseArguments) -> (CanisterWsCloseResult);
     ws_message : (CanisterWsMessageArguments, opt WebsocketEventMessage) -> (CanisterWsMessageResult);
     ws_get_messages : (CanisterWsGetMessagesArguments) -> (CanisterWsGetMessagesResult) query;
 
-    get_chats: (nat) -> (vec Chat);
+    get_chats: (nat) -> (variant {
+        Ok: vec Chat;
+        Err: text;
+    });
 }

@@ -26,15 +26,16 @@ pub struct GroupQueryResponse {
 }
 
 impl Group {
-    pub fn new(name: impl Into<String>) -> Self {
-        let owner = user::get_selfname().unwrap();
-        Self {
+    pub fn new(name: impl Into<String>) -> Result<Self, String> {
+        let owner = user::get_selfname_force()?;
+
+        Ok(Self {
             id: primary_key::get_primary_key(PrimaryKeyType::Group),
             name: name.into(),
             owner: owner.clone(),
             users: Vec::from([owner]),
             profile_picture_blob: Vec::new(),
-        }
+        })
     }
 }
 
@@ -50,106 +51,114 @@ impl From<&Group> for GroupQueryResponse {
 }
 
 #[ic_cdk::update]
-pub fn create_group(name: String) -> u128 {
-    user::assert_user_logged_in();
+pub fn create_group(name: String) -> Result<u128, String> {
+    user::assert_user_logged_in()?;
 
-    let group = Group::new(name);
+    let group = Group::new(name)?;
     let group_id = group.id;
 
     GROUPS.with_borrow_mut(|groups| groups.insert(group.id, group));
 
-    group_id
+    Ok(group_id)
 }
 
 #[ic_cdk::query]
-pub fn get_all_groups() -> Vec<GroupQueryResponse> {
-    user::assert_user_logged_in();
+pub fn get_all_groups() -> Result<Vec<GroupQueryResponse>, String> {
+    user::assert_user_logged_in()?;
 
-    let owner = user::get_selfname().unwrap();
+    let owner = user::get_selfname_force()?;
 
-    GROUPS.with_borrow(|groups| {
+    Ok(GROUPS.with_borrow(|groups| {
         groups
             .values()
-            .filter(|x| x.owner == owner || x.users.contains(&owner))
+            .filter(|x| x.owner.eq_ignore_ascii_case(&owner) || x.users.contains(&owner))
             .map(GroupQueryResponse::from)
             .collect::<Vec<_>>()
-    })
+    }))
 }
 
 #[ic_cdk::query]
-pub fn get_group(group_id: u128) -> Option<GroupQueryResponse> {
-    user::assert_user_logged_in();
+pub fn get_group(group_id: u128) -> Result<Option<GroupQueryResponse>, String> {
+    user::assert_user_logged_in()?;
 
-    let selfname = user::get_selfname().unwrap();
+    let selfname = user::get_selfname_force()?;
+
     GROUPS.with_borrow(|groups| {
         let group = groups.get(&group_id);
 
         if let Some(group) = group.as_ref() {
             if group.owner != selfname && !group.users.contains(&selfname) {
-                panic!("This user is not in this group!")
+                return Err(String::from("This user is not in this group!"));
             }
         }
 
-        group.map(GroupQueryResponse::from)
+        Ok(group.map(GroupQueryResponse::from))
     })
 }
 
 #[ic_cdk::update]
-pub fn upload_group_profile_picture(group_id: u128, chunk_data: Vec<u8>) {
-    user::assert_user_logged_in();
+pub fn upload_group_profile_picture(group_id: u128, chunk_data: Vec<u8>) -> Result<(), String> {
+    user::assert_user_logged_in()?;
 
-    let selfname = user::get_selfname().unwrap();
+    let selfname = user::get_selfname_force()?;
+
     GROUPS.with_borrow_mut(|groups| {
         let group = groups
             .get_mut(&group_id)
-            .expect("Cannot find group with this ID!");
+            .ok_or(String::from("Cannot find group with this ID!"))?;
 
         if group.owner != selfname && !group.users.contains(&selfname) {
-            panic!("This user is not in this group!")
+            return Err(String::from("This user is not in this group!"));
         }
 
-        group.profile_picture_blob.extend(chunk_data)
+        group.profile_picture_blob.extend(chunk_data);
+        Ok(())
     })
 }
 
 #[ic_cdk::query]
-pub fn get_group_profile_picture_size(group_id: u128) -> u128 {
-    user::assert_user_logged_in();
+pub fn get_group_profile_picture_size(group_id: u128) -> Result<u128, String> {
+    user::assert_user_logged_in()?;
 
-    let selfname = user::get_selfname().unwrap();
+    let selfname = user::get_selfname_force()?;
+
     GROUPS.with_borrow(|groups| {
         let group = groups
             .get(&group_id)
-            .expect("Cannot find group with this ID!");
+            .ok_or(String::from("Cannot find group with this ID!"))?;
 
         if group.owner != selfname && !group.users.contains(&selfname) {
-            panic!("This user is not in this group!")
+            return Err(String::from("This user is not in this group!"));
         }
 
-        group.profile_picture_blob.len() as u128
+        Ok(group.profile_picture_blob.len() as u128)
     })
 }
 
 #[ic_cdk::query]
-pub fn get_group_profile_picture_chunk_blob(group_id: u128, index: u128) -> Vec<u8> {
-    user::assert_user_logged_in();
+pub fn get_group_profile_picture_chunk_blob(
+    group_id: u128,
+    index: u128,
+) -> Result<Vec<u8>, String> {
+    user::assert_user_logged_in()?;
 
-    let selfname = user::get_selfname().unwrap();
+    let selfname = user::get_selfname_force()?;
+
     GROUPS.with_borrow(|groups| {
         let group = groups
             .get(&group_id)
-            .expect("Cannot find group with this ID!");
+            .ok_or(String::from("Cannot find group with this ID!"))?;
 
         if group.owner != selfname && !group.users.contains(&selfname) {
-            panic!("This user is not in this group!")
+            return Err(String::from("This user is not in this group!"));
         }
 
-        group
+        Ok(group
             .profile_picture_blob
             .iter()
             .skip(index as usize * chunk::MB)
             .take(chunk::MB)
             .cloned()
-            .collect()
+            .collect())
     })
 }
