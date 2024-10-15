@@ -106,7 +106,14 @@ pub fn query_username(keyword: String) -> Vec<String> {
 #[ic_cdk::query]
 pub fn validate_username(name: String) -> bool {
     assert_user_logged_in();
-
+    ic_cdk::println!("finding username: {}", name);
+    ic_cdk::println!(
+        "all usernames: {:?}",
+        USERS.with_borrow(|users| users
+            .values()
+            .map(|x| x.username.clone())
+            .collect::<Vec<_>>())
+    );
     USERS.with_borrow(|users| {
         users
             .values()
