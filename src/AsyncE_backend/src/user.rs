@@ -104,6 +104,18 @@ pub fn query_username(keyword: String) -> Vec<String> {
 }
 
 #[ic_cdk::query]
+pub fn validate_username(name: String) -> bool {
+    assert_user_logged_in();
+
+    USERS.with_borrow(|users| {
+        users
+            .values()
+            .find(|x| x.username.eq_ignore_ascii_case(&name))
+            .is_some()
+    })
+}
+
+#[ic_cdk::query]
 pub fn get_all_usernames() -> Vec<String> {
     USERS.with_borrow(|users| {
         users

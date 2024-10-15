@@ -54,6 +54,7 @@ service : {
     register: (text) -> ();
     get_selfname: () -> (opt text) query;
     query_username: (text) -> (vec text) query;
+    validate_username: (text) -> (bool) query;
     upload_profile_picture: (blob) -> ();
     get_profile_picture_size: () -> (nat) query;
     get_profile_picture_chunk_blob: (nat) -> (blob) query;
