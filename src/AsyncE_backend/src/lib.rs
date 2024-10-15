@@ -11,7 +11,8 @@ pub mod video;
 pub mod websocket;
 
 use crate::{
-    chat::Chat, group::GroupQueryResponse, video::Video, websocket::WebsocketEventMessage,
+    chat::Chat, group::GroupQueryResponse, invite::GroupInviteResponse, video::Video,
+    websocket::WebsocketEventMessage,
 };
 use globals::{CHATS, GROUPS, GROUP_INVITES, PRIMARY_KEY_CONTAINERS, USERS, VIDEOS};
 use ic_websocket_cdk::{

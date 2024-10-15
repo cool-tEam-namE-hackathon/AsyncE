@@ -43,12 +43,14 @@ type Chat = record {
     created_time_unix: nat;
 };
 
+type GroupInviteResponse = record {
+    group_id: nat;
+    group_name: text;
+};
+
 type WebsocketEventMessage = variant {
     Ping: null;
-    GroupInvited: record {
-        group_id: nat;
-        group_name: text;
-    };
+    GroupInvited: GroupInviteResponse;
     AddChat: Chat;
 };
 
@@ -75,7 +77,7 @@ service : {
     concat_video: (nat, nat, blob, blob) -> ();
 
     invite_user: (nat, text) -> ();
-    get_self_group_invites: () -> (vec nat) query;
+    get_self_group_invites: () -> (vec GroupInviteResponse) query;
     update_group_invite: (nat, bool) -> ();
 
     ws_open : (CanisterWsOpenArguments) -> (CanisterWsOpenResult);
