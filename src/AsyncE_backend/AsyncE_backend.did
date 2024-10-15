@@ -45,7 +45,10 @@ type Chat = record {
 
 type WebsocketEventMessage = variant {
     Ping: null;
-    GroupInvited: text;
+    GroupInvited: record {
+        group_id: nat;
+        group_name: text;
+    };
     AddChat: Chat;
 };
 
