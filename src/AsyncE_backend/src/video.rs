@@ -46,20 +46,17 @@ impl Video {
     }
 }
 
-fn assert_check_group(group_id: u128) {
-    let group = match group::get_group(group_id) {
-        Some(group) => group,
-        None => panic!("Group not found!"),
-    };
+fn assert_check_group(group_id: u128) -> Result<(), String> {
+    let group =
+        group::get_group(group_id)?.ok_or(String::from("Group with this ID is not found"))?;
 
-    let name = match user::get_selfname() {
-        Some(name) => name,
-        None => panic!("Current user does not have a name!"),
-    };
+    let name = user::get_selfname_force()?;
 
     if group.owner != name && !group.users.contains(&name) {
-        panic!("Current user does not belong to this group!")
+        return Err(String::from("Current user does not belong to this group!"));
     }
+
+    Ok(())
 }
 
 fn add_mp4_track<T: AsRef<[u8]>>(
@@ -144,38 +141,43 @@ fn concat_mp4(self_blob_data: &mut Vec<u8>, blob_data: &[u8]) {
 }
 
 #[ic_cdk::query]
-pub fn get_videos(group_id: u128) -> Vec<Video> {
-    user::assert_user_logged_in();
-    assert_check_group(group_id);
+pub fn get_videos(group_id: u128) -> Result<Vec<Video>, String> {
+    user::assert_user_logged_in()?;
+    assert_check_group(group_id)?;
 
     VIDEOS.with_borrow(|videos| {
-        videos
+        Ok(videos
             .get(&group_id)
             .cloned()
             .unwrap_or_default()
             .values()
             .cloned()
-            .collect::<Vec<_>>()
+            .collect::<Vec<_>>())
     })
 }
 
 #[ic_cdk::update]
-pub fn create_video(group_id: u128) -> u128 {
-    user::assert_user_logged_in();
-    assert_check_group(group_id);
+pub fn create_video(group_id: u128) -> Result<u128, String> {
+    user::assert_user_logged_in()?;
+    assert_check_group(group_id)?;
 
-    let selfname = user::get_selfname().unwrap();
+    let selfname = user::get_selfname_force()?;
     let video = Video::new(selfname);
     let video_id = video.id;
     VIDEOS.with_borrow_mut(|videos| videos.entry(group_id).or_default().insert(video.id, video));
     VIDEO_UPLOADS.with_borrow_mut(|video_uploads| video_uploads.insert(video_id, Vec::new()));
-    video_id
+    Ok(video_id)
 }
 
 #[ic_cdk::update]
-pub fn upload_video(group_id: u128, video_id: u128, data: Vec<u8>, finish: bool) {
-    user::assert_user_logged_in();
-    assert_check_group(group_id);
+pub fn upload_video(
+    group_id: u128,
+    video_id: u128,
+    data: Vec<u8>,
+    finish: bool,
+) -> Result<(), String> {
+    user::assert_user_logged_in()?;
+    assert_check_group(group_id)?;
 
     VIDEO_UPLOADS.with_borrow_mut(|video_uploads| {
         video_uploads.get_mut(&video_id).unwrap().extend(data);
@@ -193,24 +195,25 @@ pub fn upload_video(group_id: u128, video_id: u128, data: Vec<u8>, finish: bool)
             })
         }
     });
+
+    Ok(())
 }
 
 #[ic_cdk::update]
-pub fn concat_video(group_id: u128, video_id: u128, data: Vec<u8>) {
-    user::assert_user_logged_in();
-    assert_check_group(group_id);
+pub fn concat_video(group_id: u128, video_id: u128, data: Vec<u8>) -> Result<(), String> {
+    user::assert_user_logged_in()?;
+    assert_check_group(group_id)?;
 
     VIDEOS.with_borrow_mut(|videos| {
-        let videos = match videos.get_mut(&group_id) {
-            Some(video) => video,
-            None => panic!("No videos found on this group!"),
-        };
+        let videos = videos
+            .get_mut(&group_id)
+            .ok_or(String::from("No videos found on this group!"))?;
 
-        let video = match videos.get_mut(&video_id) {
-            Some(video) => video,
-            None => panic!("No video found on this video ID!"),
-        };
+        let video = videos
+            .get_mut(&video_id)
+            .ok_or(String::from("No video found on this video ID!"))?;
 
         concat_mp4(&mut video.data, &data);
-    });
+        Ok(())
+    })
 }

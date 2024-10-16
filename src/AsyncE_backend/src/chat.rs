@@ -29,24 +29,28 @@ impl Chat {
 }
 
 #[ic_cdk::query]
-pub fn get_chats(group_id: u128) -> Vec<Chat> {
-    let selfname = user::get_selfname().unwrap();
+pub fn get_chats(group_id: u128) -> Result<Vec<Chat>, String> {
+    user::assert_user_logged_in()?;
+
+    let selfname = user::get_selfname_force()?;
+
     GROUPS.with_borrow(|groups| {
         let group = groups
             .get(&group_id)
-            .expect("Cannot find group with this ID!");
+            .ok_or(String::from("Cannot find group with this ID!"))?;
+
         if group.owner != selfname && !group.users.contains(&selfname) {
-            panic!("This user is not in this group!")
+            return Err(String::from("This user is not in this group!"));
         }
 
         CHATS.with_borrow(|chats| {
-            chats
+            Ok(chats
                 .get(&group_id)
                 .cloned()
                 .unwrap_or_default()
                 .values()
                 .cloned()
-                .collect::<Vec<_>>()
+                .collect::<Vec<_>>())
         })
     })
 }

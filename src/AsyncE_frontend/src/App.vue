@@ -114,7 +114,7 @@ onMounted(() => {
     watchEffect(async () => {
         if (isInitialized.value) {
             const response = await userStore.getUserCredentials();
-            if (!response?.length && isAuthenticated.value) {
+            if (!response && isAuthenticated.value) {
                 isOpen.value = true;
             }
         }
