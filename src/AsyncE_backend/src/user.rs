@@ -6,6 +6,7 @@ use crate::{chunk, globals::USERS};
 #[derive(Clone, Debug, Default, CandidType, Deserialize)]
 pub struct User {
     pub username: String,
+    pub created_time_unix: u128,
     pub profile_picture_blob: Vec<u8>,
 }
 
@@ -85,6 +86,7 @@ pub fn register(name: String) -> Result<(), String> {
 
     let user = User {
         username: name,
+        created_time_unix: ic_cdk::api::time() as u128,
         profile_picture_blob: Vec::new(),
     };
     USERS.with_borrow_mut(|users| users.insert(principal, user));

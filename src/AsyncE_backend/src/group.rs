@@ -14,6 +14,7 @@ pub struct Group {
     pub name: String,
     pub users: Vec<String>,
     pub owner: String,
+    pub created_time_unix: u128,
     pub profile_picture_blob: Vec<u8>,
 }
 
@@ -23,6 +24,7 @@ pub struct GroupQueryResponse {
     pub name: String,
     pub users: Vec<String>,
     pub owner: String,
+    pub created_time_unix: u128,
 }
 
 impl Group {
@@ -34,6 +36,7 @@ impl Group {
             name: name.into(),
             owner: owner.clone(),
             users: Vec::from([owner]),
+            created_time_unix: ic_cdk::api::time() as u128,
             profile_picture_blob: Vec::new(),
         })
     }
@@ -46,6 +49,7 @@ impl From<&Group> for GroupQueryResponse {
             name: x.name.clone(),
             users: x.users.clone(),
             owner: x.owner.clone(),
+            created_time_unix: x.created_time_unix,
         }
     }
 }
