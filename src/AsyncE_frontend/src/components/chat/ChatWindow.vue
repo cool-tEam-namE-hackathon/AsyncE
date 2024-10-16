@@ -65,7 +65,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from "vue";
+import { nextTick, ref, watch } from "vue";
 
 import { storeToRefs } from "pinia";
 
@@ -96,6 +96,17 @@ function toggleChatWindow() {
     isChatWindowOpen.value = !isChatWindowOpen.value;
 }
 
+function scrollToBottom() {
+    nextTick(() => {
+        if (chatRef.value) {
+            chatRef.value.scrollTo({
+                top: chatRef.value.scrollHeight,
+                behavior: "smooth",
+            });
+        }
+    });
+}
+
 function handleChatSend() {
     const payload: Chat & { temp?: boolean } = {
         id: BigInt(0),
@@ -109,19 +120,19 @@ function handleChatSend() {
 
     messages.value.push(payload);
 
-    if (chatRef.value) {
-        chatRef.value.scrollTo({
-            top: chatRef.value.scrollHeight,
-            behavior: "smooth",
-        });
-    }
     message.value = "";
+
+    scrollToBottom();
 }
 
 function handleIncomingChat(chat: Chat & { temp?: boolean }) {
-    messages.value = messages.value.filter((message) => !message.temp);
+    if (chat.username !== username.value) {
+        messages.value = messages.value.filter((message) => !message.temp);
 
-    messages.value.push(chat);
+        messages.value.push(chat);
+
+        scrollToBottom();
+    }
 }
 
 websocketStore.setOnChatReceive(handleIncomingChat);
