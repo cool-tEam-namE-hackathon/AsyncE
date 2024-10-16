@@ -23,7 +23,10 @@
         </base-dialog>
 
         <!-- INVITE USER DIALOG -->
-        <base-dialog :open="isInviteUserDialogOpen">
+        <base-dialog
+            :open="isInviteUserDialogOpen"
+            @on-close-dialog="toggleInviteModal"
+        >
             <template #title> Invite user </template>
 
             <template #description>
@@ -186,7 +189,7 @@
                             >Manage and invite users to your video
                             sessions</span
                         >
-                        <Button class="mt-2" @click="toggleUserModal">
+                        <Button class="mt-2" @click="toggleInviteModal">
                             <Icon
                                 icon="lucide:user-plus"
                                 width="24"
@@ -356,7 +359,7 @@ const isFieldError = computed(() => {
     return !isError.value && inputtedUsername.value;
 });
 
-function toggleUserModal() {
+function toggleInviteModal() {
     isInviteUserDialogOpen.value = !isInviteUserDialogOpen.value;
 }
 
@@ -376,6 +379,7 @@ async function handleInvite() {
             BigInt(route.params.id as string),
             inputtedUsername.value,
         );
+        isInviteUserDialogOpen.value = false;
     } catch (e) {
         inviteError.value = (e as Error).message;
     } finally {

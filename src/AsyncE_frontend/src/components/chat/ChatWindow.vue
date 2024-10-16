@@ -24,7 +24,7 @@
                         :class="[
                             message.username === username
                                 ? 'bg-black text-white'
-                                : 'bg-gray-400',
+                                : 'bg-gray-200 text-black',
                             'inline-block p-2 rounded-md text-sm',
                         ]"
                     >
@@ -88,7 +88,7 @@ const { ws } = storeToRefs(websocketStore);
 const { username } = storeToRefs(useUserStore());
 
 const message = ref<string>("");
-const messages = ref<Chat[]>([]);
+const messages = ref<(Chat & { temp?: boolean })[]>([]);
 const isChatWindowOpen = ref<boolean>(false);
 const chatRef = ref<HTMLDivElement>();
 
@@ -97,12 +97,13 @@ function toggleChatWindow() {
 }
 
 function handleChatSend() {
-    const payload: Chat = {
+    const payload: Chat & { temp?: boolean } = {
         id: BigInt(0),
         content: message.value,
         group_id: BigInt(route.params.id as string),
         created_time_unix: BigInt(0),
         username: username.value,
+        temp: true,
     };
     websocketStore.sendMessage(payload);
 
@@ -117,20 +118,11 @@ function handleChatSend() {
     message.value = "";
 }
 
-function handleIncomingChat(chat: Chat) {
-    console.log("here");
+function handleIncomingChat(chat: Chat & { temp?: boolean }) {
+    messages.value = messages.value.filter((message) => !message.temp);
 
-    console.log(chat);
+    messages.value.push(chat);
 }
 
 websocketStore.setOnChatReceive(handleIncomingChat);
-
-function init() {
-    ws.value?.send({
-        Ping: null,
-    });
-    console.log("here");
-}
-
-init();
 </script>

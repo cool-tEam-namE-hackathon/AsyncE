@@ -11,9 +11,7 @@
             </DialogHeader>
             <slot name="content" />
             <DialogFooter>
-                <DialogClose as-child>
-                    <slot name="footer" />
-                </DialogClose>
+                <slot name="footer" />
             </DialogFooter>
         </DialogContent>
     </Dialog>
@@ -25,7 +23,6 @@ import { BaseDialogProps } from "@/types/api/model";
 
 import {
     Dialog,
-    DialogClose,
     DialogContent,
     DialogDescription,
     DialogFooter,
