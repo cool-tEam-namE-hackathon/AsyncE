@@ -10,6 +10,7 @@ use serde::{Deserialize, Serialize};
 use crate::{
     chat::Chat,
     globals::{CHATS, GROUPS, USERS, WEBSOCKET_CLIENTS},
+    group::Group,
     invite::GroupInviteResponse,
     primary_key::{self, PrimaryKeyType},
     user,
@@ -60,8 +61,9 @@ pub fn on_open(args: OnOpenCallbackArgs) {
 
 pub fn on_message(args: OnMessageCallbackArgs) {
     let app_msg: WebsocketEventMessage = candid::decode_one(&args.message).unwrap();
-    user::assert_user_logged_in_from(args.client_principal);
     ic_cdk::println!("Received message: {:?}", app_msg);
+
+    user::assert_user_logged_in_from(args.client_principal).unwrap();
 
     match app_msg {
         WebsocketEventMessage::Ping => {}
@@ -95,10 +97,24 @@ pub fn on_message(args: OnMessageCallbackArgs) {
                         .or_default()
                         .insert(chat.id, chat.clone());
 
-                    broadcast_websocket_message(WebsocketEventMessage::AddChat(chat));
+                    broadcast_chat(group, chat);
                 })
             });
         }
+    }
+}
+
+pub fn broadcast_chat(group: &Group, chat: Chat) {
+    for username in group.users.iter() {
+        USERS.with_borrow(|users| {
+            if let Some(principal) = users
+                .iter()
+                .find(|x| x.1.username.eq_ignore_ascii_case(&username))
+                .map(|x| x.0)
+            {
+                send_websocket_message(*principal, WebsocketEventMessage::AddChat(chat.clone()));
+            }
+        })
     }
 }
 
@@ -111,6 +127,12 @@ pub fn broadcast_websocket_message(msg: WebsocketEventMessage) {
 }
 
 pub fn send_websocket_message(client_principal: ClientPrincipal, msg: WebsocketEventMessage) {
+    if !WEBSOCKET_CLIENTS
+        .with_borrow(|websocket_clients| websocket_clients.contains(&client_principal))
+    {
+        return;
+    }
+
     ic_cdk::println!("Sending message to {}: {:?}", client_principal, msg);
 
     if let Err(e) = ic_websocket_cdk::send(client_principal, msg.candid_serialize()) {

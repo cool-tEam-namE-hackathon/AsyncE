@@ -116,26 +116,45 @@ export const useUserStore = defineStore("user", () => {
     }
 
     async function getUserCredentials() {
-        const response = await actor.value?.get_user_credentials();
-        if (response?.length) {
-            username.value = response[0];
+        const responseResult = await actor.value?.get_user_credentials();
+        console.log("responseResult", responseResult);
 
-            const profilePictureBlobSizeBigint =
-                await actor.value?.get_profile_picture_size();
-            const profilePictureBlobSize = Number(profilePictureBlobSizeBigint);
-            const profilePictureData = new Uint8Array(profilePictureBlobSize);
+        if (responseResult) {
+            if ("Ok" in responseResult) {
+                const response = responseResult.Ok;
+                if (response?.length) {
+                    username.value = response[0];
 
-            for (let i = 0; i < Math.ceil(profilePictureBlobSize / MB); ++i) {
-                await actor.value
-                    ?.get_profile_picture_chunk_blob(BigInt(i))
-                    .then((chunk) => {
-                        profilePictureData.set(chunk, i * MB);
-                    });
+                    const profilePictureBlobSizeBigint =
+                        await actor.value?.get_profile_picture_size();
+                    const profilePictureBlobSize = Number(
+                        profilePictureBlobSizeBigint,
+                    );
+                    const profilePictureData = new Uint8Array(
+                        profilePictureBlobSize,
+                    );
+
+                    for (
+                        let i = 0;
+                        i < Math.ceil(profilePictureBlobSize / MB);
+                        ++i
+                    ) {
+                        await actor.value
+                            ?.get_profile_picture_chunk_blob(BigInt(i))
+                            .then((chunk) => {
+                                profilePictureData.set(chunk, i * MB);
+                            });
+                    }
+
+                    profilePicture.value = blobToURL(profilePictureData);
+                    return true;
+                }
+            } else {
+                console.log("get_user_credentials error:", responseResult.Err);
             }
-
-            profilePicture.value = blobToURL(profilePictureData);
         }
-        return response;
+
+        return false;
     }
 
     async function validateUsername(username: string) {
