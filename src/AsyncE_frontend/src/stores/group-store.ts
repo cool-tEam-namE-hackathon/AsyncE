@@ -38,7 +38,7 @@ export const useGroupStore = defineStore("group", () => {
                 groupList.value.push(group);
 
                 await actor.value
-                    ?.get_group_profile_picture_size(group.id)!
+                    ?.get_group_profile_picture_size(group.id)
                     .then(async (groupPictureBlobSizeBigInt) => {
                         const profilePictureBlobSize = Number(
                             groupPictureBlobSizeBigInt,
@@ -159,6 +159,21 @@ export const useGroupStore = defineStore("group", () => {
         return response;
     }
 
+    async function getInvites() {
+        const response = await actor.value?.get_self_group_invites();
+
+        return response;
+    }
+
+    async function handleInvitation(groupId: bigint, invitation: boolean) {
+        const response = await actor.value?.update_group_invite(
+            groupId,
+            invitation,
+        );
+
+        return response;
+    }
+
     return {
         currentGroup,
         groupList,
@@ -167,6 +182,8 @@ export const useGroupStore = defineStore("group", () => {
         // addVideo,
         getAllGroups,
         getGroup,
+        getInvites,
+        handleInvitation,
         createGroup,
         inviteUser,
     };

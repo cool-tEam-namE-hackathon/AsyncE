@@ -5,13 +5,15 @@
                 <h1 class="text-2xl font-bold text-gray-900">Your Groups</h1>
                 <router-link to="/create-group">
                     <Button>
-                        <Icon
-                            class="mr-2"
-                            icon="mdi-light:plus-circle"
-                            width="1.2rem"
-                            height="1.2rem"
-                        />
-                        Create New Group
+                        <template #default>
+                            <Icon
+                                class="mr-2"
+                                icon="mdi-light:plus-circle"
+                                width="1.2rem"
+                                height="1.2rem"
+                            />
+                            Create New Group
+                        </template>
                     </Button>
                 </router-link>
             </div>

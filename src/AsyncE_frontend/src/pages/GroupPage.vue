@@ -22,20 +22,64 @@
             </template>
         </base-dialog>
 
+        <!-- INVITE USER DIALOG -->
+        <base-dialog
+            :open="isInviteUserDialogOpen"
+            @on-close-dialog="toggleUserModal"
+        >
+            <template #title> Invite user </template>
+
+            <template #description>
+                Enter the username of the user you'd like to invite.
+            </template>
+
+            <template #content>
+                <div class="flex items-center gap-3">
+                    <Label>Username</Label>
+                    <Input
+                        v-model="invitedUsername"
+                        :class="{
+                            'border-red-600': isFieldError && invitedUsername,
+                            'border-green-700':
+                                !isFieldError && invitedUsername,
+                            'focus-visible:ring-0': true,
+                        }"
+                        @update:model-value="validateUsername"
+                    />
+                    <Icon
+                        icon="ep:success-filled"
+                        width="32"
+                        height="32"
+                        :class="{
+                            'text-red-700': isFieldError && invitedUsername,
+                            'text-green-700': !isFieldError && invitedUsername,
+                            hidden: !invitedUsername,
+                        }"
+                    />
+                </div>
+            </template>
+
+            <template #footer>
+                <Button :disabled="isFieldError" @click="handleInvite"
+                    >Invite</Button
+                >
+            </template>
+        </base-dialog>
+
         <!-- GROUP NAME -->
         <span> {{ currentGroup?.name }}</span>
 
         <!-- MEDIA -->
         <div class="mx-auto py-8">
             <div class="flex flex-col lg:flex-row gap-8">
-                <!-- VIDEO -->
-                <div class="w-full">
-                    <div class="bg-white rounded-lg shadow-md p-6">
+                <div class="w-full flex gap-8">
+                    <!-- VIDEO -->
+                    <div class="flex-1 bg-white rounded-lg shadow-sm p-6">
                         <div class="flex items-center justify-between mb-3">
                             <h2 class="text-xl font-semibold">
                                 Record New Video
                             </h2>
-                            <VideoControls
+                            <video-controls
                                 v-model:selectedCamera="selectedCamera"
                                 :camera-list="cameraList"
                                 :enabled-camera="enabledCamera"
@@ -47,12 +91,6 @@
                                 @on-record="handleRecord"
                             />
                         </div>
-
-                        <!-- RESULT VIDEO -->
-                        <canvas
-                            ref="canvasRef"
-                            class="rounded-lg w-full hidden"
-                        ></canvas>
 
                         <!-- NO CAMERA OR SCREEN YET -->
                         <div
@@ -112,21 +150,53 @@
                             </div>
                         </div>
                     </div>
+
+                    <!-- USER MANAGEMENT -->
+                    <div
+                        class="p-4 rounded-lg border-solid border-[1px] border-slate-200 w-64"
+                    >
+                        <div class="flex items-center gap-2">
+                            <Icon
+                                icon="lucide:users"
+                                width="24"
+                                height="24"
+                                style="color: black"
+                            />
+                            <h1>User Management</h1>
+                        </div>
+                        <span class="text-sm text-gray-400"
+                            >Manage and invite users to your video
+                            sessions</span
+                        >
+                        <Button class="mt-2" @click="toggleUserModal">
+                            <Icon
+                                icon="lucide:user-plus"
+                                width="24"
+                                height="24"
+                                class="text-white mr-2"
+                            />
+                            Invite new users
+                        </Button>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <video v-if="url" autoplay muted controls>
+    <!-- CHAT -->
+    <chat-window />
+
+    <!-- <video v-if="url" autoplay muted controls>
         <source :src="url" type="video/mp4" />
         Your browser does not support the video tag.
-    </video>
+    </video> -->
 </template>
 
 <script setup lang="ts">
 import { ref, watchEffect, computed, onMounted } from "vue";
 
 import { useRoute } from "vue-router";
+import { useUserStore } from "@stores/user-store";
 import { useGroupStore } from "@stores/group-store";
 import { storeToRefs } from "pinia";
 
@@ -135,21 +205,27 @@ import {
     useUserMedia,
     useDevicesList,
     useElementSize,
+    useDebounceFn,
 } from "@vueuse/core";
 
 import { Icon } from "@iconify/vue";
 
-import VideoControls from "@components/VideoControls.vue";
+import VideoControls from "@components/video/VideoControls.vue";
+import ChatWindow from "@components/chat/ChatWindow.vue";
 
-import BaseDialog from "@/components/shared/BaseDialog.vue";
-import BaseProgress from "@/components/shared/BaseProgress.vue";
+import { Button } from "@components/ui/button";
+import Input from "@components/ui/input/Input.vue";
+import Label from "@components/ui/label/Label.vue";
+
+import BaseDialog from "@components/shared/BaseDialog.vue";
+import BaseProgress from "@components/shared/BaseProgress.vue";
 
 import { RecordedChunks } from "@/types/api/model";
 import { generateUUID, createChunks } from "@/utils/helpers";
-import { useUserStore } from "@/stores/user-store";
 
 const route = useRoute();
 const groupStore = useGroupStore();
+const userStore = useUserStore();
 
 const selectedCamera = ref<string>();
 const uploadedChunk = ref<{
@@ -173,6 +249,7 @@ const url = ref<string>("");
 
 const isRecording = ref<boolean>(false);
 const isOpen = ref<boolean>(false);
+const isError = ref<boolean>(false);
 
 const recordedChunks = ref<Blob[]>([]);
 
@@ -190,7 +267,6 @@ const recordedVideo = ref<Uint8Array | null>(null);
 // const mediaStreamAudioDestinationNode = ref<MediaStreamAudioDestinationNode | null>(null);
 
 const { currentGroup } = storeToRefs(groupStore);
-const { ws } = storeToRefs(useUserStore());
 
 const { enabled: enabledScreen, stream: displayStream } = useDisplayMedia({
     audio: true,
@@ -250,6 +326,32 @@ const screenProgress = computed(() => {
         (uploadedChunk.value.screen / totalUploadSize.value.screen) * 100 || 0
     );
 });
+
+const isInviteUserDialogOpen = ref<boolean>(false);
+
+const invitedUsername = ref<string>("");
+const inputtedUsername = ref<string>("");
+
+const isFieldError = computed(() => {
+    return !isError.value && inputtedUsername.value;
+});
+
+function toggleUserModal() {
+    isInviteUserDialogOpen.value = !isInviteUserDialogOpen.value;
+}
+
+const validateUsername = useDebounceFn(async (payload) => {
+    const response = await userStore.validateUsername(payload);
+    isError.value = response!;
+    inputtedUsername.value = payload;
+}, 1000);
+
+async function handleInvite() {
+    await groupStore.inviteUser(
+        BigInt(route.params.id as string),
+        inputtedUsername.value,
+    );
+}
 
 function startRecording() {
     if (!canvasRef.value) return;
@@ -482,16 +584,10 @@ onMounted(async () => {
 async function init() {
     // inviteUser();
     await fetchGroupDetails();
-    
-    ws.value?.send({
-        AddChat: {
-            id: BigInt(0),
-            content: "bitch",
-            created_time_unix: BigInt(0),
-            username: "Dylan",
-            group_id: BigInt(route.params.id[0]),
-        },
-    });
+
+    // ws.value!.onmessage = async (event) => {
+    //     console.log(event);
+    // };
 }
 
 await init();

@@ -3,7 +3,7 @@
         <DropdownMenuTrigger>
             <slot name="trigger" />
         </DropdownMenuTrigger>
-        <DropdownMenuContent :side-offset="20">
+        <DropdownMenuContent>
             <DropdownMenuLabel>
                 <span v-if="props.label">{{ props.label }}</span>
             </DropdownMenuLabel>
@@ -12,9 +12,14 @@
                 v-for="(option, index) in props.options"
                 :key="index"
             >
-                <span @click="handleClick(option.name)"
+                <span @click="handleOptionClick(option.name)"
                     >{{ option.name }}
                 </span>
+            </DropdownMenuItem>
+
+            <!-- NO DATA FOUND -->
+            <DropdownMenuItem v-if="props.options.length === 0" disabled>
+                <span>{{ props.emptyMessage }}</span>
             </DropdownMenuItem>
         </DropdownMenuContent>
     </DropdownMenu>
@@ -33,13 +38,10 @@ import {
 
 const props = defineProps<BaseDropdownProps>();
 const emits = defineEmits<{
-    (e: "on-logout-click"): void;
+    (e: "on-option-click", payload: string): void;
 }>();
 
-function handleClick(name: string) {
-    if (name === "Logout") {
-        emits("on-logout-click");
-    }
-    return;
+function handleOptionClick(option: string) {
+    emits("on-option-click", option);
 }
 </script>

@@ -56,8 +56,13 @@ interface BaseDialogProps {
     hideCloseButton?: boolean;
 }
 
+interface DropdownOptions {
+    name: string;
+}
+
 interface BaseDropdownProps {
-    options?: Option[];
+    options: DropdownOptions[];
+    emptyMessage?: string;
     label?: string;
     side?: "top" | "right" | "bottom" | "left";
 }
@@ -77,6 +82,11 @@ interface Option {
     name: string;
 }
 
+interface GroupInvite {
+    group_id: bigint;
+    group_name: string;
+}
+
 export type {
     User,
     Group,
@@ -91,4 +101,5 @@ export type {
     RecordingStatus,
     Elements,
     VideoRefs,
+    GroupInvite,
 };

@@ -1,10 +1,12 @@
 <template>
-    <div v-if="isInitialized" class="h-dvh flex flex-col">
+    <div v-if="!isInitialized">
+        <base-spinner />
+    </div>
+    <div v-else class="h-dvh flex flex-col">
         <Navbar />
         <router-view v-slot="{ Component }">
             <Suspense>
                 <component :is="Component" />
-
                 <template #fallback>
                     <base-spinner />
                 </template>
@@ -45,7 +47,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watchEffect, onMounted } from "vue";
+import { ref, computed } from "vue";
 import { storeToRefs } from "pinia";
 
 import Navbar from "@components/layout/Navbar.vue";
@@ -59,12 +61,15 @@ import BaseSpinner from "@components/shared/BaseSpinner.vue";
 import BaseDialog from "@components/shared/BaseDialog.vue";
 
 import { useUserStore } from "@stores/user-store";
+import { useWebsocketStore } from "@stores/websocket-store";
+
 import { fileToBlob } from "./utils/helpers";
 import { User } from "./types/api/model";
 
 const userStore = useUserStore();
+const websocketStore = useWebsocketStore();
 const { isAuthenticated } = storeToRefs(userStore);
-const { ws } = storeToRefs(userStore);
+const { ws } = storeToRefs(useWebsocketStore());
 
 const isOpen = ref<boolean>(false);
 const isInitialized = ref<boolean>(false);
@@ -104,22 +109,39 @@ function onFileInput(e: Event) {
 
 async function init() {
     await userStore.init();
-    await userStore.setWebsockets();
+    await websocketStore.setWebsockets();
+
+    const response = await userStore.getUserCredentials();
+    if (!response?.length && isAuthenticated.value) {
+        isOpen.value = true;
+    }
+
     isInitialized.value = true;
 
-    console.log(ws.value);
+    // console.log(ws.value);
 }
 
-onMounted(() => {
-    watchEffect(async () => {
-        if (isInitialized.value) {
-            const response = await userStore.getUserCredentials();
-            if (!response?.length && isAuthenticated.value) {
-                isOpen.value = true;
-            }
-        }
-    });
-});
+// onMounted(async () => {
+//     const response = await userStore.getUserCredentials();
+//     if (!response?.length && isAuthenticated.value) {
+//         isOpen.value = true;
+//     }
+
+//     isInitialized.value = true;
+// });
+
+// watchEffect(async () => {
+//     if (isInitialized.value) {
+//         const response = await userStore.getUserCredentials();
+//         if (!response?.length && isAuthenticated.value) {
+//             isOpen.value = true;
+//         }
+//     }
+// });
 
 init();
+
+// onBeforeMount(async () => {
+//     await init();
+// });
 </script>

@@ -17,13 +17,32 @@
                 <div class="space-y-2">
                     <Label>Group Image</Label>
                     <div class="flex items-center space-x-2">
-                        <Input type="file" accept="image/*" @on-file-change="onFileInput" />
+                        <Input
+                            type="file"
+                            accept="image/*"
+                            @on-file-change="onFileInput"
+                        />
                     </div>
                 </div>
             </div>
             <div class="mt-6">
-                <Button class="w-full" @click="createGroup" :disabled="isFormValid">
-                    Create Group
+                <Button
+                    class="w-full"
+                    :disabled="isFormValid || isLoading"
+                    :is-loading="isLoading"
+                    @click="createGroup"
+                >
+                    <template #default> Create Group </template>
+
+                    <template #loading>
+                        <Icon
+                            icon="prime:spinner"
+                            width="16"
+                            height="16"
+                            class="text-white animate-spin mr-1"
+                        />
+                        Creating Group...
+                    </template>
                 </Button>
             </div>
         </div>
@@ -33,17 +52,22 @@
 <script setup lang="ts">
 import { ref, computed } from "vue";
 
-import { fileToBlob } from "@/utils/helpers";
+import { useRouter } from "vue-router";
 
 import { useGroupStore } from "@stores/group-store";
+
+import { fileToBlob } from "@/utils/helpers";
+
+import { Icon } from "@iconify/vue";
 
 import Input from "@components/ui/input/Input.vue";
 import Label from "@components/ui/label/Label.vue";
 import Button from "@components/ui/button/Button.vue";
-import { useRouter } from "vue-router";
 
 const router = useRouter();
 const groupStore = useGroupStore();
+
+const isLoading = ref<boolean>(false);
 
 const groupName = ref<string>("");
 const groupPicture = ref<Blob | null>();
@@ -65,6 +89,8 @@ async function createGroup() {
         return;
     }
 
+    isLoading.value = true;
+
     const payload = {
         name: groupName.value,
         picture: new Uint8Array(await groupPicture.value?.arrayBuffer()),
@@ -75,6 +101,8 @@ async function createGroup() {
         router.push("/group-list");
     } catch (e) {
         console.log(e);
+    } finally {
+        isLoading.value = false;
     }
 }
 </script>
