@@ -9,6 +9,7 @@ import { storeToRefs } from "pinia";
 import { Group } from "@/types/api/model";
 import { MB } from "@/data/user-constants";
 import { GroupQueryResponse } from "@declarations/AsyncE_backend/AsyncE_backend.did";
+import { validateResponse } from "@/utils/helpers";
 
 export const useGroupStore = defineStore("group", () => {
     const { actor } = storeToRefs(useUserStore());
@@ -29,50 +30,45 @@ export const useGroupStore = defineStore("group", () => {
 
     async function getAllGroups() {
         const response = await actor.value?.get_all_groups();
-        if (response) {
-            groupList.value = [];
+        const okResponse = validateResponse(response);
 
-            for (let i = 0; i < response.length; ++i) {
-                const groupResponse = response[i];
+        const groupFetchPromises = okResponse.map(
+            async (groupResponse, index) => {
                 const group = convertGroupFromResponse(groupResponse);
-                groupList.value.push(group);
+                const profilePictureData = await fetchGroupProfilePicture(
+                    group.id,
+                );
 
-                await actor.value
-                    ?.get_group_profile_picture_size(group.id)
-                    .then(async (groupPictureBlobSizeBigInt) => {
-                        const profilePictureBlobSize = Number(
-                            groupPictureBlobSizeBigInt,
-                        );
-                        const profilePictureData = new Uint8Array(
-                            profilePictureBlobSize,
-                        );
+                group.profile_picture_blob = profilePictureData;
+                groupList.value[index] = group;
+            },
+        );
 
-                        const promises = [];
-                        for (
-                            let i = 0;
-                            i < Math.ceil(profilePictureBlobSize / MB);
-                            ++i
-                        ) {
-                            promises.push(
-                                actor.value
-                                    ?.get_group_profile_picture_chunk_blob(
-                                        group.id,
-                                        BigInt(i),
-                                    )
-                                    .then((chunk) => {
-                                        profilePictureData.set(chunk, i * MB);
-                                    }),
-                            );
-                        }
-
-                        await Promise.all(promises);
-
-                        groupList.value[i].profile_picture_blob =
-                            profilePictureData;
-                    });
-            }
-        }
+        await Promise.all(groupFetchPromises);
     }
+
+    async function fetchGroupProfilePicture(groupId: bigint) {
+        const response = await actor.value?.get_group_profile_picture_size(
+            groupId,
+        );
+        const profilePictureSize = Number(validateResponse(response));
+        const profilePictureData = new Uint8Array(profilePictureSize);
+
+        const chunkPromises = Array.from(
+            { length: Math.ceil(profilePictureSize / MB) },
+            (_, i) =>
+                actor.value
+                    ?.get_group_profile_picture_chunk_blob(groupId, BigInt(i))
+                    .then((chunk) => {
+                        const okChunk = validateResponse(chunk);
+                        profilePictureData.set(okChunk, i * MB);
+                    }),
+        );
+
+        await Promise.all(chunkPromises);
+        return profilePictureData;
+    }
+
     async function createGroup({
         name,
         picture,
@@ -80,9 +76,9 @@ export const useGroupStore = defineStore("group", () => {
         name: string;
         picture: Uint8Array;
     }) {
-        const groupId = await actor.value?.create_group(name);
+        const response = await actor.value?.create_group(name);
 
-        if (!groupId) return;
+        const groupId = validateResponse(response);
 
         for (let i = 0; i < Math.ceil(picture.length / MB); ++i) {
             const start = i * MB;
@@ -94,45 +90,48 @@ export const useGroupStore = defineStore("group", () => {
 
     async function getGroup(id: bigint) {
         const response = await actor.value?.get_group(id);
-        if (response) {
-            currentGroup.value = convertGroupFromResponse(response[0]!);
 
-            await actor.value
-                ?.get_group_profile_picture_size(currentGroup.value.id)!
-                .then(async (groupPictureBlobSizeBigInt) => {
-                    const profilePictureBlobSize = Number(
-                        groupPictureBlobSizeBigInt,
-                    );
-                    const profilePictureData = new Uint8Array(
-                        profilePictureBlobSize,
-                    );
+        const okResponse = validateResponse(response);
 
-                    const promises = [];
-                    for (
-                        let i = 0;
-                        i < Math.ceil(profilePictureBlobSize / MB);
-                        ++i
-                    ) {
-                        promises.push(
-                            actor.value
-                                ?.get_group_profile_picture_chunk_blob(
-                                    currentGroup.value!.id,
-                                    BigInt(i),
-                                )
-                                .then((chunk) => {
-                                    profilePictureData.set(chunk, i * MB);
-                                }),
-                        );
-                    }
+        if (!okResponse[0]) return;
 
-                    await Promise.all(promises);
+        currentGroup.value = convertGroupFromResponse(okResponse[0]);
 
-                    currentGroup.value!.profile_picture_blob =
-                        profilePictureData;
-                });
-        }
+        // await actor.value
+        //     ?.get_group_profile_picture_size(currentGroup.value.id)
+        //     .then(async (groupPictureBlobSizeBigInt) => {
+        //         const profilePictureBlobSize = Number(
+        //             groupPictureBlobSizeBigInt,
+        //         );
+        //         const profilePictureData = new Uint8Array(
+        //             profilePictureBlobSize,
+        //         );
 
-        return response;
+        //         const promises = [];
+        //         for (
+        //             let i = 0;
+        //             i < Math.ceil(profilePictureBlobSize / MB);
+        //             ++i
+        //         ) {
+        //             promises.push(
+        //                 actor.value
+        //                     ?.get_group_profile_picture_chunk_blob(
+        //                         currentGroup.value!.id,
+        //                         BigInt(i),
+        //                     )
+        //                     .then((chunk) => {
+        //                         const okChunk = validateResponse(chunk);
+        //                         profilePictureData.set(okChunk, i * MB);
+        //                     }),
+        //             );
+        //         }
+
+        //         await Promise.all(promises);
+
+        //         currentGroup.value!.profile_picture_blob = profilePictureData;
+        //     });
+
+        return okResponse[0];
     }
 
     // async function addVideo(data: Uint8Array) {
@@ -156,13 +155,16 @@ export const useGroupStore = defineStore("group", () => {
 
     async function inviteUser(id: bigint, name: string) {
         const response = await actor.value?.invite_user(id, name);
-        return response;
+
+        validateResponse(response);
     }
 
     async function getInvites() {
         const response = await actor.value?.get_self_group_invites();
 
-        return response;
+        const okResponse = validateResponse(response);
+
+        return okResponse;
     }
 
     async function handleInvitation(groupId: bigint, invitation: boolean) {
@@ -171,7 +173,7 @@ export const useGroupStore = defineStore("group", () => {
             invitation,
         );
 
-        return response;
+        validateResponse(response);
     }
 
     return {

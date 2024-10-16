@@ -31,4 +31,18 @@ function createChunks(array: Uint8Array, size: number) {
 function generateUUID() {
     return crypto.randomUUID();
 }
-export { fileToBlob, blobToURL, createChunks, generateUUID };
+
+function validateResponse<T>(
+    response: { Ok: T } | { Err: string } | undefined | null,
+): T {
+    if (!response) {
+        throw new Error("Response is null or undefined");
+    }
+
+    if (!("Ok" in response)) {
+        throw Error(response.Err);
+    }
+
+    return response.Ok;
+}
+export { fileToBlob, blobToURL, createChunks, generateUUID, validateResponse };

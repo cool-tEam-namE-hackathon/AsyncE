@@ -23,10 +23,7 @@
         </base-dialog>
 
         <!-- INVITE USER DIALOG -->
-        <base-dialog
-            :open="isInviteUserDialogOpen"
-            @on-close-dialog="toggleUserModal"
-        >
+        <base-dialog :open="isInviteUserDialogOpen">
             <template #title> Invite user </template>
 
             <template #description>
@@ -34,35 +31,56 @@
             </template>
 
             <template #content>
-                <div class="flex items-center gap-3">
-                    <Label>Username</Label>
-                    <Input
-                        v-model="invitedUsername"
-                        :class="{
-                            'border-red-600': isFieldError && invitedUsername,
-                            'border-green-700':
-                                !isFieldError && invitedUsername,
-                            'focus-visible:ring-0': true,
-                        }"
-                        @update:model-value="validateUsername"
-                    />
-                    <Icon
-                        icon="ep:success-filled"
-                        width="32"
-                        height="32"
-                        :class="{
-                            'text-red-700': isFieldError && invitedUsername,
-                            'text-green-700': !isFieldError && invitedUsername,
-                            hidden: !invitedUsername,
-                        }"
-                    />
+                <div class="space-y-2">
+                    <div class="flex items-center gap-3">
+                        <Label>Username</Label>
+                        <Input
+                            v-model="invitedUsername"
+                            :class="{
+                                'border-red-400':
+                                    isFieldError && invitedUsername,
+                                'border-green-700':
+                                    !isFieldError && invitedUsername,
+                                'focus-visible:ring-0': true,
+                            }"
+                            @update:model-value="validateUsername"
+                        />
+                        <Icon
+                            icon="ep:success-filled"
+                            width="32"
+                            height="32"
+                            :class="{
+                                'text-red-700': isFieldError && invitedUsername,
+                                'text-green-700':
+                                    !isFieldError && invitedUsername,
+                                hidden: !invitedUsername,
+                            }"
+                        />
+                    </div>
+                    <div v-if="inviteError" class="text-sm text-red-500">
+                        {{ inviteError }}
+                    </div>
                 </div>
             </template>
 
             <template #footer>
-                <Button :disabled="isFieldError" @click="handleInvite"
-                    >Invite</Button
+                <Button
+                    :disabled="isFieldError || isLoading"
+                    :is-loading="isLoading"
+                    @click="handleInvite"
                 >
+                    <template #default> Invite </template>
+
+                    <template #loading>
+                        <Icon
+                            icon="prime:spinner"
+                            width="16"
+                            height="16"
+                            class="text-black animate-spin mr-1"
+                        />
+                        Inviting...
+                    </template>
+                </Button>
             </template>
         </base-dialog>
 
@@ -246,10 +264,12 @@ const totalUploadSize = ref<{
 const animationFrameId = ref<number | null>(null);
 
 const url = ref<string>("");
+const inviteError = ref<string>("");
 
 const isRecording = ref<boolean>(false);
 const isOpen = ref<boolean>(false);
 const isError = ref<boolean>(false);
+const isLoading = ref<boolean>(false);
 
 const recordedChunks = ref<Blob[]>([]);
 
@@ -341,16 +361,26 @@ function toggleUserModal() {
 }
 
 const validateUsername = useDebounceFn(async (payload) => {
-    const response = await userStore.validateUsername(payload);
-    isError.value = response!;
-    inputtedUsername.value = payload;
-}, 1000);
+    try {
+        isError.value = await userStore.validateUsername(payload);
+        inputtedUsername.value = payload;
+    } catch (e) {
+        console.log((e as Error).message);
+    }
+}, 500);
 
 async function handleInvite() {
-    await groupStore.inviteUser(
-        BigInt(route.params.id as string),
-        inputtedUsername.value,
-    );
+    isLoading.value = true;
+    try {
+        await groupStore.inviteUser(
+            BigInt(route.params.id as string),
+            inputtedUsername.value,
+        );
+    } catch (e) {
+        inviteError.value = (e as Error).message;
+    } finally {
+        isLoading.value = false;
+    }
 }
 
 function startRecording() {
@@ -455,16 +485,12 @@ async function fetchGroupDetails() {
     const { id } = route.params;
     const groupId = BigInt(id as string);
 
-    await groupStore.getGroup(groupId);
-}
-
-async function inviteUser() {
-    const { id } = route.params;
-    const groupId = BigInt(id as string);
-
-    const response = await groupStore.inviteUser(groupId, "Dylan");
-
-    console.log(response);
+    try {
+        const response = await groupStore.getGroup(groupId);
+        console.log(response);
+    } catch (e) {
+        console.log((e as Error).message);
+    }
 }
 
 // async function uploadRecording() {

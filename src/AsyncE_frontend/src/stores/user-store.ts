@@ -7,7 +7,7 @@ import { AuthClient } from "@dfinity/auth-client";
 import { ActorSubclass, Identity } from "@dfinity/agent";
 import { User } from "@/types/api/model";
 import { _SERVICE } from "@declarations/AsyncE_backend/AsyncE_backend.did";
-import { blobToURL } from "@/utils/helpers";
+import { blobToURL, validateResponse } from "@/utils/helpers";
 import { MB } from "@/data/user-constants";
 
 const client = ref<AuthClient | null>(null);
@@ -98,7 +98,9 @@ export const useUserStore = defineStore("user", () => {
     }
 
     async function register(payload: User) {
-        await actor.value?.register(payload.username);
+        const response = await actor.value?.register(payload.username);
+
+        validateResponse(response);
 
         for (
             let i = 0;
@@ -116,51 +118,43 @@ export const useUserStore = defineStore("user", () => {
     }
 
     async function getUserCredentials() {
-        const responseResult = await actor.value?.get_user_credentials();
-        console.log("responseResult", responseResult);
+        const response = await actor.value?.get_user_credentials();
 
-        if (responseResult) {
-            if ("Ok" in responseResult) {
-                const response = responseResult.Ok;
-                if (response?.length) {
-                    username.value = response[0];
+        const okResponse = validateResponse(response);
 
-                    const profilePictureBlobSizeBigint =
-                        await actor.value?.get_profile_picture_size();
-                    const profilePictureBlobSize = Number(
-                        profilePictureBlobSizeBigint,
-                    );
-                    const profilePictureData = new Uint8Array(
-                        profilePictureBlobSize,
-                    );
+        if (!okResponse[0]) return;
 
-                    for (
-                        let i = 0;
-                        i < Math.ceil(profilePictureBlobSize / MB);
-                        ++i
-                    ) {
-                        await actor.value
-                            ?.get_profile_picture_chunk_blob(BigInt(i))
-                            .then((chunk) => {
-                                profilePictureData.set(chunk, i * MB);
-                            });
-                    }
+        username.value = okResponse[0];
 
-                    profilePicture.value = blobToURL(profilePictureData);
-                    return true;
-                }
-            } else {
-                console.log("get_user_credentials error:", responseResult.Err);
-            }
+        const profilePictureSize =
+            await actor.value?.get_profile_picture_size();
+
+        const profilePictureBlobSizeBigint =
+            validateResponse(profilePictureSize);
+
+        const profilePictureBlobSize = Number(profilePictureBlobSizeBigint);
+        const profilePictureData = new Uint8Array(profilePictureBlobSize);
+
+        for (let i = 0; i < Math.ceil(profilePictureBlobSize / MB); ++i) {
+            await actor.value
+                ?.get_profile_picture_chunk_blob(BigInt(i))
+                .then((chunk) => {
+                    const okChunk = validateResponse(chunk);
+                    profilePictureData.set(okChunk, i * MB);
+                });
         }
 
-        return false;
+        profilePicture.value = blobToURL(profilePictureData);
+
+        return okResponse;
     }
 
     async function validateUsername(username: string) {
         const response = await actor.value?.validate_username(username);
 
-        return response;
+        const okResponse = validateResponse(response);
+
+        return okResponse;
     }
 
     return {

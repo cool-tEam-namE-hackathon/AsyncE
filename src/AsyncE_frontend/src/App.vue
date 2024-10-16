@@ -23,8 +23,23 @@
             <template #content>
                 <div class="space-y-3">
                     <div class="space-y-2">
-                        <Label>Username</Label>
-                        <Input v-model="username" />
+                        <Label
+                            :class="{
+                                'text-red-500': error,
+                            }"
+                        >
+                            Username
+                        </Label>
+                        <Input
+                            v-model="username"
+                            :class="{
+                                'border-red-400': error,
+                                'focus-visible:ring-0': true,
+                            }"
+                        />
+                        <div v-if="error" class="text-red-500 text-sm mt-2">
+                            {{ error }}
+                        </div>
                     </div>
                     <div class="space-y-2">
                         <Label>Profile picture</Label>
@@ -38,9 +53,23 @@
             </template>
 
             <template #footer>
-                <Button @click="register" :disabled="isFormValid"
-                    >Submit</Button
+                <Button
+                    :disabled="isLoading"
+                    :is-loading="isLoading"
+                    @click="register"
                 >
+                    <template #default> Register </template>
+
+                    <template #loading>
+                        <Icon
+                            icon="prime:spinner"
+                            width="16"
+                            height="16"
+                            class="text-black animate-spin mr-1"
+                        />
+                        Registering...
+                    </template>
+                </Button>
             </template>
         </base-dialog>
     </div>
@@ -60,6 +89,8 @@ import Label from "@components/ui/label/Label.vue";
 import BaseSpinner from "@components/shared/BaseSpinner.vue";
 import BaseDialog from "@components/shared/BaseDialog.vue";
 
+import { Icon } from "@iconify/vue";
+
 import { useUserStore } from "@stores/user-store";
 import { useWebsocketStore } from "@stores/websocket-store";
 
@@ -69,10 +100,11 @@ import { User } from "./types/api/model";
 const userStore = useUserStore();
 const websocketStore = useWebsocketStore();
 const { isAuthenticated } = storeToRefs(userStore);
-const { ws } = storeToRefs(useWebsocketStore());
 
 const isOpen = ref<boolean>(false);
 const isInitialized = ref<boolean>(false);
+const isLoading = ref<boolean>(false);
+const error = ref<string>("");
 
 const username = ref<string>("");
 const imageBlob = ref<Blob | null>(null);
@@ -86,17 +118,25 @@ async function register() {
         return;
     }
 
+    isLoading.value = true;
+
     const payload: User = {
         username: username.value,
         profile_picture_blob: new Uint8Array(
             await imageBlob.value.arrayBuffer(),
         ),
     };
-    await userStore.register(payload);
 
-    isOpen.value = false;
-
-    window.location.reload();
+    try {
+        await userStore.register(payload);
+        isOpen.value = false;
+        window.location.reload();
+    } catch (e) {
+        const err = e as Error;
+        error.value = err.message;
+    } finally {
+        isLoading.value = false;
+    }
 }
 
 function onFileInput(e: Event) {
@@ -111,37 +151,15 @@ async function init() {
     await userStore.init();
     await websocketStore.setWebsockets();
 
-    const response = await userStore.getUserCredentials();
-    if (!response?.length && isAuthenticated.value) {
-        isOpen.value = true;
+    try {
+        const hasCredentials = await userStore.getUserCredentials();
+
+        if (!hasCredentials && isAuthenticated) isOpen.value = true;
+    } catch (e) {
+        console.log((e as Error).message);
+    } finally {
+        isInitialized.value = true;
     }
-
-    isInitialized.value = true;
-
-    // console.log(ws.value);
 }
-
-// onMounted(async () => {
-//     const response = await userStore.getUserCredentials();
-//     if (!response?.length && isAuthenticated.value) {
-//         isOpen.value = true;
-//     }
-
-//     isInitialized.value = true;
-// });
-
-// watchEffect(async () => {
-//     if (isInitialized.value) {
-//         const response = await userStore.getUserCredentials();
-//         if (!response?.length && isAuthenticated.value) {
-//             isOpen.value = true;
-//         }
-//     }
-// });
-
 init();
-
-// onBeforeMount(async () => {
-//     await init();
-// });
 </script>

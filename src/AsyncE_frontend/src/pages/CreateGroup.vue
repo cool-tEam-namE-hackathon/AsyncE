@@ -100,7 +100,7 @@ async function createGroup() {
         await groupStore.createGroup(payload);
         router.push("/group-list");
     } catch (e) {
-        console.log(e);
+        console.log((e as Error).message);
     } finally {
         isLoading.value = false;
     }

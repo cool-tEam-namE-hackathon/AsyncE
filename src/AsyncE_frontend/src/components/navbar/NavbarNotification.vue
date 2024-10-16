@@ -143,9 +143,11 @@ const invites = ref<GroupInvite[] | GroupInviteResponse[]>([]);
 websocketStore.setOnGroupInvited(handleGroupInvite);
 
 async function getAllInvites() {
-    const response = await groupStore.getInvites();
-    if (response) {
+    try {
+        const response = await groupStore.getInvites();
         invites.value = [...invites.value, ...response];
+    } catch (e) {
+        console.log((e as Error).message);
     }
 }
 
@@ -176,5 +178,5 @@ async function init() {
     getAllInvites();
 }
 
-init();
+// init();
 </script>

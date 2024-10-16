@@ -7,7 +7,7 @@
         <nav class="ml-auto flex gap-4 sm:gap-6">
             <!-- NOT AUTHENTICATED -->
             <button
-                v-if="!isAuthenticated"
+                v-if="!isAuthenticated || !username"
                 class="text-sm font-medium hover:underline underline-offset-4"
                 @click="login"
             >

@@ -66,8 +66,11 @@ const groupStore = useGroupStore();
 const { groupList } = storeToRefs(groupStore);
 
 async function getAllGroups() {
-    await groupStore.getAllGroups();
-    console.log(groupList.value);
+    try {
+        await groupStore.getAllGroups();
+    } catch (e) {
+        console.log((e as Error).message);
+    }
 }
 
 async function init() {
