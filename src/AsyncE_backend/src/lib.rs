@@ -11,7 +11,7 @@ pub mod video;
 pub mod websocket;
 
 use crate::{
-    chat::Chat, group::GroupQueryResponse, invite::GroupInviteResponse, video::Video,
+    chat::Chat, group::GroupQueryResponse, invite::GroupInviteResponse, video::VideoHeader,
     websocket::WebsocketEventMessage,
 };
 use globals::{CHATS, GROUPS, GROUP_INVITES, PRIMARY_KEY_CONTAINERS, USERS, VIDEOS};
@@ -20,7 +20,6 @@ use ic_websocket_cdk::{
     CanisterWsGetMessagesResult, CanisterWsMessageArguments, CanisterWsMessageResult,
     CanisterWsOpenArguments, CanisterWsOpenResult, WsHandlers, WsInitParams,
 };
-// extern crate ffmpeg_next as ffmpeg;
 
 #[ic_cdk::init]
 fn init() {
@@ -31,7 +30,6 @@ fn init() {
     };
 
     ic_websocket_cdk::init(WsInitParams::new(handlers));
-    // ffmpeg::init().unwrap();
 }
 
 #[ic_cdk::pre_upgrade]
@@ -52,7 +50,7 @@ fn pre_upgrade() {
         chat_store,
         primary_key_store,
     ))
-    .unwrap();
+    .expect("FAILED TO STABLE SAVE DATA!");
 }
 
 #[ic_cdk::post_upgrade]
@@ -64,7 +62,7 @@ fn post_upgrade() {
         group_invites_store,
         chat_store,
         primary_key_containers_store,
-    ) = ic_cdk::storage::stable_restore().unwrap();
+    ) = ic_cdk::storage::stable_restore().expect("FAILED TO STABLE RESTORE DATA!");
 
     USERS.with_borrow_mut(|users| *users = user_store);
     GROUPS.with_borrow_mut(|groups| *groups = group_store);

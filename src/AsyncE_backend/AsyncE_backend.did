@@ -25,16 +25,24 @@ type GroupQueryResponse = record {
 
 type Video = record {
     id: nat;
-    webcam_blob: blob;
-    screen_blob: blob;
+    data: blob;
+    title: blob;
+    created_by: text;
     created_time_unix: nat;
 };
 
 type VideoFrame = record {
-    id: text;
-    username: text;
-    webcam_blob: blob;
-    screen_blob: blob;
+    id: nat;
+    data: blob;
+    title: text;
+    created_by: text;
+    created_time_unix: nat;
+};
+
+type VideoHeader = record {
+    id: nat;
+    title: text;
+    created_by: text;
     created_time_unix: nat;
 };
 
@@ -124,11 +132,11 @@ service : {
     }) query;
 
     get_videos: (nat) -> (variant {
-        Ok: vec Video;
+        Ok: vec VideoHeader;
         Err: text;
     }) query;
 
-    create_video: (nat) -> (variant {
+    create_video: (nat, text) -> (variant {
         Ok: nat;
         Err: text;
     });
@@ -138,8 +146,18 @@ service : {
         Err: text;
     });
 
-    concat_video: (nat, nat, blob, blob) -> (variant {
-        Ok: null;
+    get_video_detail: (nat, nat) -> (variant {
+        Ok: VideoHeader;
+        Err: text;
+    });
+
+    get_video_size: (nat, nat) -> (variant {
+        Ok: nat;
+        Err: text;
+    });
+
+    get_video_chunk_blob: (nat, nat, nat) -> (variant {
+        Ok: blob;
         Err: text;
     });
 
