@@ -30,6 +30,7 @@ pub struct VideoHeader {
     pub id: u128,
     pub title: String,
     pub created_by: String,
+    pub frames_count: u128,
     pub created_time_unix: u128,
 }
 
@@ -78,6 +79,7 @@ impl From<&Video> for VideoHeader {
             id: value.id,
             title: value.title.clone(),
             created_by: value.created_by.clone(),
+            frames_count: value.frames.len() as u128,
             created_time_unix: value.created_time_unix,
         }
     }
@@ -382,6 +384,65 @@ pub fn get_video_chunk_blob(
             .ok_or(String::from("No video found on this video ID!"))?;
 
         Ok(video
+            .data
+            .iter()
+            .skip(index as usize * chunk::MB)
+            .take(chunk::MB)
+            .cloned()
+            .collect())
+    })
+}
+
+#[ic_cdk::query]
+pub fn get_video_frame_size(
+    group_id: u128,
+    video_id: u128,
+    frame_index: u128,
+) -> Result<u128, String> {
+    user::assert_user_logged_in()?;
+    assert_check_group(group_id)?;
+
+    VIDEOS.with_borrow_mut(|videos| {
+        let videos = videos
+            .get_mut(&group_id)
+            .ok_or(String::from("No videos found on this group!"))?;
+
+        let video = videos
+            .get_mut(&video_id)
+            .ok_or(String::from("No video found on this video ID!"))?;
+
+        Ok(video
+            .frames
+            .get(frame_index as usize)
+            .ok_or(String::from("Frame index is out of bounds!"))?
+            .data
+            .len() as u128)
+    })
+}
+
+#[ic_cdk::query]
+pub fn get_video_frame_chunk_blob(
+    group_id: u128,
+    video_id: u128,
+    frame_index: u128,
+    index: u128,
+) -> Result<Vec<u8>, String> {
+    user::assert_user_logged_in()?;
+    assert_check_group(group_id)?;
+
+    VIDEOS.with_borrow_mut(|videos| {
+        let videos = videos
+            .get_mut(&group_id)
+            .ok_or(String::from("No videos found on this group!"))?;
+
+        let video = videos
+            .get_mut(&video_id)
+            .ok_or(String::from("No video found on this video ID!"))?;
+
+        Ok(video
+            .frames
+            .get(frame_index as usize)
+            .ok_or(String::from("Frame index is out of bounds!"))?
             .data
             .iter()
             .skip(index as usize * chunk::MB)

@@ -42,6 +42,7 @@ type VideoHeader = record {
     id: nat;
     title: text;
     created_by: text;
+    frames_count: nat;
     created_time_unix: nat;
 };
 
@@ -161,6 +162,16 @@ service : {
     });
 
     get_video_chunk_blob: (nat, nat, nat) -> (variant {
+        Ok: blob;
+        Err: text;
+    });
+
+    get_video_frame_size: (nat, nat, nat) -> (variant {
+        Ok: nat;
+        Err: text;
+    });
+
+    get_video_frame_chunk_blob: (nat, nat, nat, nat) -> (variant {
         Ok: blob;
         Err: text;
     });
