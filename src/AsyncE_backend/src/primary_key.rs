@@ -10,6 +10,7 @@ pub enum PrimaryKeyType {
     Group,
     Video,
     Chat,
+    VideoFrame,
 }
 
 pub type PrimaryKeyContainer = BTreeMap<PrimaryKeyType, u128>;

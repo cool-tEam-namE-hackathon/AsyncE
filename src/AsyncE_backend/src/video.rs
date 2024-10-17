@@ -20,6 +20,7 @@ pub struct Video {
     pub id: u128,
     pub data: Vec<u8>,
     pub title: String,
+    pub frames: Vec<VideoFrame>,
     pub created_by: String,
     pub created_time_unix: u128,
 }
@@ -33,12 +34,22 @@ pub struct VideoHeader {
 }
 
 #[derive(Clone, Debug, Default, CandidType, Deserialize)]
-pub struct VideoFrames {
-    pub id: u128,
+pub struct VideoFrame {
     pub data: Vec<u8>,
     pub title: String,
     pub created_by: String,
     pub created_time_unix: u128,
+}
+
+impl VideoFrame {
+    fn new(username: String, title: String) -> Self {
+        Self {
+            data: Vec::new(),
+            title,
+            created_by: username,
+            created_time_unix: ic_cdk::api::time() as u128,
+        }
+    }
 }
 
 impl Video {
@@ -46,6 +57,7 @@ impl Video {
         Self {
             id: primary_key::get_primary_key(PrimaryKeyType::Video),
             data: Vec::new(),
+            frames: Vec::from([VideoFrame::new(username.clone(), title.clone())]),
             title,
             created_by: username,
             created_time_unix: ic_cdk::api::time() as u128,
@@ -251,11 +263,37 @@ pub fn create_video(group_id: u128, title: String) -> Result<u128, String> {
     assert_check_group(group_id)?;
 
     let selfname = user::get_selfname_force()?;
-    let video = Video::new(selfname, title);
+    let video = Video::new(selfname.clone(), title.clone());
     let video_id = video.id;
+
     VIDEOS.with_borrow_mut(|videos| videos.entry(group_id).or_default().insert(video.id, video));
     VIDEO_UPLOADS.with_borrow_mut(|video_uploads| video_uploads.insert(video_id, Vec::new()));
+
     Ok(video_id)
+}
+
+#[ic_cdk::update]
+pub fn create_video_frame(group_id: u128, video_id: u128, title: String) -> Result<(), String> {
+    user::assert_user_logged_in()?;
+    assert_check_group(group_id)?;
+
+    let selfname = user::get_selfname_force()?;
+
+    VIDEOS.with_borrow_mut(|videos| {
+        let videos = videos
+            .get_mut(&group_id)
+            .ok_or(String::from("No videos found on this group!"))?;
+
+        let video = videos
+            .get_mut(&video_id)
+            .ok_or(String::from("No video found on this video ID!"))?;
+
+        video.frames.push(VideoFrame::new(selfname, title));
+
+        VIDEO_UPLOADS.with_borrow_mut(|video_uploads| video_uploads.insert(video_id, Vec::new()));
+
+        Ok(())
+    })
 }
 
 #[ic_cdk::update]
@@ -293,8 +331,13 @@ pub fn upload_video(
                 if !video.data.is_empty() {
                     concat_mp4(&mut video.data, &data)?;
                 } else {
-                    video.set_data(data)?;
+                    video.set_data(data.clone())?;
                 }
+
+                let video_frame = video.frames.last_mut().ok_or(String::from(
+                    "Cannot find latest frame (This should never happen though)",
+                ))?;
+                video_frame.data = data;
             }
 
             Ok(())
