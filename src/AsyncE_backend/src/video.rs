@@ -1,9 +1,10 @@
 use std::io::Cursor;
 
 use candid::CandidType;
+use image::{ImageFormat, ImageReader};
 use mp4::{
     AacConfig, AvcConfig, HevcConfig, MediaConfig, MediaType, Mp4Config, Mp4Reader, Mp4Writer,
-    TrackConfig, TtxtConfig, Vp9Config,
+    TrackConfig, TrackType, TtxtConfig, Vp9Config,
 };
 use serde::Deserialize;
 
@@ -19,6 +20,7 @@ use crate::{
 pub struct Video {
     pub id: u128,
     pub data: Vec<u8>,
+    pub thumbnail_data: Vec<u8>,
     pub title: String,
     pub frames: Vec<VideoFrame>,
     pub created_by: String,
@@ -58,6 +60,7 @@ impl Video {
         Self {
             id: primary_key::get_primary_key(PrimaryKeyType::Video),
             data: Vec::new(),
+            thumbnail_data: Vec::new(),
             frames: Vec::from([VideoFrame::new(username.clone(), title.clone())]),
             title,
             created_by: username,
@@ -66,9 +69,58 @@ impl Video {
     }
 
     pub fn set_data(&mut self, data: Vec<u8>) -> Result<(), String> {
-        Mp4Reader::read_header(Cursor::new(&data), data.len() as u64)
+        let mut mp4_reader = Mp4Reader::read_header(Cursor::new(&data), data.len() as u64)
             .map_err(|_| String::from("Invalid MP4 Data!"))?;
+
+        for track_id in mp4_reader.tracks().keys().copied().collect::<Vec<u32>>() {
+            let track = mp4_reader
+                .tracks()
+                .get(&track_id)
+                .ok_or(String::from("Cannot find track from the given ID!"))?;
+
+            let track_type = track
+                .track_type()
+                .map_err(|_| String::from("Cannot get current track type!"))?;
+
+            let sample_count = mp4_reader
+                .sample_count(track_id)
+                .map_err(|_| String::from("Cannot get sample_count from the MP4 reader"))?;
+
+            for sample_idx in 0..sample_count {
+                let sample_id = sample_idx + 1;
+                let sample = mp4_reader
+                    .read_sample(track_id, sample_id)
+                    .map_err(|_| {
+                        format!(
+                            "Cannot read the mp4 sample on track id {} and sample id {}",
+                            track_id, sample_id
+                        )
+                    })?
+                    .ok_or(format!(
+                        "MP4 sample is null on track id {} and sample id {}",
+                        track_id, sample_id
+                    ))?;
+
+                if sample_idx == 0 && track_type == TrackType::Video {
+                    let image = ImageReader::new(Cursor::new(&sample.bytes))
+                        .with_guessed_format()
+                        .map_err(|_| {
+                            String::from("Cannot guess format of the current video frame")
+                        })?
+                        .decode()
+                        .map_err(|_| String::from("Cannot decode current video frame to image"))?;
+
+                    let mut cursor = Cursor::new(&mut self.thumbnail_data);
+
+                    image
+                        .write_to(&mut cursor, ImageFormat::Png)
+                        .map_err(|_| String::from("Cannot write image to png!"))?;
+                }
+            }
+        }
+
         self.data = data;
+
         Ok(())
     }
 }
@@ -444,6 +496,52 @@ pub fn get_video_frame_chunk_blob(
             .get(frame_index as usize)
             .ok_or(String::from("Frame index is out of bounds!"))?
             .data
+            .iter()
+            .skip(index as usize * chunk::MB)
+            .take(chunk::MB)
+            .cloned()
+            .collect())
+    })
+}
+
+#[ic_cdk::query]
+pub fn get_video_thumbnaiL_size(group_id: u128, video_id: u128) -> Result<u128, String> {
+    user::assert_user_logged_in()?;
+    assert_check_group(group_id)?;
+
+    VIDEOS.with_borrow_mut(|videos| {
+        let videos = videos
+            .get_mut(&group_id)
+            .ok_or(String::from("No videos found on this group!"))?;
+
+        let video = videos
+            .get_mut(&video_id)
+            .ok_or(String::from("No video found on this video ID!"))?;
+
+        Ok(video.thumbnail_data.len() as u128)
+    })
+}
+
+#[ic_cdk::query]
+pub fn get_video_thumbnail_chunk_blob(
+    group_id: u128,
+    video_id: u128,
+    index: u128,
+) -> Result<Vec<u8>, String> {
+    user::assert_user_logged_in()?;
+    assert_check_group(group_id)?;
+
+    VIDEOS.with_borrow_mut(|videos| {
+        let videos = videos
+            .get_mut(&group_id)
+            .ok_or(String::from("No videos found on this group!"))?;
+
+        let video = videos
+            .get_mut(&video_id)
+            .ok_or(String::from("No video found on this video ID!"))?;
+
+        Ok(video
+            .thumbnail_data
             .iter()
             .skip(index as usize * chunk::MB)
             .take(chunk::MB)
