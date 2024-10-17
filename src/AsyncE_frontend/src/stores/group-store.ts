@@ -134,24 +134,26 @@ export const useGroupStore = defineStore("group", () => {
         return okResponse[0];
     }
 
-    // async function addVideo(data: Uint8Array) {
-    //     const videoId = await actor.value?.create_video(
-    //         currentGroup.value?.id!,
-    //     );
-    //     const totalChunks = Math.ceil(data.length / MB);
+    async function addVideo(data: Uint8Array, title: string) {
+        const videoId = validateResponse(await actor.value?.create_video(
+            currentGroup.value?.id!,
+            title
+        ));
+        const totalChunks = Math.ceil(data.length / MB);
 
-    //     for (let i = 0; i < totalChunks; ++i) {
-    //         const start = i * MB;
-    //         const end = Math.min(start + MB, data.length);
-    //         const chunk = data.slice(start, end);
-    //         await actor.value?.upload_video(
-    //             currentGroup.value?.id!,
-    //             videoId,
-    //             chunk,
-    //             i == totalChunks - 1,
-    //         );
-    //     }
-    // }
+        for (let i = 0; i < totalChunks; ++i) {
+            const start = i * MB;
+            const end = Math.min(start + MB, data.length);
+            const chunk = data.slice(start, end);
+
+            validateResponse(await actor.value?.upload_video(
+                currentGroup.value?.id!,
+                videoId,
+                chunk,
+                i == totalChunks - 1,
+            ));
+        }
+    }
 
     async function inviteUser(id: bigint, name: string) {
         const response = await actor.value?.invite_user(id, name);
@@ -181,7 +183,7 @@ export const useGroupStore = defineStore("group", () => {
         groupList,
         groupPicture,
 
-        // addVideo,
+        addVideo,
         getAllGroups,
         getGroup,
         getInvites,

@@ -1,40 +1,10 @@
 import "./ws_types.did";
 
-type User = record {
-    username: text;
-    created_time_unix: nat;
-    profile_picture_blob: blob;
-};
-
-type Group = record {
-    id: nat;
-    name: text;
-    users: vec text;
-    owner: text;
-    created_time_unix: nat;
-    profile_picture_blob: blob;
-};
-
 type GroupQueryResponse = record {
     id: nat;
     name: text;
     users: vec text;
     owner: text;
-    created_time_unix: nat;
-};
-
-type Video = record {
-    id: nat;
-    data: blob;
-    title: blob;
-    created_by: text;
-    created_time_unix: nat;
-};
-
-type VideoFrame = record {
-    data: blob;
-    title: text;
-    created_by: text;
     created_time_unix: nat;
 };
 

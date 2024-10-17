@@ -463,7 +463,7 @@ async function saveRecording() {
     const blob = new Blob(recordedChunks.value, { type: "video/mp4" });
     const data = new Uint8Array(await blob.arrayBuffer());
 
-    // await groupStore.addVideo(data);
+    await groupStore.addVideo(data, "Test title");
 
     recordedVideo.value = data;
     url.value = URL.createObjectURL(blob);

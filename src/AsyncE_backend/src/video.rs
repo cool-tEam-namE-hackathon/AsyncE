@@ -1,10 +1,9 @@
 use std::io::Cursor;
 
 use candid::CandidType;
-use image::{ImageFormat, ImageReader};
 use mp4::{
     AacConfig, AvcConfig, HevcConfig, MediaConfig, MediaType, Mp4Config, Mp4Reader, Mp4Writer,
-    TrackConfig, TrackType, TtxtConfig, Vp9Config,
+    TrackConfig, TtxtConfig, Vp9Config,
 };
 use serde::Deserialize;
 
@@ -69,55 +68,8 @@ impl Video {
     }
 
     pub fn set_data(&mut self, data: Vec<u8>) -> Result<(), String> {
-        let mut mp4_reader = Mp4Reader::read_header(Cursor::new(&data), data.len() as u64)
+        Mp4Reader::read_header(Cursor::new(&data), data.len() as u64)
             .map_err(|_| String::from("Invalid MP4 Data!"))?;
-
-        for track_id in mp4_reader.tracks().keys().copied().collect::<Vec<u32>>() {
-            let track = mp4_reader
-                .tracks()
-                .get(&track_id)
-                .ok_or(String::from("Cannot find track from the given ID!"))?;
-
-            let track_type = track
-                .track_type()
-                .map_err(|_| String::from("Cannot get current track type!"))?;
-
-            let sample_count = mp4_reader
-                .sample_count(track_id)
-                .map_err(|_| String::from("Cannot get sample_count from the MP4 reader"))?;
-
-            for sample_idx in 0..sample_count {
-                let sample_id = sample_idx + 1;
-                let sample = mp4_reader
-                    .read_sample(track_id, sample_id)
-                    .map_err(|_| {
-                        format!(
-                            "Cannot read the mp4 sample on track id {} and sample id {}",
-                            track_id, sample_id
-                        )
-                    })?
-                    .ok_or(format!(
-                        "MP4 sample is null on track id {} and sample id {}",
-                        track_id, sample_id
-                    ))?;
-
-                if sample_idx == 0 && track_type == TrackType::Video {
-                    let image = ImageReader::new(Cursor::new(&sample.bytes))
-                        .with_guessed_format()
-                        .map_err(|_| {
-                            String::from("Cannot guess format of the current video frame")
-                        })?
-                        .decode()
-                        .map_err(|_| String::from("Cannot decode current video frame to image"))?;
-
-                    let mut cursor = Cursor::new(&mut self.thumbnail_data);
-
-                    image
-                        .write_to(&mut cursor, ImageFormat::Png)
-                        .map_err(|_| String::from("Cannot write image to png!"))?;
-                }
-            }
-        }
 
         self.data = data;
 
