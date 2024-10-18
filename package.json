@@ -23,6 +23,8 @@
     "prettier": "^3.3.3"
   },
   "dependencies": {
+    "@ffmpeg/ffmpeg": "^0.12.10",
+    "@ffmpeg/util": "^0.12.1",
     "@radix-icons/vue": "^1.0.0",
     "@vueuse/core": "^11.1.0",
     "class-variance-authority": "^0.7.0",

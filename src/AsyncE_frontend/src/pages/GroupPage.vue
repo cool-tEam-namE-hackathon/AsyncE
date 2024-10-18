@@ -185,6 +185,10 @@
 <script setup lang="ts">
 import { ref, watchEffect, computed } from "vue";
 
+import { FFmpeg } from "@ffmpeg/ffmpeg";
+
+import type { LogEvent } from "@ffmpeg/ffmpeg/dist/esm/types";
+
 import { useRoute } from "vue-router";
 import { useUserStore } from "@stores/user-store";
 import { useGroupStore } from "@stores/group-store";
@@ -207,6 +211,7 @@ import BaseProgress from "@components/shared/BaseProgress.vue";
 import { RecordedChunks } from "@/types/api/model";
 import { generateUUID, createChunks } from "@/utils/helpers";
 import { MB } from "@/data/user-constants";
+import { fetchFile, toBlobURL } from "@ffmpeg/util";
 
 const route = useRoute();
 const groupStore = useGroupStore();
@@ -324,7 +329,7 @@ function startRecording() {
 
     const combinedStream = new MediaStream(displayCamera.value.getTracks());
     const options = {
-        mimeType: 'video/mp4; codecs="avc1.42E01E, mp4a.40.2"'
+        mimeType: "video/webm",
     };
 
     mediaRecorder.value = new MediaRecorder(combinedStream, options);
@@ -375,13 +380,66 @@ async function prepareChunks(
 }
 
 async function saveRecording() {
-    const blob = new Blob(recordedChunks.value, { type: "video/mp4" });
-    const data = new Uint8Array(await blob.arrayBuffer());
+    const blob = new Blob(recordedChunks.value, { type: "video/webm" });
+
+    const mp4Video = await convertToMp4(blob);
+
+    const data = new Uint8Array(await mp4Video.arrayBuffer());
+
+    url.value = URL.createObjectURL(mp4Video);
+
+    console.log(url.value);
+
     await groupStore.addVideo(data, route.params.id as string, "Test title");
 
-    url.value = URL.createObjectURL(blob);
     recordedVideo.value = data;
     recordedChunks.value = [];
+}
+
+async function convertToMp4(blob: Blob) {
+    const ffmpeg = new FFmpeg();
+    console.log("not loaded");
+
+    await ffmpeg.load({
+        coreURL: await toBlobURL(
+            "https://unpkg.com/@ffmpeg/core@0.12.3/dist/esm/ffmpeg-core.js",
+            "text/javascript",
+        ),
+        wasmURL: await toBlobURL(
+            "https://unpkg.com/@ffmpeg/core@0.12.3/dist/esm/ffmpeg-core.wasm",
+            "application/wasm",
+        ),
+        workerURL: await toBlobURL(
+            "https://unpkg.com/@ffmpeg/ffmpeg@0.12.3/dist/esm/worker.js",
+            "text/javascript",
+        ),
+    });
+
+    console.log("loaded");
+
+    await ffmpeg.writeFile("input.webm", await fetchFile(blob));
+
+    console.log("here 1");
+
+    try {
+        await ffmpeg.exec(["-i", "input.webm", "output.mp4"]);
+    } catch (e) {
+        console.log(e);
+    }
+
+    const data = await ffmpeg.readFile("output.mp4");
+
+    console.log("here2 ");
+
+    const mp4Blob = new Blob([(data as Uint8Array).buffer], {
+        type: "video/mp4",
+    });
+
+    console.log("here3 ");
+
+    console.log(mp4Blob);
+
+    return mp4Blob;
 }
 
 async function handleRecord() {
