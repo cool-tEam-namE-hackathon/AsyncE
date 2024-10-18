@@ -323,11 +323,11 @@ function startRecording() {
     if (!displayCamera.value) return;
 
     const combinedStream = new MediaStream(displayCamera.value.getTracks());
+    const options = {
+        mimeType: 'video/mp4; codecs="avc1.42E01E, mp4a.40.2"'
+    };
 
-    mediaRecorder.value = new MediaRecorder(combinedStream, {
-        mimeType: "video/mp4",
-    });
-
+    mediaRecorder.value = new MediaRecorder(combinedStream, options);
     mediaRecorder.value.ondataavailable = (e) => {
         if (e.data.size > 0) {
             recordedChunks.value.push(e.data);
