@@ -13,23 +13,20 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v2
 
-      - name: Install dfx
+      - name: Install dfx sstup toolkit
         uses: dfinity/setup-dfx@main
 
-      - name: Confirm successful installation
-        run: dfx --version
-
-      - name: Update cargo so no error
+      - name: Update cargo to prevent errors when compiling
         run: cargo update
 
       - name: Add wasm
         run: rustup target add wasm32-unknown-unknown
 
-      - name: Install NPM packages
+      - name: Install npm packages
         run: npm i
 
       - name: Start dfx server in the background
         run: dfx start --background
 
-      - name: Deploy canisters
+      - name: Deploy canisters using dfx
         run: dfx deploy
