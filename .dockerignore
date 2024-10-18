@@ -4,6 +4,9 @@
 /.dfx
 /.github
 /node_modules
+/.venv
+
+__pycache__/
 
 .git
 .gitignore
