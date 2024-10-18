@@ -135,8 +135,8 @@ export const useGroupStore = defineStore("group", () => {
         return okResponse[0];
     }
 
-    async function addVideo(data: Uint8Array, groupId: string) {
-        const videoId = await actor.value?.create_video(BigInt(groupId));
+    async function addVideo(data: Uint8Array, groupId: string, title: string) {
+        const videoId = await actor.value?.create_video(BigInt(groupId), title);
 
         const okVideoId = validateResponse(videoId);
 

@@ -384,7 +384,7 @@ async function saveRecording() {
     recordedVideo.value = data;
     url.value = URL.createObjectURL(blob);
 
-    await groupStore.addVideo(data, route.params.id as string);
+    await groupStore.addVideo(data, route.params.id as string, "Test title");
 
     recordedChunks.value = [];
 }

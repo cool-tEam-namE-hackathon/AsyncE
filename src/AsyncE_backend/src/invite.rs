@@ -12,6 +12,23 @@ pub struct GroupInviteResponse {
     pub group_name: String,
 }
 
+impl GroupInviteResponse {
+    fn new(group_id: u128) -> Result<Self, String> {
+        GROUPS.with_borrow(|groups| {
+            let group_name = groups
+                .get(&group_id)
+                .ok_or(String::from("Cannot find this group with the provided ID!"))?
+                .name
+                .clone();
+
+            Ok(Self {
+                group_id,
+                group_name,
+            })
+        })
+    }
+}
+
 #[ic_cdk::update]
 pub fn invite_user(group_id: u128, username: String) -> Result<(), String> {
     user::assert_user_logged_in()?;
@@ -61,18 +78,15 @@ pub fn get_self_group_invites() -> Result<Vec<GroupInviteResponse>, String> {
 
     let selfname = user::get_selfname_force()?;
 
-    Ok(GROUP_INVITES.with_borrow(|group_invites| {
+    GROUP_INVITES.with_borrow(|group_invites| {
         group_invites
             .get(&selfname)
             .cloned()
             .unwrap_or_default()
-            .iter()
-            .map(|x| GroupInviteResponse {
-                group_id: *x,
-                group_name: GROUPS.with_borrow(|groups| groups.get(x).unwrap().name.clone()),
-            })
-            .collect::<Vec<_>>()
-    }))
+            .into_iter()
+            .map(GroupInviteResponse::new)
+            .collect::<_>()
+    })
 }
 
 #[ic_cdk::update]

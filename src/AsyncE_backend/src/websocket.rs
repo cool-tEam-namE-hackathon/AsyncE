@@ -25,7 +25,7 @@ pub enum WebsocketEventMessage {
 
 impl WebsocketEventMessage {
     fn candid_serialize(&self) -> Vec<u8> {
-        candid::encode_one(self).unwrap()
+        candid::encode_one(self).expect("Cannot encode websocket event message to candid data!")
     }
 }
 
@@ -60,10 +60,13 @@ pub fn on_open(args: OnOpenCallbackArgs) {
 }
 
 pub fn on_message(args: OnMessageCallbackArgs) {
-    let app_msg: WebsocketEventMessage = candid::decode_one(&args.message).unwrap();
+    let app_msg: WebsocketEventMessage = candid::decode_one(&args.message)
+        .expect("Cannot decode message data to candid predefined type!");
+
     ic_cdk::println!("Received message: {:?}", app_msg);
 
-    user::assert_user_logged_in_from(args.client_principal).unwrap();
+    user::assert_user_logged_in_from(args.client_principal)
+        .expect("Current user is not logged in yet!");
 
     match app_msg {
         WebsocketEventMessage::Ping => {}
@@ -77,7 +80,7 @@ pub fn on_message(args: OnMessageCallbackArgs) {
                         .get(&args.client_principal)
                         .map(|x| x.username.clone())
                 })
-                .unwrap();
+                .expect("Cannot find current username!");
 
             GROUPS.with_borrow(|groups| {
                 let group = groups
@@ -109,7 +112,7 @@ pub fn broadcast_chat(group: &Group, chat: Chat) {
         USERS.with_borrow(|users| {
             if let Some(principal) = users
                 .iter()
-                .find(|x| x.1.username.eq_ignore_ascii_case(&username))
+                .find(|x| x.1.username.eq_ignore_ascii_case(username))
                 .map(|x| x.0)
             {
                 send_websocket_message(*principal, WebsocketEventMessage::AddChat(chat.clone()));

@@ -1,20 +1,5 @@
 import "./ws_types.did";
 
-type User = record {
-    username: text;
-    created_time_unix: nat;
-    profile_picture_blob: blob;
-};
-
-type Group = record {
-    id: nat;
-    name: text;
-    users: vec text;
-    owner: text;
-    created_time_unix: nat;
-    profile_picture_blob: blob;
-};
-
 type GroupQueryResponse = record {
     id: nat;
     name: text;
@@ -23,18 +8,11 @@ type GroupQueryResponse = record {
     created_time_unix: nat;
 };
 
-type Video = record {
+type VideoHeader = record {
     id: nat;
-    webcam_blob: blob;
-    screen_blob: blob;
-    created_time_unix: nat;
-};
-
-type VideoFrame = record {
-    id: text;
-    username: text;
-    webcam_blob: blob;
-    screen_blob: blob;
+    title: text;
+    created_by: text;
+    frames_count: nat;
     created_time_unix: nat;
 };
 
@@ -124,12 +102,17 @@ service : {
     }) query;
 
     get_videos: (nat) -> (variant {
-        Ok: vec Video;
+        Ok: vec VideoHeader;
         Err: text;
     }) query;
 
-    create_video: (nat) -> (variant {
+    create_video: (nat, text) -> (variant {
         Ok: nat;
+        Err: text;
+    });
+
+    create_video_frame: (nat, nat, text) -> (variant {
+        Ok: null;
         Err: text;
     });
 
@@ -138,8 +121,38 @@ service : {
         Err: text;
     });
 
-    concat_video: (nat, nat, blob, blob) -> (variant {
-        Ok: null;
+    get_video_detail: (nat, nat) -> (variant {
+        Ok: VideoHeader;
+        Err: text;
+    });
+
+    get_video_size: (nat, nat) -> (variant {
+        Ok: nat;
+        Err: text;
+    });
+
+    get_video_chunk_blob: (nat, nat, nat) -> (variant {
+        Ok: blob;
+        Err: text;
+    });
+
+    get_video_frame_size: (nat, nat, nat) -> (variant {
+        Ok: nat;
+        Err: text;
+    });
+
+    get_video_frame_chunk_blob: (nat, nat, nat, nat) -> (variant {
+        Ok: blob;
+        Err: text;
+    });
+
+    get_video_thumbnail_size: (nat) -> (variant {
+        Ok: nat;
+        Err: text;
+    });
+
+    get_video_thumbnail_chunk_blob: (nat, nat) -> (variant {
+        Ok: blob;
         Err: text;
     });
 
