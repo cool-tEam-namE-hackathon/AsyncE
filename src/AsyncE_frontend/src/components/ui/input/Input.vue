@@ -1,7 +1,9 @@
 <script setup lang="ts">
-import type { HTMLAttributes } from "vue";
+import { ref, type HTMLAttributes } from "vue";
 import { useVModel } from "@vueuse/core";
 import { cn } from "@/lib/utils";
+
+const input = ref<HTMLInputElement>();
 
 const props = defineProps<{
     defaultValue?: string | number;
@@ -22,10 +24,15 @@ const modelValue = useVModel(props, "modelValue", emits, {
 function handleChange(e: Event) {
     emits("on-file-change", e);
 }
+
+defineExpose({
+    input,
+});
 </script>
 
 <template>
     <input
+        ref="input"
         v-model="modelValue"
         :class="
             cn(
