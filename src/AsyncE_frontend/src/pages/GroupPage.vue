@@ -166,6 +166,7 @@
                         </Button>
                     </div>
                 </div>
+                <h1>{{ message }}</h1>
                 <div class="flex-1 h-1/4">
                     <p>Here</p>
                 </div>
@@ -396,9 +397,15 @@ async function saveRecording() {
     recordedChunks.value = [];
 }
 
+const message = ref<string>("");
+
 async function convertToMp4(blob: Blob) {
     const ffmpeg = new FFmpeg();
     console.log("not loaded");
+
+    ffmpeg.on("log", ({ message: msg }: LogEvent) => {
+        message.value = msg;
+    });
 
     await ffmpeg.load({
         coreURL: await toBlobURL(
