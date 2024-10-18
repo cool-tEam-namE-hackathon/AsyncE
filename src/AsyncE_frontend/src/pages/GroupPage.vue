@@ -1,5 +1,5 @@
 <template>
-    <div class="container relative h-full">
+    <div class="container h-full">
         <!-- UPLOAD PROGRESS MODAL -->
         <base-dialog :open="isOpen" :hide-close-button="true">
             <template #title>
@@ -9,14 +9,8 @@
             </template>
             <template #content>
                 <div class="flex justify-between">
-                    <span>Screen Recording</span>
-                    <span>{{ screenProgress.toFixed(1) }}%</span>
-                </div>
-                <base-progress v-model="screenProgress" />
-
-                <div class="flex justify-between">
                     <span>Camera Recording</span>
-                    <span>{{ cameraProgress.toFixed(1) }}%</span>
+                    <span>{{ uploadVideoProgress.toFixed(1) }}%</span>
                 </div>
                 <base-progress v-model="cameraProgress" />
             </template>
@@ -68,7 +62,7 @@
 
             <template #footer>
                 <Button
-                    :disabled="isFieldError || isLoading"
+                    :disabled="isFieldError || isLoading || !invitedUsername"
                     :is-loading="isLoading"
                     @click="handleInvite"
                 >
@@ -89,13 +83,16 @@
 
         <!-- GROUP NAME -->
         <span> {{ currentGroup?.name }}</span>
+        <span>{{ uploadVideoProgress }}</span>
 
         <!-- MEDIA -->
-        <div class="mx-auto py-8">
-            <div class="flex flex-col lg:flex-row gap-8">
-                <div class="w-full flex gap-8">
+        <div class="mx-auto py-8 h-full">
+            <div class="flex flex-col gap-8 h-full">
+                <div class="flex gap-6">
                     <!-- VIDEO -->
-                    <div class="flex-1 bg-white rounded-lg shadow-sm p-6">
+                    <div
+                        class="flex flex-col flex-1 bg-white rounded-lg shadow-lg h-full p-4"
+                    >
                         <div class="flex items-center justify-between mb-3">
                             <h2 class="text-xl font-semibold">
                                 Record New Video
@@ -104,19 +101,19 @@
                                 v-model:selectedCamera="selectedCamera"
                                 :camera-list="cameraList"
                                 :enabled-camera="enabledCamera"
-                                :enabled-screen="enabledScreen"
                                 :is-recording-disabled="isRecordingDisabled"
                                 :recording-phase-text="recordingPhaseText"
-                                @on-toggle-camera="onToggleCamera"
-                                @on-toggle-screen="onToggleScreen"
+                                @on-toggle-camera="
+                                    enabledCamera = !enabledCamera
+                                "
                                 @on-record="handleRecord"
                             />
                         </div>
 
                         <!-- NO CAMERA OR SCREEN YET -->
                         <div
-                            v-if="!displayCamera && !displayStream"
-                            class="flex flex-col items-center justify-center bg-gray-200 rounded-lg h-96"
+                            v-if="!displayCamera"
+                            class="flex flex-col items-center justify-center bg-gray-200 rounded-lg h-full py-4"
                         >
                             <Icon
                                 icon="fluent:video-off-32-regular"
@@ -124,52 +121,21 @@
                                 height="64"
                                 style="color: black"
                             />
-                            <p className="text-xl font-semibold">
+                            <p class="text-xl font-semibold">
                                 Video stream unavailable
                             </p>
-                            <p className="text-sm mt-2">
+                            <p class="text-sm mt-2">
                                 Please start your camera or screen share
                             </p>
                         </div>
 
-                        <div
+                        <video
                             v-else
-                            ref="containerEl"
-                            class="bg-gray-200 rounded-lg mb-4 w-full relative overflow-hidden"
-                        >
-                            <!-- SCREEN -->
-                            <video
-                                ref="videoRef"
-                                class="rounded-lg w-full h-full object-cover"
-                                autoplay
-                                muted
-                            />
-
-                            <!-- CAMERA -->
-                            <div ref="videoEl">
-                                <video
-                                    ref="cameraRef"
-                                    :class="[
-                                        displayStream
-                                            ? `select-none top-0 left-0`
-                                            : 'inset-0 w-full h-full object-cover',
-                                        'absolute',
-                                    ]"
-                                    :width="
-                                        displayStream
-                                            ? cameraDimensions.width
-                                            : 'auto'
-                                    "
-                                    :height="
-                                        displayStream
-                                            ? cameraDimensions.height
-                                            : 'auto'
-                                    "
-                                    muted
-                                    autoplay
-                                />
-                            </div>
-                        </div>
+                            ref="cameraRef"
+                            class="object-cover w-full h-full rounded-lg"
+                            muted
+                            autoplay
+                        />
                     </div>
 
                     <!-- USER MANAGEMENT -->
@@ -200,6 +166,9 @@
                         </Button>
                     </div>
                 </div>
+                <div class="flex-1 h-1/4">
+                    <p>Here</p>
+                </div>
             </div>
         </div>
     </div>
@@ -207,27 +176,21 @@
     <!-- CHAT -->
     <chat-window />
 
-    <!-- <video v-if="url" autoplay muted controls>
+    <video v-if="url" autoplay muted controls>
         <source :src="url" type="video/mp4" />
         Your browser does not support the video tag.
-    </video> -->
+    </video>
 </template>
 
 <script setup lang="ts">
-import { ref, watchEffect, computed, onMounted } from "vue";
+import { ref, watchEffect, computed } from "vue";
 
 import { useRoute } from "vue-router";
 import { useUserStore } from "@stores/user-store";
 import { useGroupStore } from "@stores/group-store";
 import { storeToRefs } from "pinia";
 
-import {
-    useDisplayMedia,
-    useUserMedia,
-    useDevicesList,
-    useElementSize,
-    useDebounceFn,
-} from "@vueuse/core";
+import { useUserMedia, useDevicesList, useDebounceFn } from "@vueuse/core";
 
 import { Icon } from "@iconify/vue";
 
@@ -243,6 +206,7 @@ import BaseProgress from "@components/shared/BaseProgress.vue";
 
 import { RecordedChunks } from "@/types/api/model";
 import { generateUUID, createChunks } from "@/utils/helpers";
+import { MB } from "@/data/user-constants";
 
 const route = useRoute();
 const groupStore = useGroupStore();
@@ -264,8 +228,6 @@ const totalUploadSize = ref<{
     camera: 0,
 });
 
-const animationFrameId = ref<number | null>(null);
-
 const url = ref<string>("");
 const inviteError = ref<string>("");
 
@@ -276,24 +238,12 @@ const isLoading = ref<boolean>(false);
 
 const recordedChunks = ref<Blob[]>([]);
 
-const ctx = ref<CanvasRenderingContext2D | null>(null);
-const canvasRef = ref<HTMLCanvasElement | null>(null);
-const containerEl = ref<HTMLElement | null>(null);
-const videoEl = ref<HTMLElement | null>(null);
-const videoRef = ref<HTMLVideoElement | null>(null);
 const cameraRef = ref<HTMLVideoElement | null>(null);
 
 const mediaRecorder = ref<MediaRecorder | null>(null);
 const recordedVideo = ref<Uint8Array | null>(null);
 
-// const audioContext = ref<AudioContext>(new AudioContext());
-// const mediaStreamAudioDestinationNode = ref<MediaStreamAudioDestinationNode | null>(null);
-
-const { currentGroup } = storeToRefs(groupStore);
-
-const { enabled: enabledScreen, stream: displayStream } = useDisplayMedia({
-    audio: true,
-});
+const { currentGroup, uploadVideoProgress } = storeToRefs(groupStore);
 
 const { videoInputs: cameras, audioInputs: microphones } = useDevicesList({
     requestPermissions: true,
@@ -308,11 +258,8 @@ const { stream: displayCamera, enabled: enabledCamera } = useUserMedia({
     },
 });
 
-const { width: screenWidth, height: screenHeight } =
-    useElementSize(containerEl);
-
 const isRecordingDisabled = computed(() => {
-    return !enabledCamera.value && !enabledScreen.value;
+    return !enabledCamera.value;
 });
 
 const cameraList = computed(() => {
@@ -329,24 +276,9 @@ const recordingPhaseText = computed(() => {
     return recordedChunks.value.length > 0 ? "Save" : "Record";
 });
 
-const cameraDimensions = computed(() => ({
-    width: displayStream.value
-        ? screenWidth.value * 0.25
-        : canvasRef.value?.width ?? 0,
-    height: displayStream.value
-        ? screenHeight.value * 0.25
-        : canvasRef.value?.height ?? 0,
-}));
-
 const cameraProgress = computed(() => {
     return (
         (uploadedChunk.value.camera / totalUploadSize.value.camera) * 100 || 0
-    );
-});
-
-const screenProgress = computed(() => {
-    return (
-        (uploadedChunk.value.screen / totalUploadSize.value.screen) * 100 || 0
     );
 });
 
@@ -388,24 +320,11 @@ async function handleInvite() {
 }
 
 function startRecording() {
-    if (!canvasRef.value) return;
-
-    const canvasStream = canvasRef.value.captureStream(30);
-    // const audioTracks = [
-    //     displayCamera.value?.getAudioTracks()[0],
-    //     displayStream.value?.getAudioTracks()[0],
-    // ];
-
-    // const validAudioTracks = audioTracks.filter(Boolean);
-
-    console.log("display camera", displayCamera.value?.getAudioTracks());
-    console.log("display stream", displayStream.value?.getAudioTracks());
-
-    // mediaStreamAudioDestinationNode.value = new MediaStreamAudioDestinationNode(audioContext.value);
+    if (!displayCamera.value) return;
 
     const combinedStream = new MediaStream([
-        ...canvasStream.getVideoTracks(),
-        // mediaStreamAudioDestinationNode.value.stream.getAudioTracks()[0]
+        ...displayCamera.value.getVideoTracks(),
+        ...displayCamera.value.getAudioTracks(),
     ]);
 
     mediaRecorder.value = new MediaRecorder(combinedStream, {
@@ -443,8 +362,7 @@ async function prepareChunks(
     videoData: Uint8Array,
     type: keyof RecordedChunks,
 ) {
-    const chunkSize = 1024 * 1024; // 1 mb
-    const chunks = createChunks(videoData, chunkSize);
+    const chunks = createChunks(videoData, MB);
 
     const fileId = generateUUID();
 
@@ -463,12 +381,10 @@ async function saveRecording() {
     const blob = new Blob(recordedChunks.value, { type: "video/mp4" });
     const data = new Uint8Array(await blob.arrayBuffer());
 
-    await groupStore.addVideo(data, "Test title");
-
     recordedVideo.value = data;
     url.value = URL.createObjectURL(blob);
-    // totalUploadSize.value[type] = recordedVideo.value[type].byteLength;
-    // await prepareChunks(recordedVideo.value[type], type);
+
+    await groupStore.addVideo(data, route.params.id as string, "Test title");
 
     recordedChunks.value = [];
 }
@@ -516,111 +432,15 @@ async function fetchGroupDetails() {
 //     console.log(response);
 // }
 
-function startDrawing() {
-    if (!ctx.value) return;
-
-    const draw = () => {
-        if (!ctx.value || !canvasRef.value) return;
-        ctx.value.clearRect(
-            0,
-            0,
-            canvasRef.value.width,
-            canvasRef.value.height,
-        );
-
-        // Draw screen capture
-        if (enabledScreen.value && displayStream.value) {
-            const screenVideo = videoRef.value;
-            if (screenVideo) {
-                ctx.value.drawImage(
-                    screenVideo,
-                    0,
-                    0,
-                    canvasRef.value.width,
-                    canvasRef.value.height,
-                );
-            }
-        }
-
-        // Draw camera feed
-        if (enabledCamera.value && displayCamera.value) {
-            const cameraVideo = cameraRef.value;
-            if (cameraVideo) {
-                ctx.value.drawImage(
-                    cameraVideo,
-                    0,
-                    0,
-                    cameraDimensions.value.width,
-                    cameraDimensions.value.height,
-                );
-            }
-        }
-
-        animationFrameId.value = requestAnimationFrame(draw);
-    };
-
-    draw();
-}
-
-async function onToggleCamera() {
-    enabledCamera.value = !enabledCamera.value;
-
-    const audioTrack = displayCamera.value?.getAudioTracks()[0]!;
-    // const anotherMediaStreamAudioSourceNode = new MediaStreamAudioSourceNode(
-    //     audioContext.value,
-    //     { mediaStream: displayCamera.value! }
-    // );
-
-    if (enabledCamera.value) {
-        mediaRecorder.value?.stream.addTrack(audioTrack);
-        console.log("added toggle camera track");
-    } else {
-        mediaRecorder.value?.stream.removeTrack(audioTrack);
-        console.log("removed toggle camera track");
-    }
-}
-
-async function onToggleScreen() {
-    enabledScreen.value = !enabledScreen.value;
-
-    const audioTrack = displayStream.value?.getAudioTracks()[0]!;
-    if (enabledScreen.value) {
-        mediaRecorder.value?.stream.addTrack(audioTrack);
-        console.log("added toggle screen track");
-    } else {
-        mediaRecorder.value?.stream.removeTrack(audioTrack);
-        console.log("removed toggle screen track");
-    }
-}
-
 watchEffect(() => {
-    if (videoRef.value) {
-        videoRef.value.srcObject = displayStream.value!;
-    }
     if (cameraRef.value) {
         cameraRef.value.srcObject = displayCamera.value!;
     }
 });
 
-onMounted(async () => {
-    if (canvasRef.value) {
-        canvasRef.value.width = 1920;
-        canvasRef.value.height = 1080;
-        ctx.value = canvasRef.value.getContext("2d");
-        startDrawing();
-    }
-});
-
 async function init() {
-    // inviteUser();
     await fetchGroupDetails();
-
-    // ws.value!.onmessage = async (event) => {
-    //     console.log(event);
-    // };
 }
 
 await init();
 </script>
-
-<style scoped></style>

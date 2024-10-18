@@ -17,6 +17,11 @@
 target/
 Cargo.lock
 
+# python
+__pycache__/
+.venv/
+model/
+
 # frontend code
 node_modules/
 dist/

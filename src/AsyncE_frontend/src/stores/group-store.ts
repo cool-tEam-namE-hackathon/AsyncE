@@ -17,6 +17,7 @@ export const useGroupStore = defineStore("group", () => {
     const groupPicture = ref<string>("");
     const groupList = ref<Group[]>([]);
     const currentGroup = ref<Group>();
+    const uploadVideoProgress = ref<number>(0);
 
     function convertGroupFromResponse(groupResponse: GroupQueryResponse) {
         return {
@@ -134,24 +135,33 @@ export const useGroupStore = defineStore("group", () => {
         return okResponse[0];
     }
 
-    async function addVideo(data: Uint8Array, title: string) {
-        const videoId = validateResponse(await actor.value?.create_video(
-            currentGroup.value?.id!,
-            title
-        ));
+    async function addVideo(data: Uint8Array, groupId: string, title: string) {
+        const videoId = await actor.value?.create_video(BigInt(groupId), title);
+
+        const okVideoId = validateResponse(videoId);
+
+        console.log(okVideoId);
+
         const totalChunks = Math.ceil(data.length / MB);
+
+        let totalBytesUploaded = 0;
 
         for (let i = 0; i < totalChunks; ++i) {
             const start = i * MB;
             const end = Math.min(start + MB, data.length);
             const chunk = data.slice(start, end);
+            validateResponse(
+                await actor.value?.upload_video(
+                    BigInt(groupId),
+                    okVideoId,
+                    chunk,
+                    i == totalChunks - 1,
+                ),
+            );
 
-            validateResponse(await actor.value?.upload_video(
-                currentGroup.value?.id!,
-                videoId,
-                chunk,
-                i == totalChunks - 1,
-            ));
+            totalBytesUploaded += chunk.length;
+            uploadVideoProgress.value =
+                (totalBytesUploaded / data.length) * 100;
         }
     }
 
@@ -182,6 +192,7 @@ export const useGroupStore = defineStore("group", () => {
         currentGroup,
         groupList,
         groupPicture,
+        uploadVideoProgress,
 
         addVideo,
         getAllGroups,

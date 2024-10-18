@@ -14,7 +14,7 @@
                         message.username === username
                             ? 'text-right'
                             : 'text-left',
-                        'space-y-1',
+                        'space-y-1 mb-2',
                     ]"
                 >
                     <div class="text-xs text-gray-400 mt-2">
@@ -35,6 +35,7 @@
             <hr />
             <div class="flex items-center gap-3 p-2">
                 <Input
+                    ref="inputRef"
                     v-model="message"
                     placeholder="Type a message..."
                     @keyup.enter="handleChatSend"
@@ -65,7 +66,7 @@
 </template>
 
 <script setup lang="ts">
-import { nextTick, ref, watch } from "vue";
+import { computed, nextTick, onMounted, ref, watchEffect } from "vue";
 
 import { storeToRefs } from "pinia";
 
@@ -83,38 +84,36 @@ import { Chat } from "@declarations/AsyncE_backend/AsyncE_backend.did";
 
 const route = useRoute();
 const websocketStore = useWebsocketStore();
-
-const { ws } = storeToRefs(websocketStore);
 const { username } = storeToRefs(useUserStore());
 
 const message = ref<string>("");
-const messages = ref<(Chat & { temp?: boolean })[]>([]);
+const messages = ref<Chat[]>([]);
 const isChatWindowOpen = ref<boolean>(false);
 const chatRef = ref<HTMLDivElement>();
+const inputRef = ref<InstanceType<typeof Input>>();
 
 function toggleChatWindow() {
     isChatWindowOpen.value = !isChatWindowOpen.value;
 }
 
-function scrollToBottom() {
-    nextTick(() => {
-        if (chatRef.value) {
-            chatRef.value.scrollTo({
-                top: chatRef.value.scrollHeight,
-                behavior: "smooth",
-            });
-        }
+async function scrollToBottom() {
+    if (!chatRef.value) return;
+
+    await nextTick();
+
+    chatRef.value.scrollTo({
+        top: chatRef.value.scrollHeight,
+        behavior: "smooth",
     });
 }
 
-function handleChatSend() {
-    const payload: Chat & { temp?: boolean } = {
+async function handleChatSend() {
+    const payload: Chat = {
         id: BigInt(0),
         content: message.value,
         group_id: BigInt(route.params.id as string),
         created_time_unix: BigInt(0),
         username: username.value,
-        temp: true,
     };
     websocketStore.sendMessage(payload);
 
@@ -125,14 +124,12 @@ function handleChatSend() {
     scrollToBottom();
 }
 
-function handleIncomingChat(chat: Chat & { temp?: boolean }) {
+function handleIncomingChat(chat: Chat) {
     if (chat.username !== username.value) {
-        messages.value = messages.value.filter((message) => !message.temp);
-
         messages.value.push(chat);
-
-        scrollToBottom();
     }
+
+    scrollToBottom();
 }
 
 websocketStore.setOnChatReceive(handleIncomingChat);
