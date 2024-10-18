@@ -19,8 +19,8 @@ export const useWebsocketStore = defineStore("websocket", () => {
 
     const ws = ref<IcWebSocket<_SERVICE, WebsocketEventMessage>>();
 
-    let onGroupInvited = (group: GroupInviteResponse) => {};
-    let onChatReceive = (chat: Chat) => {};
+    let onGroupInvited = (group: GroupInviteResponse) => { };
+    let onChatReceive = (chat: Chat) => { };
 
     function sendMessage(chat: Chat) {
         if (ws.value) {
@@ -45,21 +45,6 @@ export const useWebsocketStore = defineStore("websocket", () => {
         });
 
         ws.value = new IcWebSocket(gatewayUrl, undefined, wsConfig);
-
-        // wait until the WebSocket connection is opened
-        await new Promise((resolve, reject) => {
-            ws.value!.onopen = () => {
-                console.log("Websocket is opened");
-                resolve(null);
-            };
-
-            ws.value!.onerror = (error) => {
-                console.log("Websocket error:", error);
-                reject(error);
-            };
-        });
-
-        // setup the message handler after the connection is established
         ws.value.onmessage = async (event) => {
             console.log("Received message:", event.data);
 
@@ -85,13 +70,24 @@ export const useWebsocketStore = defineStore("websocket", () => {
             }
         };
 
-        ws.value.onclose = () => {
-            console.log("Disconnected from the canister");
-        };
+        await new Promise((resolve, reject) => {
+            ws.value!.onopen = () => {
+                console.log("Websocket is opened");
+                resolve(null);
+            };
 
-        ws.value.onerror = (error) => {
-            console.log("Error:", error);
-        };
+            ws.value!.onerror = (error) => {
+                console.log("Websocket error:", error);
+                reject(error);
+            };
+
+            ws.value!.onclose = () => {
+                console.log("Disconnected from the canister");
+                reject(null);
+            };
+
+            setTimeout(resolve, 3000)
+        });
     }
 
     return {

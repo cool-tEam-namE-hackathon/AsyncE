@@ -149,9 +149,9 @@ function onFileInput(e: Event) {
 
 async function init() {
     await userStore.init();
-    await websocketStore.setWebsockets();
 
     try {
+        await websocketStore.setWebsockets();
         const hasCredentials = await userStore.getUserCredentials();
 
         if (!hasCredentials && isAuthenticated) isOpen.value = true;

@@ -322,10 +322,7 @@ async function handleInvite() {
 function startRecording() {
     if (!displayCamera.value) return;
 
-    const combinedStream = new MediaStream([
-        ...displayCamera.value.getVideoTracks(),
-        ...displayCamera.value.getAudioTracks(),
-    ]);
+    const combinedStream = new MediaStream(displayCamera.value.getTracks());
 
     mediaRecorder.value = new MediaRecorder(combinedStream, {
         mimeType: "video/mp4",
@@ -380,12 +377,10 @@ async function prepareChunks(
 async function saveRecording() {
     const blob = new Blob(recordedChunks.value, { type: "video/mp4" });
     const data = new Uint8Array(await blob.arrayBuffer());
-
-    recordedVideo.value = data;
-    url.value = URL.createObjectURL(blob);
-
     await groupStore.addVideo(data, route.params.id as string, "Test title");
 
+    url.value = URL.createObjectURL(blob);
+    recordedVideo.value = data;
     recordedChunks.value = [];
 }
 

@@ -136,6 +136,10 @@ export const useGroupStore = defineStore("group", () => {
     }
 
     async function addVideo(data: Uint8Array, groupId: string, title: string) {
+        console.log("data", data);
+        console.log("groupId", groupId);
+        console.log("title", title);
+
         const videoId = await actor.value?.create_video(BigInt(groupId), title);
 
         const okVideoId = validateResponse(videoId);
@@ -155,7 +159,7 @@ export const useGroupStore = defineStore("group", () => {
                     BigInt(groupId),
                     okVideoId,
                     chunk,
-                    i == totalChunks - 1,
+                    i === totalChunks - 1,
                 ),
             );
 
@@ -163,6 +167,8 @@ export const useGroupStore = defineStore("group", () => {
             uploadVideoProgress.value =
                 (totalBytesUploaded / data.length) * 100;
         }
+
+        console.log("all good")
     }
 
     async function inviteUser(id: bigint, name: string) {

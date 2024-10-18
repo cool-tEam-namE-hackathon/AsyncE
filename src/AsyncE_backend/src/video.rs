@@ -68,8 +68,13 @@ impl Video {
     }
 
     pub fn set_data(&mut self, data: Vec<u8>) -> Result<(), String> {
-        Mp4Reader::read_header(Cursor::new(&data), data.len() as u64)
-            .map_err(|_| String::from("Invalid MP4 Data!"))?;
+        Mp4Reader::read_header(Cursor::new(&data), data.len() as u64).map_err(|error| {
+            format!(
+                "Invalid MP4 Data while trying to set data for video: {}!\n{}",
+                error,
+                hex::encode(&data),
+            )
+        })?;
 
         self.data = data;
 
