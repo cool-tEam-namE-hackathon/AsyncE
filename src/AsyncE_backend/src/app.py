@@ -37,7 +37,7 @@ def get_thumbnail_from_video() -> Response:
     video_bytes = request.data
     thumbnail = extract_thumbnail(video_bytes)
 
-    return send_file(thumbnail, mimetype="image/jpg")
+    return send_file(thumbnail, mimetype="image/jpeg")
 
 
 if __name__ == "__main__":
