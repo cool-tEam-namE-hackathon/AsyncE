@@ -33,7 +33,7 @@ app = Flask(__name__)
 
 
 @app.route("/thumbnail", methods=["POST"])
-def get_thumbnail_from_video() -> Response:
+def create_thumbnail_from_video() -> Response:
     video_bytes = request.data
     thumbnail = extract_thumbnail(video_bytes)
 
