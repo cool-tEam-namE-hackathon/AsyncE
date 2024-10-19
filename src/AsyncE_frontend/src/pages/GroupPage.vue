@@ -236,6 +236,7 @@ const totalUploadSize = ref<{
 
 const url = ref<string>("");
 const inviteError = ref<string>("");
+const message = ref<string>("");
 
 const isRecording = ref<boolean>(false);
 const isOpen = ref<boolean>(false);
@@ -252,7 +253,7 @@ const recordedVideo = ref<Uint8Array | null>(null);
 const { currentGroup, uploadVideoProgress } = storeToRefs(groupStore);
 
 const { videoInputs: cameras, audioInputs: microphones } = useDevicesList({
-    requestPermissions: true,
+    requestPermissions: false,
 });
 
 const currentMicrophone = computed(() => microphones.value[0]?.deviceId);
@@ -328,7 +329,7 @@ async function handleInvite() {
 function startRecording() {
     if (!displayCamera.value) return;
 
-    const combinedStream = new MediaStream(displayCamera.value.getTracks());
+    const combinedStream = new MediaStream(displayCamera.value);
     const options = {
         mimeType: "video/webm",
     };
@@ -397,11 +398,8 @@ async function saveRecording() {
     recordedChunks.value = [];
 }
 
-const message = ref<string>("");
-
 async function convertToMp4(blob: Blob) {
     const ffmpeg = new FFmpeg();
-    console.log("not loaded");
 
     ffmpeg.on("log", ({ message: msg }: LogEvent) => {
         message.value = msg;
@@ -422,29 +420,14 @@ async function convertToMp4(blob: Blob) {
         ),
     });
 
-    console.log("loaded");
-
     await ffmpeg.writeFile("input.webm", await fetchFile(blob));
-
-    console.log("here 1");
-
-    try {
-        await ffmpeg.exec(["-i", "input.webm", "output.mp4"]);
-    } catch (e) {
-        console.log(e);
-    }
+    await ffmpeg.exec(["-i", "input.webm", "-c", "copy", "output.mp4"]);
 
     const data = await ffmpeg.readFile("output.mp4");
-
-    console.log("here2 ");
 
     const mp4Blob = new Blob([(data as Uint8Array).buffer], {
         type: "video/mp4",
     });
-
-    console.log("here3 ");
-
-    console.log(mp4Blob);
 
     return mp4Blob;
 }
