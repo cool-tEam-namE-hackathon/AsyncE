@@ -101,12 +101,12 @@ service : {
         Err: text;
     }) query;
 
-    get_videos: (nat) -> (variant {
+    get_meetings: (nat) -> (variant {
         Ok: vec VideoHeader;
         Err: text;
     }) query;
 
-    create_video: (nat, text) -> (variant {
+    create_meeting: (nat, text) -> (variant {
         Ok: nat;
         Err: text;
     });
@@ -121,17 +121,17 @@ service : {
         Err: text;
     });
 
-    get_video_detail: (nat, nat) -> (variant {
+    get_meeting_detail: (nat, nat) -> (variant {
         Ok: VideoHeader;
         Err: text;
     });
 
-    get_video_size: (nat, nat) -> (variant {
+    get_video_meeting_size: (nat, nat) -> (variant {
         Ok: nat;
         Err: text;
     });
 
-    get_video_chunk_blob: (nat, nat, nat) -> (variant {
+    get_video_meeting_chunk_blob: (nat, nat, nat) -> (variant {
         Ok: blob;
         Err: text;
     });
