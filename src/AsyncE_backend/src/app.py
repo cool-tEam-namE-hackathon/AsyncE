@@ -13,17 +13,13 @@ def convert_image_to_bytesio(image, format: str) -> BytesIO:
     return img_io
 
 
-def extract_thumbnail(video_bytes: bytes, format: str = "jpeg") -> BytesIO:
-    with tempfile.NamedTemporaryFile(delete=True) as tmp_video_file:
-        tmp_video_file.write(video_bytes)
-        tmp_video_file.flush()
-
-        with VideoFileClip(tmp_video_file.name) as clip:
-            if clip.duration >= 1:
-                time = 1
-            else:
-                time = 0
-            frame = clip.get_frame(time)
+def extract_thumbnail(video_path: str, format: str = "jpeg") -> BytesIO:
+    with VideoFileClip(video_path) as clip:
+        if clip.duration >= 1:
+            time = 1
+        else:
+            time = 0
+        frame = clip.get_frame(time)
 
     thumbnail = Image.fromarray(frame)
     return convert_image_to_bytesio(thumbnail, format)
@@ -35,7 +31,11 @@ app = Flask(__name__)
 @app.route("/thumbnail", methods=["POST"])
 def create_thumbnail_from_video() -> Response:
     video_bytes = request.data
-    thumbnail = extract_thumbnail(video_bytes)
+
+    with tempfile.NamedTemporaryFile(delete=True) as tmp_video_file:
+        tmp_video_file.write(video_bytes)
+        tmp_video_file.flush()
+        thumbnail = extract_thumbnail(tmp_video_file.name)
 
     return send_file(thumbnail, mimetype="image/jpeg")
 
