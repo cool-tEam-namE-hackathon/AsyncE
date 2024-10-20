@@ -22,7 +22,7 @@
                 <div
                     v-for="(group, index) in groupList"
                     :key="index"
-                    class="flex flex-col bg-white shadow-md rounded-lg overflow-hidden"
+                    class="flex flex-col bg-white shadow-md rounded-lg overflow-hidden cursor-pointer"
                     @click="router.push(`/group/${group.id}`)"
                 >
                     <img

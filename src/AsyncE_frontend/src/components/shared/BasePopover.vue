@@ -18,6 +18,4 @@ import {
 import { useAttrs } from "vue";
 
 const attrs = useAttrs();
-
-console.log(attrs);
 </script>

@@ -1,6 +1,10 @@
 <template>
     <Dialog v-model:open="isOpen">
-        <DialogContent :hide-close-button="hideCloseButton" class="sm:max-w-md">
+        <DialogContent
+            v-bind="attrs"
+            :hide-close-button="hideCloseButton"
+            class="sm:max-w-md"
+        >
             <DialogHeader>
                 <DialogTitle>
                     <slot name="title" />
@@ -18,7 +22,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from "vue";
+import { computed, useAttrs } from "vue";
 import { BaseDialogProps } from "@/types/api/model";
 
 import {
@@ -37,4 +41,6 @@ const isOpen = computed({
     get: () => props.open,
     set: (newVal) => emits("on-close-dialog", newVal),
 });
+
+const attrs = useAttrs();
 </script>

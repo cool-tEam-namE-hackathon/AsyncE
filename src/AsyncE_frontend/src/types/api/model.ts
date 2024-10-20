@@ -1,3 +1,5 @@
+import { VideoHeader } from "@declarations/AsyncE_backend/AsyncE_backend.did";
+
 interface User {
     profile_picture_blob: Uint8Array;
     username: string;
@@ -50,6 +52,11 @@ interface VideoControlProps {
     recordingPhaseText: string;
 }
 
+interface VideoList {
+    video: VideoHeader;
+    url: string;
+}
+
 interface BaseDialogProps {
     open?: boolean;
     hideCloseButton?: boolean;
@@ -68,7 +75,7 @@ interface BaseDropdownProps {
 
 interface BaseSelectProps {
     modelValue?: string;
-    placeholder: string;
+    placeholder?: string;
     options?: Option[];
 }
 
@@ -93,6 +100,7 @@ export type {
     BaseDialogProps,
     BaseDropdownProps,
     BaseSelectProps,
+    VideoList,
     VideoControlProps,
     BaseProgress,
     RecordedChunks,

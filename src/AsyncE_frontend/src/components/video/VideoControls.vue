@@ -23,13 +23,6 @@
                 </div>
             </template>
         </Button>
-        <!-- <Button
-            :variant="enabledScreen ? 'default' : 'outline'"
-            @click="emits('on-toggle-screen', enabledScreen)"
-        >
-            <Icon class="mr-2" icon="gg:screen" width="24" height="24" />
-            Screen
-        </Button> -->
         <Button :disabled="isRecordingDisabled" @click="emits('on-record')">
             <template #default>
                 <Icon

@@ -45,4 +45,42 @@ function validateResponse<T>(
 
     return response.Ok;
 }
-export { fileToBlob, blobToURL, createChunks, generateUUID, validateResponse };
+
+function timeAgo(timestamp: bigint) {
+    const timestampMillis = Number(timestamp / 1000000n); // Accurate conversion
+    const date = new Date(timestampMillis);
+
+    console.log(date);
+
+    const now = new Date().getTime();
+    const diff = now - date.getTime();
+
+    const intervals = [
+        { label: "year", seconds: 31536000 },
+        { label: "month", seconds: 2628000 },
+        { label: "day", seconds: 86400 },
+        { label: "hour", seconds: 3600 },
+        { label: "minute", seconds: 60 },
+        { label: "second", seconds: 1 },
+    ];
+
+    for (const interval of intervals) {
+        const milliseconds = interval.seconds * 1000;
+        const count = Math.floor(diff / milliseconds);
+
+        if (count > 0) {
+            return `${count} ${interval.label}${count > 1 ? "s" : ""} ago`;
+        }
+    }
+
+    return "just now";
+}
+
+export {
+    fileToBlob,
+    blobToURL,
+    createChunks,
+    generateUUID,
+    validateResponse,
+    timeAgo,
+};
