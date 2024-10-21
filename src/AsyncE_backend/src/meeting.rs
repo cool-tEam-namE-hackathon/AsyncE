@@ -62,7 +62,7 @@ impl Meeting {
             id: primary_key::get_primary_key(PrimaryKeyType::Video),
             full_video_data: Vec::new(),
             thumbnail_data: Vec::new(),
-            frames: Vec::from([VideoFrame::new(username.clone(), title.clone())]),
+            frames: Vec::new(),
             title,
             created_by: username,
             created_time_unix: ic_cdk::api::time() as u128,
@@ -285,13 +285,19 @@ pub fn create_meeting(group_id: u128, title: String) -> Result<u128, String> {
             .or_default()
             .insert(meeting_id, meeting)
     });
-    VIDEO_UPLOADS.with_borrow_mut(|video_uploads| video_uploads.insert(meeting_id, Vec::new()));
 
     Ok(meeting_id)
 }
 
 #[ic_cdk::update]
-pub fn create_video_frame(group_id: u128, meeting_id: u128, title: String) -> Result<(), String> {
+pub fn upload_video(
+    group_id: u128,
+    meeting_id: u128,
+    data: Vec<u8>,
+    finish: bool,
+    title: String,
+    video_upload_uuid: String,
+) -> Result<(), String> {
     user::assert_user_logged_in()?;
     assert_check_group(group_id)?;
 
@@ -304,46 +310,17 @@ pub fn create_video_frame(group_id: u128, meeting_id: u128, title: String) -> Re
 
         let meeting = meetings
             .get_mut(&meeting_id)
-            .ok_or(String::from("No meeting found on this meeting ID!"))?;
-
-        meeting.frames.push(VideoFrame::new(selfname, title));
-
-        VIDEO_UPLOADS.with_borrow_mut(|video_uploads| video_uploads.insert(meeting_id, Vec::new()));
-
-        Ok(())
-    })
-}
-
-#[ic_cdk::update]
-pub fn upload_video(
-    group_id: u128,
-    meeting_id: u128,
-    data: Vec<u8>,
-    finish: bool,
-) -> Result<(), String> {
-    user::assert_user_logged_in()?;
-    assert_check_group(group_id)?;
-
-    MEETINGS.with_borrow_mut(|meetings| {
-        let meetings = meetings
-            .get_mut(&group_id)
-            .ok_or(String::from("No meetings found on this group!"))?;
-
-        let meeting = meetings
-            .get_mut(&meeting_id)
             .ok_or(String::from("No meeting found on this video ID!"))?;
 
         VIDEO_UPLOADS.with_borrow_mut(|video_uploads| {
             video_uploads
-                .get_mut(&meeting_id)
-                .ok_or(String::from(
-                    "Cannot find existing upload process with given ID",
-                ))?
+                .entry(video_upload_uuid.clone())
+                .or_insert(Vec::new())
                 .extend(data);
 
             if finish {
-                let data = video_uploads.remove(&meeting_id).ok_or(String::from(
-                    "Cannot find existing upload process with given ID (This should never happen though)",
+                let data = video_uploads.remove(&video_upload_uuid).ok_or(String::from(
+                    "Cannot find existing upload process with given UUID (This should never happen though)",
                 ))?;
 
                 if !meeting.full_video_data.is_empty() {
@@ -352,10 +329,9 @@ pub fn upload_video(
                     meeting.set_data(data.clone())?;
                 }
 
-                let video_frame = meeting.frames.last_mut().ok_or(String::from(
-                    "Cannot find latest frame (This should never happen though)",
-                ))?;
+                let mut video_frame = VideoFrame::new(selfname, title);
                 video_frame.data = data;
+                meeting.frames.push(video_frame);
             }
 
             Ok(())

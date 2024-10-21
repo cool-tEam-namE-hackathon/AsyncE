@@ -45,11 +45,6 @@ service : {
         Ok: null;
         Err: text;
     });
-
-    get_selfname: () -> (variant {
-        Ok: opt text;
-        Err: text;
-    }) query;
     
     validate_username: (text) -> (variant {
         Ok: bool;
@@ -111,12 +106,7 @@ service : {
         Err: text;
     });
 
-    create_video_frame: (nat, nat, text) -> (variant {
-        Ok: null;
-        Err: text;
-    });
-
-    upload_video: (nat, nat, blob, bool) -> (variant {
+    upload_video: (nat, nat, blob, bool, text) -> (variant {
         Ok: null;
         Err: text;
     });

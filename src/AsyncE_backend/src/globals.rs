@@ -17,7 +17,7 @@ pub type GroupInviteStore = BTreeMap<String, BTreeSet<u128>>;
 pub type WebSocketClientStore = BTreeSet<ClientPrincipal>;
 pub type ChatStore = BTreeMap<u128, BTreeMap<u128, Chat>>;
 pub type PrimaryKeyContainerStore = PrimaryKeyContainer;
-pub type VideoUploadStore = BTreeMap<u128, Vec<u8>>;
+pub type VideoUploadStore = BTreeMap<String, Vec<u8>>;
 
 thread_local! {
     pub static USERS: RefCell<UserStore> = RefCell::default();

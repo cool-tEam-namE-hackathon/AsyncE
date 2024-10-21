@@ -10,16 +10,20 @@ pub mod primary_key;
 pub mod user;
 pub mod websocket;
 
+use std::{cell::RefCell, time::Duration};
+
 use crate::{
     chat::Chat, group::GroupQueryResponse, invite::GroupInviteResponse, meeting::MeetingHeader,
     websocket::WebsocketEventMessage,
 };
+use getrandom::register_custom_getrandom;
 use globals::{CHATS, GROUPS, GROUP_INVITES, MEETINGS, PRIMARY_KEY_CONTAINERS, USERS};
 use ic_websocket_cdk::{
     CanisterWsCloseArguments, CanisterWsCloseResult, CanisterWsGetMessagesArguments,
     CanisterWsGetMessagesResult, CanisterWsMessageArguments, CanisterWsMessageResult,
     CanisterWsOpenArguments, CanisterWsOpenResult, WsHandlers, WsInitParams,
 };
+use rand::{rngs::StdRng, RngCore, SeedableRng};
 
 #[ic_cdk::init]
 fn init() {
@@ -30,6 +34,7 @@ fn init() {
     };
 
     ic_websocket_cdk::init(WsInitParams::new(handlers));
+    init_rng()
 }
 
 #[ic_cdk::pre_upgrade]
@@ -72,6 +77,31 @@ fn post_upgrade() {
     PRIMARY_KEY_CONTAINERS.with_borrow_mut(|primary_key_containers| {
         *primary_key_containers = primary_key_containers_store
     });
+
+    init_rng()
+}
+
+thread_local! {
+    static RNG: RefCell<Option<StdRng>> = RefCell::new(None);
+}
+
+register_custom_getrandom!(custom_getrandom);
+
+fn init_rng() {
+    ic_cdk_timers::set_timer(Duration::ZERO, || {
+        ic_cdk::spawn(async {
+            let (seed,) = ic_cdk::api::management_canister::main::raw_rand()
+                .await
+                .unwrap();
+
+            RNG.with(|rng| *rng.borrow_mut() = Some(StdRng::from_seed(seed.try_into().unwrap())));
+        })
+    });
+}
+
+fn custom_getrandom(buf: &mut [u8]) -> Result<(), getrandom::Error> {
+    RNG.with(|rng| rng.borrow_mut().as_mut().unwrap().fill_bytes(buf));
+    Ok(())
 }
 
 ic_cdk::export_candid!();

@@ -94,7 +94,6 @@ pub fn register(name: String) -> Result<(), String> {
     Ok(())
 }
 
-#[ic_cdk::query]
 pub fn get_selfname() -> Result<Option<String>, String> {
     assert_user_logged_in()?;
 
