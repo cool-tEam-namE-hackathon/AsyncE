@@ -29,7 +29,8 @@ def whisper_transcriber(audio_data: sr.AudioData) -> str:
 
 
 transcribers = []
-transcribers.append(whisper_transcriber)
+if config.enable_transcription_using_whisper:
+    transcribers.append(whisper_transcriber)
 if os.path.isdir("model"):
     transcribers.append(vosk_transcriber)
 transcribers.append(sphinx_transcriber)

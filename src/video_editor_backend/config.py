@@ -1,3 +1,5 @@
+enable_transcription_using_whisper = True
+
 timestamp_chunk_duration_seconds = 5
 timestamp_chunk_duration_ms = timestamp_chunk_duration_seconds * 1000
 
