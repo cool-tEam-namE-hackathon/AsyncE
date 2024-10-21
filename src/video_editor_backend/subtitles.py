@@ -5,7 +5,7 @@ from typing import List, Tuple
 import config
 import ffmpeg
 import speech_recognition as sr
-from file_db import save_video
+from file_repository import save_subtitle_video
 from moviepy.editor import (ColorClip, CompositeVideoClip, TextClip,
                             VideoFileClip)
 from pydub import AudioSegment
@@ -79,7 +79,7 @@ def transcribe_video(video_path: str) -> List[Tuple[int, str]]:
         return transcribe_audio(audio_path)
 
 
-def generate_video_with_subtitles(video_path: str, video_id: str) -> None:
+def generate_subtitle_video(video_path: str, output_video_id: str) -> None:
     transcription = transcribe_video(video_path)
     video = VideoFileClip(video_path)
     subtitle_clips = []
@@ -111,4 +111,5 @@ def generate_video_with_subtitles(video_path: str, video_id: str) -> None:
         subtitle_clips.append(text_subtitle)
 
     output_video = CompositeVideoClip([video] + subtitle_clips)
-    save_video(output_video, video_id)
+    save_subtitle_video(output_video, output_video_id)
+    os.remove(video_path)

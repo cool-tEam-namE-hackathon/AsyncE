@@ -3,29 +3,20 @@ import tempfile
 import uuid
 
 import config
-from file_db import retrieve_video
+from file_repository import (append_video_file, get_video_path,
+                             retrieve_subtitle_video)
 from flask import Flask, Response, request, send_file
-from subtitles import generate_video_with_subtitles
+from subtitles import generate_subtitle_video
 from thumbnail import generate_thumbnail
 
 worker_pool_executor = concurrent.futures.ThreadPoolExecutor(max_workers=3)
-
-
-def edit_video_with_subtitles_task(video_bytes: bytes, video_id: str) -> None:
-    with tempfile.NamedTemporaryFile() as video_file:
-        video_file.write(video_bytes)
-        video_file.flush()
-        video_path = video_file.name
-
-        generate_video_with_subtitles(video_path, video_id)
-
 
 app = Flask(__name__)
 
 
 @app.route("/subtitles/<id>")
-def get_video_with_subtitles(id: str) -> Response:
-    processed_video_bytesio = retrieve_video(id)
+def get_subtitle_video(id: str) -> Response:
+    processed_video_bytesio = retrieve_subtitle_video(id)
     if processed_video_bytesio == None:
         return Response(
             f"Video id '{id}' processing hasn't finished yet or doesn't exist",
@@ -37,13 +28,32 @@ def get_video_with_subtitles(id: str) -> Response:
     )
 
 
-@app.route("/subtitles", methods=["POST"])
-def create_video_with_subtitles() -> Response:
+@app.route("/subtitles", methods={"POST"})
+def start_chunk_for_subtitle_video() -> Response:
     video_bytes = request.data
 
-    video_id = str(uuid.uuid4())
-    worker_pool_executor.submit(edit_video_with_subtitles_task, video_bytes, video_id)
-    return Response(video_id, status=200)
+    id = str(uuid.uuid4())
+    append_video_file(get_video_path(id), video_bytes)
+    return Response(id, status=200)
+
+
+@app.route("/subtitles/<id>", methods=["PUT"])
+def append_chunk_for_subtitle_video(id) -> Response:
+    video_bytes = request.data
+
+    append_video_file(get_video_path(id), video_bytes)
+    return Response(id, status=200)
+
+
+@app.route("/subtitles/<id>", methods=["POST"])
+def create_subtitle_video(id) -> Response:
+    video_bytes = request.data
+
+    video_path = get_video_path(id)
+    append_video_file(video_path, video_bytes)
+    output_video_id = str(uuid.uuid4())
+    worker_pool_executor.submit(generate_subtitle_video, video_path, output_video_id)
+    return Response(output_video_id, status=200)
 
 
 @app.route("/thumbnail", methods=["POST"])
