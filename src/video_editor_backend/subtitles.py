@@ -83,15 +83,22 @@ def transcribe_video(video_path: str) -> List[Tuple[int, str]]:
 def generate_subtitle_video(input_video_path: str, output_video_id: str) -> None:
     transcription = transcribe_video(input_video_path)
     video = VideoFileClip(input_video_path)
+    video_length = video.duration
     subtitle_clips = []
 
-    for timestamp, text in transcription:
+    for start_seconds, text in transcription:
+        seconds_remaining = video_length - start_seconds
+        if seconds_remaining < config.timestamp_chunk_duration_seconds:
+            subtitle_duration = seconds_remaining
+        else:
+            subtitle_duration = config.timestamp_chunk_duration_seconds
+
         bg_subtitle = ColorClip(
             size=(video.w, config.subtitle_height_px), color=(0, 0, 0, 128)
         )
         bg_subtitle = (
-            bg_subtitle.set_duration(config.timestamp_chunk_duration_seconds)
-            .set_start(timestamp)
+            bg_subtitle.set_duration(subtitle_duration)
+            .set_start(start_seconds)
             .set_position(("center", "bottom"))
         )
 
@@ -103,8 +110,8 @@ def generate_subtitle_video(input_video_path: str, output_video_id: str) -> None
             method="caption",
         )
         text_subtitle = (
-            text_subtitle.set_duration(config.timestamp_chunk_duration_seconds)
-            .set_start(timestamp)
+            text_subtitle.set_duration(subtitle_duration)
+            .set_start(start_seconds)
             .set_position(("center", "bottom"))
         )
 
