@@ -256,7 +256,7 @@ pub fn get_meetings(group_id: u128) -> Result<Vec<MeetingHeader>, String> {
 }
 
 #[ic_cdk::query]
-pub fn get_meeting_detail(group_id: u128, video_id: u128) -> Result<MeetingHeader, String> {
+pub fn get_meeting_detail(group_id: u128, meeting_id: u128) -> Result<MeetingHeader, String> {
     user::assert_user_logged_in()?;
     assert_check_group(group_id)?;
 
@@ -264,8 +264,8 @@ pub fn get_meeting_detail(group_id: u128, video_id: u128) -> Result<MeetingHeade
         meetings
             .get(&group_id)
             .ok_or(String::from("No meetings found on this group!"))?
-            .get(&video_id)
-            .ok_or(String::from("No meeting found on this video ID!"))
+            .get(&meeting_id)
+            .ok_or(String::from("No meeting found on this meeting ID!"))
             .map(MeetingHeader::from)
     })
 }
@@ -304,7 +304,7 @@ pub fn create_video_frame(group_id: u128, meeting_id: u128, title: String) -> Re
 
         let meeting = meetings
             .get_mut(&meeting_id)
-            .ok_or(String::from("No meeting found on this video ID!"))?;
+            .ok_or(String::from("No meeting found on this meeting ID!"))?;
 
         meeting.frames.push(VideoFrame::new(selfname, title));
 
@@ -364,7 +364,7 @@ pub fn upload_video(
 }
 
 #[ic_cdk::query]
-pub fn get_video_meeting_size(group_id: u128, video_id: u128) -> Result<u128, String> {
+pub fn get_video_meeting_size(group_id: u128, meeting_id: u128) -> Result<u128, String> {
     user::assert_user_logged_in()?;
     assert_check_group(group_id)?;
 
@@ -374,8 +374,8 @@ pub fn get_video_meeting_size(group_id: u128, video_id: u128) -> Result<u128, St
             .ok_or(String::from("No meetings found on this group!"))?;
 
         let meeting = meetings
-            .get_mut(&video_id)
-            .ok_or(String::from("No meeting found on this video ID!"))?;
+            .get_mut(&meeting_id)
+            .ok_or(String::from("No meeting found on this meeting ID!"))?;
 
         Ok(meeting.full_video_data.len() as u128)
     })
@@ -384,7 +384,7 @@ pub fn get_video_meeting_size(group_id: u128, video_id: u128) -> Result<u128, St
 #[ic_cdk::query]
 pub fn get_video_meeting_chunk_blob(
     group_id: u128,
-    video_id: u128,
+    meeting_id: u128,
     index: u128,
 ) -> Result<Vec<u8>, String> {
     user::assert_user_logged_in()?;
@@ -396,8 +396,8 @@ pub fn get_video_meeting_chunk_blob(
             .ok_or(String::from("No meetings found on this group!"))?;
 
         let meeting = meetings
-            .get_mut(&video_id)
-            .ok_or(String::from("No meeting found on this video ID!"))?;
+            .get_mut(&meeting_id)
+            .ok_or(String::from("No meeting found on this meeting ID!"))?;
 
         Ok(meeting
             .full_video_data
@@ -412,7 +412,7 @@ pub fn get_video_meeting_chunk_blob(
 #[ic_cdk::query]
 pub fn get_video_frame_size(
     group_id: u128,
-    video_id: u128,
+    meeting_id: u128,
     frame_index: u128,
 ) -> Result<u128, String> {
     user::assert_user_logged_in()?;
@@ -424,8 +424,8 @@ pub fn get_video_frame_size(
             .ok_or(String::from("No meetings found on this group!"))?;
 
         let meeting = meetings
-            .get_mut(&video_id)
-            .ok_or(String::from("No meeting found on this video ID!"))?;
+            .get_mut(&meeting_id)
+            .ok_or(String::from("No meeting found on this meeting ID!"))?;
 
         Ok(meeting
             .frames
@@ -439,7 +439,7 @@ pub fn get_video_frame_size(
 #[ic_cdk::query]
 pub fn get_video_frame_chunk_blob(
     group_id: u128,
-    video_id: u128,
+    meeting_id: u128,
     frame_index: u128,
     index: u128,
 ) -> Result<Vec<u8>, String> {
@@ -452,7 +452,7 @@ pub fn get_video_frame_chunk_blob(
             .ok_or(String::from("No meetings found on this group!"))?;
 
         let meeting = meetings
-            .get_mut(&video_id)
+            .get_mut(&meeting_id)
             .ok_or(String::from("No meeting found on this meeting ID!"))?;
 
         Ok(meeting
@@ -480,7 +480,7 @@ pub fn get_meeting_thumbnaiL_size(group_id: u128, meeting_id: u128) -> Result<u1
 
         let meeting = meetings
             .get_mut(&meeting_id)
-            .ok_or(String::from("No meeting found on this video ID!"))?;
+            .ok_or(String::from("No meeting found on this meeting ID!"))?;
 
         Ok(meeting.thumbnail_data.len() as u128)
     })
@@ -502,7 +502,7 @@ pub fn get_meeting_thumbnail_chunk_blob(
 
         let meeting = meetings
             .get_mut(&meeting_id)
-            .ok_or(String::from("No meeting found on this video ID!"))?;
+            .ok_or(String::from("No meeting found on this meeting ID!"))?;
 
         Ok(meeting
             .thumbnail_data
