@@ -41,6 +41,7 @@ timestamp_chunk_duration_seconds = 5
 timestamp_chunk_duration_ms = timestamp_chunk_duration_seconds * 1000
 subtitle_height = 100
 
+video_output_format_ext = "webm"
 video_ids = []
 
 
@@ -55,8 +56,8 @@ def retrieve_video_as_bytesio(video_path: str) -> BytesIO:
 
 def save_video(video, id: str):
     video.write_videofile(
-        f"{id}.mp4",
-        codec="libx264",
+        f"{id}.{video_output_format_ext}",
+        codec="libvpx",
         audio_codec="aac",
         remove_temp=True,
         # preset="ultrafast", # will make the processing time much faster, but bigger output size
@@ -180,7 +181,8 @@ def get_video_with_subtitles(id: str) -> Response:
     for video_id in video_ids:
         if video_id == id:
             return send_file(
-                retrieve_video_as_bytesio(f"{video_id}.mp4"), mimetype="video/mp4"
+                retrieve_video_as_bytesio(f"{video_id}.{video_output_format_ext}"),
+                mimetype="video/{video_output_format_ext}",
             )
     return Response(
         f"Video id '{id}' hasn't finished processing or doesn't exist",
