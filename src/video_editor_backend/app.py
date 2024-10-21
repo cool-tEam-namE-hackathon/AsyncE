@@ -57,11 +57,9 @@ def get_subtitle_video(id: str, number: int) -> Response:
     if number > chunk_count:
         return Response("Given chunk number exceeds chunk count", status=400)
 
-    video_bytesio = BytesIO()
     with open(video_path, "rb") as video_file:
         video_file.seek((number - 1) * config.retrieve_video_chunk_size_bytes)
-        video_bytesio.write(video_file.read(config.retrieve_video_chunk_size_bytes))
-    video_bytesio.seek(0)
+        video_bytesio = BytesIO(video_file.read(config.retrieve_video_chunk_size_bytes))
 
     if number == chunk_count:
         os.remove(video_path)

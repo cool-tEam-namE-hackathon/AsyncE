@@ -1,3 +1,4 @@
+import os
 from typing import Union
 
 import config
@@ -12,7 +13,9 @@ def get_video_path(video_id: str):
 def get_processed_subtitle_video_path(video_id: str) -> Union[str, None]:
     if video_id not in processed_subtitle_video_ids:
         return
-    return get_video_path(video_id)
+    video_path = get_video_path(video_id)
+    if os.path.isfile(video_path):
+        return video_path
 
 
 def append_video_file(video_path: str, video_bytes: bytes):
