@@ -256,7 +256,7 @@ pub fn get_meetings(group_id: u128) -> Result<Vec<MeetingHeader>, String> {
 }
 
 #[ic_cdk::query]
-pub fn get_video_detail(group_id: u128, video_id: u128) -> Result<MeetingHeader, String> {
+pub fn get_meeting_detail(group_id: u128, video_id: u128) -> Result<MeetingHeader, String> {
     user::assert_user_logged_in()?;
     assert_check_group(group_id)?;
 
