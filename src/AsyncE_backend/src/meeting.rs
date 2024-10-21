@@ -1,10 +1,4 @@
-use std::io::Cursor;
-
 use candid::CandidType;
-use mp4::{
-    AacConfig, AvcConfig, HevcConfig, MediaConfig, MediaType, Mp4Config, Mp4Reader, Mp4Writer,
-    TrackConfig, TtxtConfig, Vp9Config,
-};
 use serde::Deserialize;
 
 use crate::{
@@ -68,20 +62,6 @@ impl Meeting {
             created_time_unix: ic_cdk::api::time() as u128,
         }
     }
-
-    pub fn set_data(&mut self, data: Vec<u8>) -> Result<(), String> {
-        Mp4Reader::read_header(Cursor::new(&data), data.len() as u64).map_err(|error| {
-            format!(
-                "Invalid MP4 Data while trying to set data for full video meeting: {}!\n{}",
-                error,
-                hex::encode(&data),
-            )
-        })?;
-
-        self.full_video_data = data;
-
-        Ok(())
-    }
 }
 
 impl From<&Meeting> for MeetingHeader {
@@ -105,136 +85,6 @@ fn assert_check_group(group_id: u128) -> Result<(), String> {
     if group.owner != name && !group.users.contains(&name) {
         return Err(String::from("Current user does not belong to this group!"));
     }
-
-    Ok(())
-}
-
-fn add_mp4_track<T: AsRef<[u8]>>(
-    mp4_reader: &mut Mp4Reader<&mut Cursor<T>>,
-    mp4_writer: &mut Mp4Writer<Cursor<Vec<u8>>>,
-) -> Result<(), String> {
-    for track in mp4_reader.tracks().values() {
-        let media_conf = track
-            .media_type()
-            .map_err(|_| String::from("Cannot find media type on the track"))?;
-
-        let media_conf = match media_conf {
-            MediaType::H264 => MediaConfig::AvcConfig(AvcConfig {
-                width: track.width(),
-                height: track.height(),
-                seq_param_set: track
-                    .sequence_parameter_set()
-                    .map_err(|_| String::from("Cannot find sequence_parameter_set on the track"))?
-                    .to_vec(),
-
-                pic_param_set: track
-                    .picture_parameter_set()
-                    .map_err(|_| String::from("Cannot find picture_parameter_set on the track"))?
-                    .to_vec(),
-            }),
-
-            MediaType::H265 => MediaConfig::HevcConfig(HevcConfig {
-                width: track.width(),
-                height: track.height(),
-            }),
-
-            MediaType::VP9 => MediaConfig::Vp9Config(Vp9Config {
-                width: track.width(),
-                height: track.height(),
-            }),
-
-            MediaType::AAC => MediaConfig::AacConfig(AacConfig {
-                bitrate: track.bitrate(),
-                profile: track
-                    .audio_profile()
-                    .map_err(|_| String::from("Cannot find audio_profile on the track"))?,
-
-                freq_index: track
-                    .sample_freq_index()
-                    .map_err(|_| String::from("Cannot find sample_freq_index on the track"))?,
-
-                chan_conf: track
-                    .channel_config()
-                    .map_err(|_| String::from("Cannot find channel_config on the track"))?,
-            }),
-
-            MediaType::TTXT => MediaConfig::TtxtConfig(TtxtConfig {}),
-        };
-
-        let track_conf = TrackConfig {
-            track_type: track
-                .track_type()
-                .map_err(|_| String::from("Cannot find track_type on the track"))?,
-
-            timescale: track.timescale(),
-            language: track.language().to_string(),
-            media_conf,
-        };
-
-        mp4_writer
-            .add_track(&track_conf)
-            .map_err(|_| String::from("Cannot add track to the mp4 writer!"))?;
-    }
-
-    for track_id in mp4_reader.tracks().keys().copied().collect::<Vec<u32>>() {
-        let sample_count = mp4_reader
-            .sample_count(track_id)
-            .map_err(|_| String::from("Cannot get sample_count from the MP4 reader"))?;
-
-        for sample_idx in 0..sample_count {
-            let sample_id = sample_idx + 1;
-            let sample = mp4_reader
-                .read_sample(track_id, sample_id)
-                .map_err(|_| {
-                    format!(
-                        "Cannot read the mp4 sample on track id {} and sample id {}",
-                        track_id, sample_id
-                    )
-                })?
-                .ok_or(format!(
-                    "MP4 sample is null on track id {} and sample id {}",
-                    track_id, sample_id
-                ))?;
-
-            mp4_writer
-                .write_sample(track_id, &sample)
-                .map_err(|_| String::from("Cannot write sample to the mp4 writer!"))?;
-        }
-    }
-
-    Ok(())
-}
-
-fn concat_mp4(self_blob_data: &mut Vec<u8>, blob_data: &[u8]) -> Result<(), String> {
-    let mut mp4_reader1_cursor = Cursor::new(&self_blob_data);
-    let mut mp4_reader1 =
-        Mp4Reader::read_header(&mut mp4_reader1_cursor, self_blob_data.len() as u64)
-            .map_err(|_| String::from("Invalid MP4 on existing data!"))?;
-
-    let mut mp4_reader2_cursor = Cursor::new(&blob_data);
-    let mut mp4_reader2 = Mp4Reader::read_header(&mut mp4_reader2_cursor, blob_data.len() as u64)
-        .map_err(|_| String::from("Invalid MP4 data!"))?;
-
-    let output = Cursor::new(Vec::new());
-    let mp4_config = Mp4Config {
-        major_brand: *mp4_reader1.major_brand(),
-        minor_version: mp4_reader1.minor_version(),
-        compatible_brands: mp4_reader1.compatible_brands().to_vec(),
-        timescale: mp4_reader1.timescale(),
-    };
-
-    let mut mp4_writer = mp4::Mp4Writer::write_start(output, &mp4_config).map_err(|_| {
-        String::from("Cannot write MP4 data start to output given the existing config!")
-    })?;
-
-    add_mp4_track(&mut mp4_reader1, &mut mp4_writer)?;
-    add_mp4_track(&mut mp4_reader2, &mut mp4_writer)?;
-
-    mp4_writer
-        .write_end()
-        .map_err(|_| String::from("Cannot write MP4 data end to output!"))?;
-
-    *self_blob_data = mp4_writer.into_writer().into_inner();
 
     Ok(())
 }
@@ -297,6 +147,8 @@ pub fn upload_video(
     finish: bool,
     title: String,
     video_upload_uuid: String,
+    chunk_index: u128,
+    total_data_length: u128,
 ) -> Result<(), String> {
     user::assert_user_logged_in()?;
     assert_check_group(group_id)?;
@@ -313,10 +165,16 @@ pub fn upload_video(
             .ok_or(String::from("No meeting found on this video ID!"))?;
 
         VIDEO_UPLOADS.with_borrow_mut(|video_uploads| {
-            video_uploads
+            let video_upload = video_uploads
                 .entry(video_upload_uuid.clone())
-                .or_insert(Vec::new())
-                .extend(data);
+                .or_insert(Vec::new());
+
+            if video_upload.capacity() != total_data_length as usize {
+                video_upload.reserve_exact(total_data_length as usize);
+            }
+
+            let offset = chunk_index as usize * chunk::MB;
+            video_upload.splice(offset..offset, data);
 
             if finish {
                 let data = video_uploads.remove(&video_upload_uuid).ok_or(String::from(
@@ -324,9 +182,9 @@ pub fn upload_video(
                 ))?;
 
                 if !meeting.full_video_data.is_empty() {
-                    concat_mp4(&mut meeting.full_video_data, &data)?;
+                    // concat_mp4(&mut meeting.full_video_data, &data)?;
                 } else {
-                    meeting.set_data(data.clone())?;
+                    meeting.full_video_data = data.clone();
                 }
 
                 let mut video_frame = VideoFrame::new(selfname, title);

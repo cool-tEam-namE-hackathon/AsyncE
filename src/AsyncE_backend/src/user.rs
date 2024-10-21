@@ -118,16 +118,26 @@ pub fn validate_username(name: String) -> Result<bool, String> {
 }
 
 #[ic_cdk::update]
-pub fn upload_profile_picture(chunk_data: Vec<u8>) -> Result<(), String> {
+pub fn upload_profile_picture(
+    chunk_data: Vec<u8>,
+    chunk_index: u128,
+    total_data_length: u128,
+) -> Result<(), String> {
     assert_user_logged_in()?;
 
     let principal = ic_cdk::caller();
     USERS.with_borrow_mut(|users| {
-        users
+        let user = users
             .get_mut(&principal)
-            .ok_or(String::from("Cannot find user with this principal!"))?
-            .profile_picture_blob
-            .extend(chunk_data);
+            .ok_or(String::from("Cannot find user with this principal!"))?;
+
+        if user.profile_picture_blob.capacity() != total_data_length as usize {
+            user.profile_picture_blob
+                .reserve_exact(total_data_length as usize);
+        }
+
+        let offset = chunk_index as usize * chunk::MB;
+        user.profile_picture_blob.splice(offset..offset, chunk_data);
 
         Ok(())
     })

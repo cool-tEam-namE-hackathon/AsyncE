@@ -101,7 +101,12 @@ pub fn get_group(group_id: u128) -> Result<Option<GroupQueryResponse>, String> {
 }
 
 #[ic_cdk::update]
-pub fn upload_group_profile_picture(group_id: u128, chunk_data: Vec<u8>) -> Result<(), String> {
+pub fn upload_group_profile_picture(
+    group_id: u128,
+    chunk_data: Vec<u8>,
+    chunk_index: u128,
+    total_data_length: u128,
+) -> Result<(), String> {
     user::assert_user_logged_in()?;
 
     let selfname = user::get_selfname_force()?;
@@ -115,7 +120,17 @@ pub fn upload_group_profile_picture(group_id: u128, chunk_data: Vec<u8>) -> Resu
             return Err(String::from("This user is not in this group!"));
         }
 
-        group.profile_picture_blob.extend(chunk_data);
+        if group.profile_picture_blob.capacity() != total_data_length as usize {
+            group
+                .profile_picture_blob
+                .reserve_exact(total_data_length as usize);
+        }
+
+        let offset = chunk_index as usize * chunk::MB;
+        group
+            .profile_picture_blob
+            .splice(offset..offset, chunk_data);
+
         Ok(())
     })
 }

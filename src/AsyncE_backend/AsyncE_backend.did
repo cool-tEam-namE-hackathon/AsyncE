@@ -51,7 +51,7 @@ service : {
         Err: text;
     }) query;
 
-    upload_profile_picture: (blob) -> (variant {
+    upload_profile_picture: (blob, nat, nat) -> (variant {
         Ok: null;
         Err: text;
     });
@@ -81,7 +81,7 @@ service : {
         Err: text;
     }) query;
 
-    upload_group_profile_picture: (nat, blob) -> (variant {
+    upload_group_profile_picture: (nat, blob, nat, nat) -> (variant {
         Ok: null;
         Err: text;
     });
@@ -106,7 +106,7 @@ service : {
         Err: text;
     });
 
-    upload_video: (nat, nat, blob, bool, text, text) -> (variant {
+    upload_video: (nat, nat, blob, bool, text, text, nat, nat) -> (variant {
         Ok: null;
         Err: text;
     });
