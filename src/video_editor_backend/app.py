@@ -9,6 +9,11 @@ from flask import Flask, Response, request, send_file
 from subtitles import generate_subtitle_video
 from thumbnail import generate_thumbnail
 
+
+def generate_uuid():
+    return str(uuid.uuid4())
+
+
 worker_pool_executor = concurrent.futures.ThreadPoolExecutor(max_workers=3)
 
 app = Flask(__name__)
@@ -32,7 +37,7 @@ def get_subtitle_video(id: str) -> Response:
 def start_chunk_for_subtitle_video() -> Response:
     video_bytes = request.data
 
-    id = str(uuid.uuid4())
+    id = generate_uuid()
     append_video_file(get_video_path(id), video_bytes)
     return Response(id, status=200)
 
@@ -51,7 +56,7 @@ def create_subtitle_video(id) -> Response:
 
     video_path = get_video_path(id)
     append_video_file(video_path, video_bytes)
-    output_video_id = str(uuid.uuid4())
+    output_video_id = generate_uuid()
     worker_pool_executor.submit(generate_subtitle_video, video_path, output_video_id)
     return Response(output_video_id, status=200)
 

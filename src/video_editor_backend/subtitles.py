@@ -79,9 +79,9 @@ def transcribe_video(video_path: str) -> List[Tuple[int, str]]:
         return transcribe_audio(audio_path)
 
 
-def generate_subtitle_video(video_path: str, output_video_id: str) -> None:
-    transcription = transcribe_video(video_path)
-    video = VideoFileClip(video_path)
+def generate_subtitle_video(input_video_path: str, output_video_id: str) -> None:
+    transcription = transcribe_video(input_video_path)
+    video = VideoFileClip(input_video_path)
     subtitle_clips = []
 
     for timestamp, text in transcription:
@@ -112,4 +112,4 @@ def generate_subtitle_video(video_path: str, output_video_id: str) -> None:
 
     output_video = CompositeVideoClip([video] + subtitle_clips)
     save_subtitle_video(output_video, output_video_id)
-    os.remove(video_path)
+    os.remove(input_video_path)
