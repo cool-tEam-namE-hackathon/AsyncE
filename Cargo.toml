@@ -1,5 +1,3 @@
 [workspace]
-members = [
-    "src/AsyncE_backend"
-]
+members = ["src/AsyncE_backend"]
 resolver = "2"
