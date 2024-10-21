@@ -1,5 +1,7 @@
+import concurrent.futures
 import os
 import tempfile
+import uuid
 from io import BytesIO
 from typing import List, Tuple
 
@@ -39,27 +41,32 @@ timestamp_chunk_duration_seconds = 5
 timestamp_chunk_duration_ms = timestamp_chunk_duration_seconds * 1000
 subtitle_height = 100
 
-
-def convert_video_to_bytesio(video) -> BytesIO:
-    with tempfile.NamedTemporaryFile(suffix=".mp4") as output_video:
-        output_video_path = output_video.name
-        video.write_videofile(
-            output_video_path,
-            codec="libx264",
-            audio_codec="aac",
-            remove_temp=True,
-            preset="ultrafast",
-        )
-
-        bytes_io = BytesIO()
-        bytes_io.write(output_video.read())
-        bytes_io.seek(0)
-        return bytes_io
+video_ids = []
 
 
-def edit_subtitles_into_video(
-    input_video_path: str, transcription: List[Tuple[int, str]]
-) -> BytesIO:
+def retrieve_video_as_bytesio(video_path: str) -> BytesIO:
+    bytes_io = BytesIO()
+    with open(video_path, "rb") as video:
+        bytes_io.write(video.read())
+    bytes_io.seek(0)
+    os.remove(video_path)
+    return bytes_io
+
+
+def save_video(video, id: str):
+    video.write_videofile(
+        f"{id}.mp4",
+        codec="libx264",
+        audio_codec="aac",
+        remove_temp=True,
+        # preset="ultrafast", # will make the processing time much faster, but bigger output size
+    )
+    video_ids.append(id)
+
+
+def generate_video_with_subtitles(
+    input_video_path: str, transcription: List[Tuple[int, str]], id: str
+) -> None:
     video = VideoFileClip(input_video_path)
     subtitle_clips = []
 
@@ -88,7 +95,7 @@ def edit_subtitles_into_video(
         subtitle_clips.append(text_subtitle)
 
     output_video = CompositeVideoClip([video] + subtitle_clips)
-    return convert_video_to_bytesio(output_video)
+    save_video(output_video, id)
 
 
 def transcribe_audio(audio_path: str) -> List[Tuple[int, str]]:
@@ -156,21 +163,38 @@ def extract_thumbnail(video_path: str, format: str = "jpeg") -> BytesIO:
 
 app = Flask(__name__)
 
+worker_pool_executor = concurrent.futures.ThreadPoolExecutor(max_workers=5)
 
-@app.route("/subtitles", methods=["POST"])
-def create_video_with_subtitles() -> Response:
-    video_bytes = request.data
 
+def edit_video_worker_task(video_bytes: bytes, id: str) -> None:
     with tempfile.NamedTemporaryFile() as video_file:
         video_file.write(video_bytes)
         video_file.flush()
         video_path = video_file.name
 
-        video_with_subtitles = edit_subtitles_into_video(
-            video_path, transcribe_video(video_path)
-        )
+        generate_video_with_subtitles(video_path, transcribe_video(video_path), id)
 
-    return send_file(video_with_subtitles, mimetype="video/mp4")
+
+@app.route("/subtitles/<id>")
+def get_video_with_subtitles(id: str) -> Response:
+    for video_id in video_ids:
+        if video_id == id:
+            return send_file(
+                retrieve_video_as_bytesio(f"{video_id}.mp4"), mimetype="video/mp4"
+            )
+    return Response(
+        f"Video id '{id}' hasn't finished processing or doesn't exist",
+        status=400,
+    )
+
+
+@app.route("/subtitles", methods=["POST"])
+def create_video_with_subtitles() -> Response:
+    video_bytes = request.data
+
+    future_video_id = str(uuid.uuid4())
+    worker_pool_executor.submit(edit_video_worker_task, video_bytes, future_video_id)
+    return Response(future_video_id, status=200)
 
 
 @app.route("/thumbnail", methods=["POST"])
