@@ -5,3 +5,5 @@ subtitle_height_px = 100
 
 video_output_format_ext = "webm"
 image_output_format_ext = "jpeg"
+
+retrieve_video_chunk_size_bytes = int(1.8 * 1024 * 1024)
