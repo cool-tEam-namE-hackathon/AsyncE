@@ -163,7 +163,7 @@ def extract_thumbnail(video_path: str, format: str = "jpeg") -> BytesIO:
 
 app = Flask(__name__)
 
-worker_pool_executor = concurrent.futures.ThreadPoolExecutor(max_workers=5)
+worker_pool_executor = concurrent.futures.ThreadPoolExecutor(max_workers=3)
 
 
 def edit_video_worker_task(video_bytes: bytes, id: str) -> None:
