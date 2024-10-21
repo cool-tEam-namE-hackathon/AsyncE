@@ -8,7 +8,7 @@ type GroupQueryResponse = record {
     created_time_unix: nat;
 };
 
-type VideoHeader = record {
+type MeetingHeader = record {
     id: nat;
     title: text;
     created_by: text;
@@ -102,7 +102,7 @@ service : {
     }) query;
 
     get_meetings: (nat) -> (variant {
-        Ok: vec VideoHeader;
+        Ok: vec MeetingHeader;
         Err: text;
     }) query;
 
@@ -122,7 +122,7 @@ service : {
     });
 
     get_meeting_detail: (nat, nat) -> (variant {
-        Ok: VideoHeader;
+        Ok: MeetingHeader;
         Err: text;
     });
 
@@ -146,12 +146,12 @@ service : {
         Err: text;
     });
 
-    get_video_thumbnail_size: (nat) -> (variant {
+    get_meeting_thumbnail_size: (nat) -> (variant {
         Ok: nat;
         Err: text;
     });
 
-    get_video_thumbnail_chunk_blob: (nat, nat) -> (variant {
+    get_meeting_thumbnail_chunk_blob: (nat, nat) -> (variant {
         Ok: blob;
         Err: text;
     });

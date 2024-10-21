@@ -9,25 +9,27 @@ use serde::Deserialize;
 
 use crate::{
     chunk,
-    globals::{VIDEOS, VIDEO_UPLOADS},
+    globals::{MEETINGS, VIDEO_UPLOADS},
     group,
     primary_key::{self, PrimaryKeyType},
     user,
 };
 
 #[derive(Clone, Debug, Default, CandidType, Deserialize)]
-pub struct Video {
+pub struct Meeting {
     pub id: u128,
-    pub data: Vec<u8>,
     pub thumbnail_data: Vec<u8>,
+    pub full_video_data: Vec<u8>,
+
     pub title: String,
-    pub frames: Vec<VideoFrame>,
     pub created_by: String,
+
+    pub frames: Vec<VideoFrame>,
     pub created_time_unix: u128,
 }
 
 #[derive(Clone, Debug, Default, CandidType, Deserialize)]
-pub struct VideoHeader {
+pub struct MeetingHeader {
     pub id: u128,
     pub title: String,
     pub created_by: String,
@@ -54,11 +56,11 @@ impl VideoFrame {
     }
 }
 
-impl Video {
+impl Meeting {
     pub fn new(username: String, title: String) -> Self {
         Self {
             id: primary_key::get_primary_key(PrimaryKeyType::Video),
-            data: Vec::new(),
+            full_video_data: Vec::new(),
             thumbnail_data: Vec::new(),
             frames: Vec::from([VideoFrame::new(username.clone(), title.clone())]),
             title,
@@ -70,20 +72,20 @@ impl Video {
     pub fn set_data(&mut self, data: Vec<u8>) -> Result<(), String> {
         Mp4Reader::read_header(Cursor::new(&data), data.len() as u64).map_err(|error| {
             format!(
-                "Invalid MP4 Data while trying to set data for video: {}!\n{}",
+                "Invalid MP4 Data while trying to set data for full video meeting: {}!\n{}",
                 error,
                 hex::encode(&data),
             )
         })?;
 
-        self.data = data;
+        self.full_video_data = data;
 
         Ok(())
     }
 }
 
-impl From<&Video> for VideoHeader {
-    fn from(value: &Video) -> Self {
+impl From<&Meeting> for MeetingHeader {
+    fn from(value: &Meeting) -> Self {
         Self {
             id: value.id,
             title: value.title.clone(),
@@ -238,70 +240,75 @@ fn concat_mp4(self_blob_data: &mut Vec<u8>, blob_data: &[u8]) -> Result<(), Stri
 }
 
 #[ic_cdk::query]
-pub fn get_videos(group_id: u128) -> Result<Vec<VideoHeader>, String> {
+pub fn get_meetings(group_id: u128) -> Result<Vec<MeetingHeader>, String> {
     user::assert_user_logged_in()?;
     assert_check_group(group_id)?;
 
-    VIDEOS.with_borrow(|videos| {
-        Ok(videos
+    MEETINGS.with_borrow(|meetings| {
+        Ok(meetings
             .get(&group_id)
             .cloned()
             .unwrap_or_default()
             .values()
-            .map(VideoHeader::from)
+            .map(MeetingHeader::from)
             .collect::<Vec<_>>())
     })
 }
 
 #[ic_cdk::query]
-pub fn get_video_detail(group_id: u128, video_id: u128) -> Result<VideoHeader, String> {
+pub fn get_video_detail(group_id: u128, video_id: u128) -> Result<MeetingHeader, String> {
     user::assert_user_logged_in()?;
     assert_check_group(group_id)?;
 
-    VIDEOS.with_borrow(|videos| {
-        videos
+    MEETINGS.with_borrow(|meetings| {
+        meetings
             .get(&group_id)
-            .ok_or(String::from("No videos found on this group!"))?
+            .ok_or(String::from("No meetings found on this group!"))?
             .get(&video_id)
-            .ok_or(String::from("No video found on this video ID!"))
-            .map(VideoHeader::from)
+            .ok_or(String::from("No meeting found on this video ID!"))
+            .map(MeetingHeader::from)
     })
 }
 
 #[ic_cdk::update]
-pub fn create_video(group_id: u128, title: String) -> Result<u128, String> {
+pub fn create_meeting(group_id: u128, title: String) -> Result<u128, String> {
     user::assert_user_logged_in()?;
     assert_check_group(group_id)?;
 
     let selfname = user::get_selfname_force()?;
-    let video = Video::new(selfname.clone(), title.clone());
-    let video_id = video.id;
+    let meeting = Meeting::new(selfname.clone(), title.clone());
+    let meeting_id = meeting.id;
 
-    VIDEOS.with_borrow_mut(|videos| videos.entry(group_id).or_default().insert(video.id, video));
-    VIDEO_UPLOADS.with_borrow_mut(|video_uploads| video_uploads.insert(video_id, Vec::new()));
+    MEETINGS.with_borrow_mut(|meetings| {
+        meetings
+            .entry(group_id)
+            .or_default()
+            .insert(meeting_id, meeting)
+    });
+    VIDEO_UPLOADS.with_borrow_mut(|video_uploads| video_uploads.insert(meeting_id, Vec::new()));
 
-    Ok(video_id)
+    Ok(meeting_id)
 }
 
 #[ic_cdk::update]
-pub fn create_video_frame(group_id: u128, video_id: u128, title: String) -> Result<(), String> {
+pub fn create_video_frame(group_id: u128, meeting_id: u128, title: String) -> Result<(), String> {
     user::assert_user_logged_in()?;
     assert_check_group(group_id)?;
 
     let selfname = user::get_selfname_force()?;
 
-    VIDEOS.with_borrow_mut(|videos| {
-        let videos = videos
+    MEETINGS.with_borrow_mut(|meetings| {
+        let meetings = meetings
             .get_mut(&group_id)
-            .ok_or(String::from("No videos found on this group!"))?;
+            .ok_or(String::from("No meetings found on this group!"))?;
 
-        let video = videos
-            .get_mut(&video_id)
-            .ok_or(String::from("No video found on this video ID!"))?;
+        let meeting = meetings
+            .get_mut(&meeting_id)
+            .ok_or(String::from("No meeting found on this video ID!"))?;
 
-        video.frames.push(VideoFrame::new(selfname, title));
+        meeting.frames.push(VideoFrame::new(selfname, title));
 
-        VIDEO_UPLOADS.with_borrow_mut(|video_uploads| video_uploads.insert(video_id, Vec::new()));
+        VIDEO_UPLOADS.with_borrow_mut(|video_uploads| video_uploads.insert(meeting_id, Vec::new()));
 
         Ok(())
     })
@@ -310,42 +317,42 @@ pub fn create_video_frame(group_id: u128, video_id: u128, title: String) -> Resu
 #[ic_cdk::update]
 pub fn upload_video(
     group_id: u128,
-    video_id: u128,
+    meeting_id: u128,
     data: Vec<u8>,
     finish: bool,
 ) -> Result<(), String> {
     user::assert_user_logged_in()?;
     assert_check_group(group_id)?;
 
-    VIDEOS.with_borrow_mut(|videos| {
-        let videos = videos
+    MEETINGS.with_borrow_mut(|meetings| {
+        let meetings = meetings
             .get_mut(&group_id)
-            .ok_or(String::from("No videos found on this group!"))?;
+            .ok_or(String::from("No meetings found on this group!"))?;
 
-        let video = videos
-            .get_mut(&video_id)
-            .ok_or(String::from("No video found on this video ID!"))?;
+        let meeting = meetings
+            .get_mut(&meeting_id)
+            .ok_or(String::from("No meeting found on this video ID!"))?;
 
         VIDEO_UPLOADS.with_borrow_mut(|video_uploads| {
             video_uploads
-                .get_mut(&video_id)
+                .get_mut(&meeting_id)
                 .ok_or(String::from(
                     "Cannot find existing upload process with given ID",
                 ))?
                 .extend(data);
 
             if finish {
-                let data = video_uploads.remove(&video_id).ok_or(String::from(
+                let data = video_uploads.remove(&meeting_id).ok_or(String::from(
                     "Cannot find existing upload process with given ID (This should never happen though)",
                 ))?;
 
-                if !video.data.is_empty() {
-                    concat_mp4(&mut video.data, &data)?;
+                if !meeting.full_video_data.is_empty() {
+                    concat_mp4(&mut meeting.full_video_data, &data)?;
                 } else {
-                    video.set_data(data.clone())?;
+                    meeting.set_data(data.clone())?;
                 }
 
-                let video_frame = video.frames.last_mut().ok_or(String::from(
+                let video_frame = meeting.frames.last_mut().ok_or(String::from(
                     "Cannot find latest frame (This should never happen though)",
                 ))?;
                 video_frame.data = data;
@@ -357,25 +364,25 @@ pub fn upload_video(
 }
 
 #[ic_cdk::query]
-pub fn get_video_size(group_id: u128, video_id: u128) -> Result<u128, String> {
+pub fn get_video_meeting_size(group_id: u128, video_id: u128) -> Result<u128, String> {
     user::assert_user_logged_in()?;
     assert_check_group(group_id)?;
 
-    VIDEOS.with_borrow_mut(|videos| {
-        let videos = videos
+    MEETINGS.with_borrow_mut(|meetings| {
+        let meetings = meetings
             .get_mut(&group_id)
-            .ok_or(String::from("No videos found on this group!"))?;
+            .ok_or(String::from("No meetings found on this group!"))?;
 
-        let video = videos
+        let meeting = meetings
             .get_mut(&video_id)
-            .ok_or(String::from("No video found on this video ID!"))?;
+            .ok_or(String::from("No meeting found on this video ID!"))?;
 
-        Ok(video.data.len() as u128)
+        Ok(meeting.full_video_data.len() as u128)
     })
 }
 
 #[ic_cdk::query]
-pub fn get_video_chunk_blob(
+pub fn get_video_meeting_chunk_blob(
     group_id: u128,
     video_id: u128,
     index: u128,
@@ -383,17 +390,17 @@ pub fn get_video_chunk_blob(
     user::assert_user_logged_in()?;
     assert_check_group(group_id)?;
 
-    VIDEOS.with_borrow_mut(|videos| {
-        let videos = videos
+    MEETINGS.with_borrow_mut(|meetings| {
+        let meetings = meetings
             .get_mut(&group_id)
-            .ok_or(String::from("No videos found on this group!"))?;
+            .ok_or(String::from("No meetings found on this group!"))?;
 
-        let video = videos
+        let meeting = meetings
             .get_mut(&video_id)
-            .ok_or(String::from("No video found on this video ID!"))?;
+            .ok_or(String::from("No meeting found on this video ID!"))?;
 
-        Ok(video
-            .data
+        Ok(meeting
+            .full_video_data
             .iter()
             .skip(index as usize * chunk::MB)
             .take(chunk::MB)
@@ -411,16 +418,16 @@ pub fn get_video_frame_size(
     user::assert_user_logged_in()?;
     assert_check_group(group_id)?;
 
-    VIDEOS.with_borrow_mut(|videos| {
-        let videos = videos
+    MEETINGS.with_borrow_mut(|meetings| {
+        let meetings = meetings
             .get_mut(&group_id)
-            .ok_or(String::from("No videos found on this group!"))?;
+            .ok_or(String::from("No meetings found on this group!"))?;
 
-        let video = videos
+        let meeting = meetings
             .get_mut(&video_id)
-            .ok_or(String::from("No video found on this video ID!"))?;
+            .ok_or(String::from("No meeting found on this video ID!"))?;
 
-        Ok(video
+        Ok(meeting
             .frames
             .get(frame_index as usize)
             .ok_or(String::from("Frame index is out of bounds!"))?
@@ -439,16 +446,16 @@ pub fn get_video_frame_chunk_blob(
     user::assert_user_logged_in()?;
     assert_check_group(group_id)?;
 
-    VIDEOS.with_borrow_mut(|videos| {
-        let videos = videos
+    MEETINGS.with_borrow_mut(|meetings| {
+        let meetings = meetings
             .get_mut(&group_id)
-            .ok_or(String::from("No videos found on this group!"))?;
+            .ok_or(String::from("No meetings found on this group!"))?;
 
-        let video = videos
+        let meeting = meetings
             .get_mut(&video_id)
-            .ok_or(String::from("No video found on this video ID!"))?;
+            .ok_or(String::from("No meeting found on this meeting ID!"))?;
 
-        Ok(video
+        Ok(meeting
             .frames
             .get(frame_index as usize)
             .ok_or(String::from("Frame index is out of bounds!"))?
@@ -462,42 +469,42 @@ pub fn get_video_frame_chunk_blob(
 }
 
 #[ic_cdk::query]
-pub fn get_video_thumbnaiL_size(group_id: u128, video_id: u128) -> Result<u128, String> {
+pub fn get_meeting_thumbnaiL_size(group_id: u128, meeting_id: u128) -> Result<u128, String> {
     user::assert_user_logged_in()?;
     assert_check_group(group_id)?;
 
-    VIDEOS.with_borrow_mut(|videos| {
-        let videos = videos
+    MEETINGS.with_borrow_mut(|meetings| {
+        let meetings = meetings
             .get_mut(&group_id)
-            .ok_or(String::from("No videos found on this group!"))?;
+            .ok_or(String::from("No meetings found on this group!"))?;
 
-        let video = videos
-            .get_mut(&video_id)
-            .ok_or(String::from("No video found on this video ID!"))?;
+        let meeting = meetings
+            .get_mut(&meeting_id)
+            .ok_or(String::from("No meeting found on this video ID!"))?;
 
-        Ok(video.thumbnail_data.len() as u128)
+        Ok(meeting.thumbnail_data.len() as u128)
     })
 }
 
 #[ic_cdk::query]
-pub fn get_video_thumbnail_chunk_blob(
+pub fn get_meeting_thumbnail_chunk_blob(
     group_id: u128,
-    video_id: u128,
+    meeting_id: u128,
     index: u128,
 ) -> Result<Vec<u8>, String> {
     user::assert_user_logged_in()?;
     assert_check_group(group_id)?;
 
-    VIDEOS.with_borrow_mut(|videos| {
-        let videos = videos
+    MEETINGS.with_borrow_mut(|meetings| {
+        let meetings = meetings
             .get_mut(&group_id)
-            .ok_or(String::from("No videos found on this group!"))?;
+            .ok_or(String::from("No meetings found on this group!"))?;
 
-        let video = videos
-            .get_mut(&video_id)
-            .ok_or(String::from("No video found on this video ID!"))?;
+        let meeting = meetings
+            .get_mut(&meeting_id)
+            .ok_or(String::from("No meeting found on this video ID!"))?;
 
-        Ok(video
+        Ok(meeting
             .thumbnail_data
             .iter()
             .skip(index as usize * chunk::MB)
