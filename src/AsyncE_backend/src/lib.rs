@@ -32,6 +32,7 @@ fn init() {
 
     ic_websocket_cdk::init(WsInitParams::new(handlers));
     // init_rng()
+    ic_cdk::println!("MB: {}", chunk::MB)
 }
 
 #[ic_cdk::pre_upgrade]
