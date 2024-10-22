@@ -167,7 +167,7 @@ pub fn upload_video(
         VIDEO_UPLOADS.with_borrow_mut(|video_uploads| {
             let video_upload = video_uploads
                 .entry(video_upload_uuid.clone())
-                .or_insert(Vec::new());
+                .or_default();
 
             if video_upload.capacity() != total_data_length as usize {
                 video_upload.reserve_exact(total_data_length as usize);
