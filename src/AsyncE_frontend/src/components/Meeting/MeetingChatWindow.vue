@@ -58,6 +58,7 @@ import { useRoute } from "vue-router";
 
 import { useUserStore } from "@stores/user-store";
 import { useWebsocketStore } from "@stores/websocket-store";
+import { useGroupStore } from "@stores/group-store";
 
 import { Icon } from "@iconify/vue";
 
@@ -68,17 +69,13 @@ import { Chat } from "@declarations/AsyncE_backend/AsyncE_backend.did";
 
 const route = useRoute();
 const websocketStore = useWebsocketStore();
+const groupStore = useGroupStore();
 const { username } = storeToRefs(useUserStore());
 
 const message = ref<string>("");
 const messages = ref<Chat[]>([]);
-const isChatWindowOpen = ref<boolean>(false);
 const chatRef = ref<HTMLDivElement>();
 const inputRef = ref<InstanceType<typeof Input>>();
-
-function toggleChatWindow() {
-    isChatWindowOpen.value = !isChatWindowOpen.value;
-}
 
 async function scrollToBottom() {
     if (!chatRef.value) return;
@@ -117,4 +114,12 @@ function handleIncomingChat(chat: Chat) {
 }
 
 websocketStore.setOnChatReceive(handleIncomingChat);
+
+async function init() {
+    const messageHistory = await groupStore.getChats(route.params.id as string);
+
+    messages.value = [...messageHistory, ...messages.value];
+}
+
+init();
 </script>
