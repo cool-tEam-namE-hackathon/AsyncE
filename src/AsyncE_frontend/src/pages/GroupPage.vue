@@ -1,5 +1,5 @@
 <template>
-    <div class="container h-full flex flex-col">
+    <div class="container mt-10 rounded-lg h-full mb-6">
         <!-- INVITE USER DIALOG -->
         <base-dialog
             :open="isInviteUserDialogOpen"
@@ -46,8 +46,10 @@
 
             <template #footer>
                 <Button
-                    :disabled="isFieldError || isLoading || !invitedUsername"
-                    :is-loading="isLoading"
+                    :disabled="
+                        isFieldError || isLoading['invite'] || !invitedUsername
+                    "
+                    :is-loading="isLoading['invite']"
                     @click="handleInvite"
                 >
                     <template #default> Invite </template>
@@ -65,29 +67,23 @@
             </template>
         </base-dialog>
 
-        <!-- INPUT GROUP TITLE -->
         <base-dialog
-            :open="isConfirmationModalOpen"
-            @on-close-dialog="toggleConfirmationModal"
+            :open="isCreateMeetingDialogOpen"
+            @on-close-dialog="toggleCreateMeetingDialog"
         >
-            <template #title>
-                <div>Confirm</div>
-            </template>
+            <template #title> Create New Meeting </template>
 
             <template #content>
-                <div class="space-y-3">
-                    <Label>Title</Label>
-                    <Input v-model="videoTitle" />
-                </div>
+                <Input v-model="meetingName" />
             </template>
 
             <template #footer>
                 <Button
-                    :disabled="isUploading || !videoTitle"
-                    :is-loading="isUploading"
-                    @click="saveRecording"
+                    :disabled="!meetingName || isLoading['meeting']"
+                    :is-loading="isLoading['meeting']"
+                    @click="createMeeting"
                 >
-                    <template #default> Upload Video </template>
+                    <template #default> Create Meeting </template>
 
                     <template #loading>
                         <Icon
@@ -96,201 +92,126 @@
                             height="16"
                             class="text-black animate-spin mr-1"
                         />
-                        Uploading...
-                        {{ uploadVideoProgress.toFixed(0) }}%
+                        Creating...
                     </template>
                 </Button>
             </template>
         </base-dialog>
 
-        <!-- GROUP NAME -->
-        <span> {{ currentGroup?.name }}</span>
-
-        <!-- MEDIA -->
-        <div class="flex-grow flex flex-col py-8">
-            <div class="flex flex-col gap-8 h-full">
-                <div class="flex h-3/4 gap-6">
-                    <!-- VIDEO -->
-                    <div
-                        class="flex flex-col flex-1 bg-white rounded-lg h-full shadow-lg p-4 overflow-hidden"
+        <div class="flex gap-3 h-full">
+            <div class="flex-1 flex flex-col border rounded-md p-4">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-xl font-bold">List of meetings</h2>
+                    <Button
+                        class="text-white rounded-full flex items-center gap-3"
+                        @click="toggleCreateMeetingDialog"
                     >
-                        <div class="flex items-center justify-between mb-3">
-                            <h2 class="text-xl font-semibold">
-                                Record New Video
-                            </h2>
-                            <video-controls
-                                v-model:selectedCamera="selectedCamera"
-                                :camera-list="cameraList"
-                                :enabled-camera="enabledCamera"
-                                :is-recording-disabled="isRecordingDisabled"
-                                :recording-phase-text="recordingPhaseText"
-                                @on-toggle-camera="
-                                    enabledCamera = !enabledCamera
-                                "
-                                @on-record="handleRecord"
-                            />
-                        </div>
+                        <Icon
+                            icon="tabler:plus"
+                            width="22"
+                            height="22"
+                            class="text-white"
+                        />
+                        Create Meeting
+                    </Button>
+                </div>
+                <div
+                    v-for="(meeting, index) in meetingList"
+                    :key="index"
+                    class="bg-gray-50 p-3 rounded-lg hover:bg-gray-100 transition duration-200 ease-in-out mb-3"
+                    @click="goToMeetingPage(meeting.id.toString())"
+                >
+                    <span class="font-semibold">{{ meeting.title }}</span>
+                </div>
+            </div>
 
-                        <div class="relative flex-grow overflow-hidden">
-                            <!-- NO CAMERA OR SCREEN YET -->
-                            <div
-                                v-if="!displayCamera"
-                                class="absolute inset-0 flex flex-col items-center justify-center bg-gray-200 rounded-lg"
+            <div class="flex flex-col gap-3 w-1/4 h-full">
+                <div class="flex flex-col border rounded-md p-4 h-1/4">
+                    <div class="rounded-lg mb-4">
+                        <div class="flex justify-between items-center mb-4">
+                            <div class="flex items-center">
+                                <h2 class="text-xl font-bold">List of users</h2>
+                            </div>
+                            <Button
+                                class="text-white p-2 rounded-full"
+                                @click="toggleInviteModal"
                             >
                                 <Icon
-                                    icon="fluent:video-off-32-regular"
-                                    width="64"
-                                    height="64"
-                                    style="color: black"
+                                    icon="mdi:invite"
+                                    width="24"
+                                    height="24"
+                                    class="text-white"
                                 />
-                                <p class="text-xl font-semibold">
-                                    Video stream unavailable
-                                </p>
-                                <p class="text-sm mt-2">
-                                    Please start your camera or screen share
-                                </p>
+                            </Button>
+                        </div>
+                        <div
+                            v-for="(user, index) in currentGroup?.users"
+                            :key="index"
+                            class="mb-2"
+                        >
+                            <div
+                                class="p-2 bg-gray-50 hover:bg-gray-100 transition duration-200 ease-in-out rounded-md text-sm"
+                            >
+                                {{ user }}
                             </div>
-
-                            <video
-                                v-else
-                                ref="cameraRef"
-                                class="absolute inset-0 w-full h-full object-cover rounded-lg"
-                                muted
-                                autoplay
-                            />
                         </div>
-                    </div>
-
-                    <!-- USER MANAGEMENT -->
-                    <div
-                        class="p-4 rounded-lg border-solid border-[1px] border-slate-200 w-64"
-                    >
-                        <div class="flex items-center gap-2">
-                            <Icon
-                                icon="lucide:users"
-                                width="24"
-                                height="24"
-                                style="color: black"
-                            />
-                            <h1>User Management</h1>
-                        </div>
-                        <span class="text-sm text-gray-400">
-                            Manage and invite users to your video sessions
-                        </span>
-                        <Button class="mt-2" @click="toggleInviteModal">
-                            <Icon
-                                icon="lucide:user-plus"
-                                width="24"
-                                height="24"
-                                class="text-white mr-2"
-                            />
-                            Invite new users
-                        </Button>
+                        <!-- <div
+                            class="max-h-60 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-gray-800"
+                        >
+                            No users
+                        </div> -->
                     </div>
                 </div>
 
-                <div class="flex-1">
-                    <video-list ref="videoList" />
+                <div class="h-3/4">
+                    <meeting-chat-window />
                 </div>
             </div>
         </div>
     </div>
-
-    <!-- CHAT -->
-    <chat-window />
-
-    <!-- <video v-if="url" autoplay muted controls>
-        <source :src="url" type="video/mp4" />
-        Your browser does not support the video tag.
-    </video> -->
 </template>
 
 <script setup lang="ts">
-import { ref, watchEffect, computed } from "vue";
+import { ref, computed } from "vue";
 
-import { FFmpeg } from "@ffmpeg/ffmpeg";
-
-import { useRoute } from "vue-router";
-import { useUserStore } from "@stores/user-store";
-import { useGroupStore } from "@stores/group-store";
 import { storeToRefs } from "pinia";
 
-import { useUserMedia, useDevicesList, useDebounceFn } from "@vueuse/core";
+import { useDebounceFn } from "@vueuse/core";
+
+import { useRoute, useRouter } from "vue-router";
+import { useUserStore } from "@stores/user-store";
+import { useGroupStore } from "@stores/group-store";
 
 import { Icon } from "@iconify/vue";
-
-import VideoList from "@components/video/VideoList.vue";
-import VideoControls from "@components/video/VideoControls.vue";
-import ChatWindow from "@components/chat/ChatWindow.vue";
-
 import { Button } from "@components/ui/button";
-import Input from "@components/ui/input/Input.vue";
-import Label from "@components/ui/label/Label.vue";
+import { Input } from "@components/ui/input";
 
+import MeetingChatWindow from "@components/Meeting/MeetingChatWindow.vue";
 import BaseDialog from "@components/shared/BaseDialog.vue";
 
-import { fetchFile, toBlobURL } from "@ffmpeg/util";
-
 const route = useRoute();
-const groupStore = useGroupStore();
+const router = useRouter();
+
 const userStore = useUserStore();
+const groupStore = useGroupStore();
 
-const ffmpeg = ref<FFmpeg>();
+const { meetingList, currentGroup } = storeToRefs(groupStore);
 
-const videoList = ref<InstanceType<typeof VideoList> | null>(null);
-
-const selectedCamera = ref<string>();
-const invitedUsername = ref<string>("");
-const inputtedUsername = ref<string>("");
-const url = ref<string>("");
-const inviteError = ref<string>("");
-const videoTitle = ref<string>("");
+const isCreateMeetingDialogOpen = ref<boolean>(false);
+const meetingName = ref<string>("");
+const isLoading = ref<{
+    meeting: boolean;
+    invite: boolean;
+}>({
+    meeting: false,
+    invite: false,
+});
 
 const isInviteUserDialogOpen = ref<boolean>(false);
-const isRecording = ref<boolean>(false);
-const isUploading = ref<boolean>(false);
+const invitedUsername = ref<string>("");
+const inputtedUsername = ref<string>("");
+const inviteError = ref<string>("");
 const isError = ref<boolean>(false);
-const isLoading = ref<boolean>(false);
-const isConfirmationModalOpen = ref<boolean>(false);
-
-const recordedChunks = ref<Blob[]>([]);
-
-const cameraRef = ref<HTMLVideoElement | null>(null);
-
-const mediaRecorder = ref<MediaRecorder | null>(null);
-
-const { currentGroup, uploadVideoProgress } = storeToRefs(groupStore);
-
-const { videoInputs: cameras, audioInputs: microphones } = useDevicesList({
-    requestPermissions: false,
-});
-
-const currentMicrophone = computed(() => microphones.value[0]?.deviceId);
-
-const { stream: displayCamera, enabled: enabledCamera } = useUserMedia({
-    constraints: {
-        video: { deviceId: selectedCamera },
-        audio: { deviceId: currentMicrophone },
-    },
-});
-
-const isRecordingDisabled = computed(() => {
-    return !enabledCamera.value;
-});
-
-const cameraList = computed(() => {
-    return cameras.value.map(({ label, deviceId }) => ({
-        deviceId,
-        name: label,
-    }));
-});
-
-const recordingPhaseText = computed(() => {
-    if (isRecording.value) {
-        return "Stop";
-    }
-    return recordedChunks.value.length > 0 ? "Save" : "Record";
-});
 
 const isFieldError = computed(() => {
     return !isError.value && inputtedUsername.value;
@@ -298,10 +219,6 @@ const isFieldError = computed(() => {
 
 function toggleInviteModal() {
     isInviteUserDialogOpen.value = !isInviteUserDialogOpen.value;
-}
-
-function toggleConfirmationModal() {
-    isConfirmationModalOpen.value = !isConfirmationModalOpen.value;
 }
 
 const validateUsername = useDebounceFn(async (payload) => {
@@ -314,7 +231,7 @@ const validateUsername = useDebounceFn(async (payload) => {
 }, 500);
 
 async function handleInvite() {
-    isLoading.value = true;
+    isLoading.value["invite"] = true;
     try {
         await groupStore.inviteUser(
             BigInt(route.params.id as string),
@@ -324,134 +241,55 @@ async function handleInvite() {
     } catch (e) {
         inviteError.value = (e as Error).message;
     } finally {
-        isLoading.value = false;
+        isLoading.value["invite"] = false;
     }
 }
 
-function startRecording() {
-    if (!displayCamera.value) return;
-
-    const combinedStream = new MediaStream(displayCamera.value);
-    const options = {
-        mimeType: "video/webm",
-    };
-
-    mediaRecorder.value = new MediaRecorder(combinedStream, options);
-    mediaRecorder.value.ondataavailable = (e) => {
-        if (e.data.size > 0) {
-            recordedChunks.value.push(e.data);
-        }
-    };
-
-    mediaRecorder.value.start();
-    isRecording.value = true;
+function toggleCreateMeetingDialog() {
+    isCreateMeetingDialogOpen.value = !isCreateMeetingDialogOpen.value;
 }
 
-function stopRecording() {
-    if (!mediaRecorder.value) return;
-
-    mediaRecorder.value.stop();
-    isRecording.value = false;
+function goToMeetingPage(id: string) {
+    router.push(`/group/${route.params.id}/meeting/${id}`);
 }
 
-async function saveRecording() {
-    isUploading.value = true;
-
-    const blob = new Blob(recordedChunks.value, { type: "video/webm" });
-
-    const mp4Video = await convertToMp4(blob);
-
-    const data = new Uint8Array(await mp4Video.arrayBuffer());
-
-    url.value = URL.createObjectURL(mp4Video);
-
+async function createMeeting() {
+    isLoading.value["meeting"] = true;
     try {
-        await groupStore.addVideo(
-            data,
+        await groupStore.createMeeting(
             route.params.id as string,
-            videoTitle.value,
+            meetingName.value,
         );
+
+        isLoading.value["meeting"] = false;
+
+        getAllMeetings();
+        toggleCreateMeetingDialog();
     } catch (e) {
         console.log((e as Error).message);
-    } finally {
-        videoList.value?.getAllVideos();
-        isUploading.value = false;
-        toggleConfirmationModal();
-    }
-
-    recordedChunks.value = [];
-}
-
-async function loadFFmpeg(ffmpeg: FFmpeg) {
-    await ffmpeg.load({
-        coreURL: await toBlobURL(
-            "https://unpkg.com/@ffmpeg/core@0.12.3/dist/esm/ffmpeg-core.js",
-            "text/javascript",
-        ),
-        wasmURL: await toBlobURL(
-            "https://unpkg.com/@ffmpeg/core@0.12.3/dist/esm/ffmpeg-core.wasm",
-            "application/wasm",
-        ),
-        workerURL: await toBlobURL(
-            "https://unpkg.com/@ffmpeg/ffmpeg@0.12.3/dist/esm/worker.js",
-            "text/javascript",
-        ),
-    });
-}
-
-async function getFFmpegInstance() {
-    if (!ffmpeg.value) {
-        ffmpeg.value = new FFmpeg();
-        await loadFFmpeg(ffmpeg.value);
-    }
-    return ffmpeg.value;
-}
-
-async function convertToMp4(blob: Blob) {
-    const ffmpegInstance = await getFFmpegInstance();
-
-    await ffmpegInstance.writeFile("input.webm", await fetchFile(blob));
-    await ffmpegInstance.exec(["-i", "input.webm", "-c", "copy", "output.mp4"]);
-
-    const data = await ffmpegInstance.readFile("output.mp4");
-
-    const mp4Blob = new Blob([(data as Uint8Array).buffer], {
-        type: "video/mp4",
-    });
-
-    return mp4Blob;
-}
-
-function handleRecord() {
-    if (recordingPhaseText.value === "Record") {
-        startRecording();
-    } else if (recordingPhaseText.value === "Stop") {
-        stopRecording();
-    } else {
-        toggleConfirmationModal();
     }
 }
-async function fetchGroupDetails() {
-    const { id } = route.params;
-    const groupId = BigInt(id as string);
 
+async function getAllMeetings() {
     try {
-        const response = await groupStore.getGroup(groupId);
-        console.log(response);
+        await groupStore.getAllMeetings(route.params.id as string);
     } catch (e) {
         console.log((e as Error).message);
     }
 }
 
-watchEffect(() => {
-    if (cameraRef.value) {
-        cameraRef.value.srcObject = displayCamera.value!;
+async function getGroup() {
+    try {
+        await groupStore.getGroup(route.params.id as string);
+    } catch (e) {
+        console.log((e as Error).message);
     }
-});
-
-async function init() {
-    await fetchGroupDetails();
 }
 
-await init();
+function init() {
+    getAllMeetings();
+    getGroup();
+}
+
+init();
 </script>

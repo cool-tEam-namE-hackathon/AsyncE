@@ -6,10 +6,14 @@ import { useUserStore } from "@stores/user-store";
 
 import { storeToRefs } from "pinia";
 
-import { Group, VideoList } from "@/types/api/model";
+import { Group } from "@/types/api/model";
 import { MB } from "@/data/user-constants";
-import { GroupQueryResponse } from "@declarations/AsyncE_backend/AsyncE_backend.did";
+import {
+    GroupQueryResponse,
+    MeetingHeader,
+} from "@declarations/AsyncE_backend/AsyncE_backend.did";
 import { blobToURL, validateResponse } from "@/utils/helpers";
+import { V } from "vitest/dist/chunks/reporters.DAfKSDh5";
 
 export const useGroupStore = defineStore("group", () => {
     const { actor } = storeToRefs(useUserStore());
@@ -18,7 +22,13 @@ export const useGroupStore = defineStore("group", () => {
     const groupList = ref<Group[]>([]);
     const currentGroup = ref<Group>();
     const uploadVideoProgress = ref<number>(0);
-    const videosList = ref<VideoList[]>([]);
+
+    const meetingList = ref<MeetingHeader[]>([]);
+    const meetingDetail = ref<MeetingHeader>();
+    const videoThumbnail = ref<Uint8Array[]>([])
+
+    const meetingVideo = ref<string>("")
+
 
     function convertGroupFromResponse(groupResponse: GroupQueryResponse) {
         return {
@@ -86,12 +96,12 @@ export const useGroupStore = defineStore("group", () => {
             const start = i * MB;
             const end = Math.min(start + MB, picture.length);
             const chunk = picture.slice(start, end);
-            await actor.value?.upload_group_profile_picture(groupId, chunk);
+            await actor.value?.upload_group_profile_picture(groupId, chunk, BigInt(i), BigInt(picture.length));
         }
     }
 
-    async function getGroup(id: bigint) {
-        const response = await actor.value?.get_group(id);
+    async function getGroup(id: string) {
+        const response = await actor.value?.get_group(BigInt(id));
 
         const okResponse = validateResponse(response);
 
@@ -117,7 +127,7 @@ export const useGroupStore = defineStore("group", () => {
         //         ) {
         //             promises.push(
         //                 actor.value
-        //                     ?.get_group_profile_picture_chunk_blob(
+        //                     ?._profile_picture_chunk_blob(
         //                         currentGroup.value!.id,
         //                         BigInt(i),
         //                     )
@@ -136,44 +146,72 @@ export const useGroupStore = defineStore("group", () => {
         return okResponse[0];
     }
 
-    async function addVideo(data: Uint8Array, groupId: string, title: string) {
-        console.log("data", data);
-        console.log("groupId", groupId);
-        console.log("title", title);
-
-        const videoId = await actor.value?.create_video(BigInt(groupId), title);
-
-        const okVideoId = validateResponse(videoId);
-
+    async function uploadVideo(data: Uint8Array, groupId: string, meetingId: string, title: string) {    
         const totalChunks = Math.ceil(data.length / MB);
-
+        const uuid = crypto.randomUUID();
         let totalBytesUploaded = 0;
-
+    
+        const uploadPromises = [];
+    
         for (let i = 0; i < totalChunks; ++i) {
             const start = i * MB;
             const end = Math.min(start + MB, data.length);
             const chunk = data.slice(start, end);
-            validateResponse(
-                await actor.value?.upload_video(
-                    BigInt(groupId),
-                    okVideoId,
-                    chunk,
-                    i === totalChunks - 1,
-                ),
-            );
+    
+            const uploadPromise = actor.value?.upload_video(
+                BigInt(groupId),
+                BigInt(meetingId),
+                chunk,
+                i === totalChunks - 1,
+                title,
+                uuid,
+                BigInt(i),
+                BigInt(data.length)
+            ).then((response) => {
+                validateResponse(response);
+                totalBytesUploaded += chunk.length;
+                uploadVideoProgress.value = (totalBytesUploaded / data.length) * 100;
+            });
+    
+            uploadPromises.push(uploadPromise);
+        }
+    
+        await Promise.all(uploadPromises);
+    
+        console.log("All chunks uploaded successfully!");
+    }
+    
 
-            totalBytesUploaded += chunk.length;
-            uploadVideoProgress.value =
-                (totalBytesUploaded / data.length) * 100;
+    async function getMeetingVideo(groupId: string, meetingId: string) {
+        const response = await actor.value?.get_video_meeting_size(BigInt(groupId), BigInt(meetingId))
+
+        const videoMeetingSize = Number(validateResponse(response))
+
+        const videoMeetingData = new Uint8Array(videoMeetingSize)
+
+        const videoPromises = []
+
+        for (let i = 0; i < Math.ceil(videoMeetingSize / MB); ++i) {
+            const videoPromise = actor.value
+                ?.get_video_meeting_chunk_blob(BigInt(groupId), BigInt(meetingId), BigInt(i))
+                .then((chunk) => {
+                    const okChunk = validateResponse(chunk);
+                    videoMeetingData.set(okChunk, i * MB);
+                });
+            videoPromises.push(videoPromise)
         }
 
-        console.log("all good bitch");
+        await Promise.all(videoPromises)
+        console.log("here", videoMeetingData)
+        meetingVideo.value = blobToURL(videoMeetingData)
     }
 
     async function inviteUser(id: bigint, name: string) {
         const response = await actor.value?.invite_user(id, name);
 
-        validateResponse(response);
+        const okResponse = validateResponse(response);
+
+        console.log(okResponse)
     }
 
     async function getInvites() {
@@ -193,55 +231,76 @@ export const useGroupStore = defineStore("group", () => {
         validateResponse(response);
     }
 
-    async function getAllVideos(groupId: string) {
-        const response = await actor.value?.get_videos(BigInt(groupId));
+    async function getAllThumbnails(groupId: string) {
+        const totalFrames = meetingDetail.value?.frames_count
+        const meetingId = meetingDetail.value?.id
 
-        const okResponse = validateResponse(response);
+        if (!meetingId) return
 
-        videosList.value = [];
-
-        const videoPromises = okResponse.map(async (video) => {
-            const videoSize = await actor.value?.get_video_size(
+        for(let i = 0; i < Number(totalFrames); ++i) {
+            const thumbnailSize = await actor.value?.get_meeting_thumbnail_size(
                 BigInt(groupId),
-                video.id,
+                meetingId
             );
 
-            const okVideoSize = validateResponse(videoSize);
+            const okThumbnailSize = validateResponse(thumbnailSize);
 
-            const okVideoBlobSize = Number(okVideoSize);
-            const okVideoData = new Uint8Array(okVideoBlobSize);
+            const okThumbnailBlobSize = Number(okThumbnailSize);
+            const okThumbnailData = new Uint8Array(okThumbnailBlobSize);
 
             const chunkPromises = [];
-            for (let j = 0; j < Math.ceil(okVideoBlobSize / MB); ++j) {
+            for (let j = 0; j < Math.ceil(okThumbnailBlobSize / MB); ++j) {
                 chunkPromises.push(
                     actor.value
-                        ?.get_video_chunk_blob(
+                        ?.get_meeting_thumbnail_chunk_blob(
                             BigInt(groupId),
-                            video.id,
-                            BigInt(j),
+                            meetingId,
                         )
                         .then((chunk) => {
                             const okChunk = validateResponse(chunk);
-                            okVideoData.set(okChunk, j * MB);
+                            okThumbnailData.set(okChunk, j * MB);
                         }),
                 );
             }
 
             await Promise.all(chunkPromises);
 
-            const url = blobToURL(okVideoData);
+            videoThumbnail.value.push(okThumbnailData)
+        };
+    }
 
-            return { video, url };
-        });
+    async function createMeeting(groupId: string, meetingName: string) {
+        const response = await actor.value?.create_meeting(
+            BigInt(groupId),
+            meetingName,
+        );
 
-        videoPromises.forEach((promise) => {
-            promise.then((result) => {
-                console.log("pushed");
-                videosList.value.push(result);
-            });
-        });
+        const okResponse = validateResponse(response);
 
-        await Promise.allSettled(videoPromises);
+        return okResponse;
+    }
+
+    async function getAllMeetings(groupId: string) {
+        const response = await actor.value?.get_meetings(BigInt(groupId));
+
+        const okResponse = validateResponse(response);
+
+        meetingList.value = okResponse;
+
+        return okResponse;
+    }
+
+    async function getMeetingDetail(groupId: string, meetingId: string) {
+        const response = await actor.value?.get_meeting_detail(
+            BigInt(groupId),
+            BigInt(meetingId),
+        );
+
+        const okResponse = validateResponse(response);
+
+        meetingDetail.value = okResponse;
+
+        return okResponse;
     }
 
     return {
@@ -249,11 +308,18 @@ export const useGroupStore = defineStore("group", () => {
         groupList,
         groupPicture,
         uploadVideoProgress,
-        videosList,
+        meetingList,
+        meetingDetail,
+        videoThumbnail,
+        meetingVideo,
 
-        addVideo,
+        uploadVideo,
         getAllGroups,
-        getAllVideos,
+        getAllMeetings,
+        createMeeting,
+        getMeetingDetail,
+        getAllThumbnails,
+        getMeetingVideo,
         getGroup,
         getInvites,
         handleInvitation,

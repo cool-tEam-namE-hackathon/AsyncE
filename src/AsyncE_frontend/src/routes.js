@@ -1,6 +1,12 @@
 import { createRouter, createWebHistory } from "vue-router";
 
-import { Home, CreateGroup, GroupPage, GroupList } from "@lazy-loading-routes";
+import {
+    Home,
+    CreateGroup,
+    GroupPage,
+    GroupList,
+    MeetingPage,
+} from "@lazy-loading-routes";
 
 const routes = [
     {
@@ -18,6 +24,10 @@ const routes = [
     {
         path: "/group-list",
         component: GroupList,
+    },
+    {
+        path: "/group/:groupId/meeting/:meetingId",
+        component: MeetingPage,
     },
 ];
 

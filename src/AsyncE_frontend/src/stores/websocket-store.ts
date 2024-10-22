@@ -19,8 +19,8 @@ export const useWebsocketStore = defineStore("websocket", () => {
 
     const ws = ref<IcWebSocket<_SERVICE, WebsocketEventMessage>>();
 
-    let onGroupInvited = (group: GroupInviteResponse) => { };
-    let onChatReceive = (chat: Chat) => { };
+    let onGroupInvited = (group: GroupInviteResponse) => {};
+    let onChatReceive = (chat: Chat) => {};
 
     function sendMessage(chat: Chat) {
         if (ws.value) {
@@ -60,6 +60,7 @@ export const useWebsocketStore = defineStore("websocket", () => {
                     break;
 
                 case "GroupInvited" in message:
+                    console.log(message.GroupInvited);
                     onGroupInvited(message.GroupInvited);
                     console.log(`Group invited: ${message.GroupInvited}`);
 
@@ -85,8 +86,6 @@ export const useWebsocketStore = defineStore("websocket", () => {
                 console.log("Disconnected from the canister");
                 reject(null);
             };
-
-            setTimeout(resolve, 3000)
         });
     }
 

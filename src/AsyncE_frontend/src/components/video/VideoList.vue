@@ -1,6 +1,6 @@
 <template>
-    <!-- PREVIEW VIDEO DIALOG -->
-    <base-dialog
+    <div></div>
+    <!-- <base-dialog
         :open="isPreviewOpen"
         class="md:min-w-[800px] md:min-h-[450px] sm:min-w-[90vw] sm:min-h-[50vh]"
         @on-close-dialog="closePreviewDialog"
@@ -70,7 +70,6 @@
                 </div>
             </div>
 
-            <!-- LOADING ANIMATION -->
             <div v-if="isFetchingVideos" class="w-full">
                 <div class="flex flex-wrap gap-4">
                     <div v-for="i in 5" :key="i" class="flex flex-col gap-3">
@@ -84,20 +83,23 @@
                 </div>
             </div>
 
-            <!-- NO VIDEOS -->
             <div
                 v-if="!videosList.length && !isFetchingVideos"
                 class="flex justify-center items-center w-full h-36"
             >
                 <p class="text-gray-400 text-center flex-grow">
-                    <!-- Added text-center class here -->
                     It looks like there are no videos in your group yet. Start
                     making some to see them appear here!
                 </p>
             </div>
         </div>
         <ScrollBar orientation="horizontal" />
-    </ScrollArea>
+    </ScrollArea> -->
+
+    <video v-if="meetingVideo" autoplay muted controls>
+        <source :src="meetingVideo" type="video/mp4" />
+        Your browser does not support the video tag.
+    </video>
 </template>
 
 <script setup lang="ts">
@@ -105,70 +107,79 @@ import { ref } from "vue";
 
 import { storeToRefs } from "pinia";
 
-import { VideoHeader } from "@declarations/AsyncE_backend/AsyncE_backend.did";
-
 import { useGroupStore } from "@stores/group-store";
 import { useRoute } from "vue-router";
 
-import { Icon } from "@iconify/vue";
+// import { Icon } from "@iconify/vue";
 
-import BaseDialog from "@shared/BaseDialog.vue";
+// import BaseDialog from "@shared/BaseDialog.vue";
 
-import { ScrollArea, ScrollBar } from "@ui/scroll-area";
+// import { ScrollArea, ScrollBar } from "@ui/scroll-area";
 
 const route = useRoute();
 const groupStore = useGroupStore();
 
-const { videosList } = storeToRefs(groupStore);
+const { videosList, videoThumbnail, meetingVideo } = storeToRefs(groupStore);
 
-const previewVideoRef = ref<HTMLVideoElement | null>(null);
-const selectedVideo = ref<VideoHeader>();
-const videoUrl = ref<string>("");
-const isPreviewOpen = ref<boolean>(false);
-const isVideoPlaying = ref<boolean>(false);
+// const previewVideoRef = ref<HTMLVideoElement | null>(null);
+// const videoUrl = ref<string>("");
+// const isPreviewOpen = ref<boolean>(false);
+// const isVideoPlaying = ref<boolean>(false);
 const isFetchingVideos = ref<boolean>(false);
 
-defineExpose({
-    getAllVideos,
-});
+// defineExpose({
+//     getAllVideos,
+// });
 
-function toggleVideo() {
-    if (!previewVideoRef.value) return;
+// function toggleVideo() {
+//     if (!previewVideoRef.value) return;
 
-    if (!isVideoPlaying.value) {
-        previewVideoRef.value.play();
-        isVideoPlaying.value = !isVideoPlaying.value;
-    } else {
-        previewVideoRef.value.pause();
-        isVideoPlaying.value = !isVideoPlaying.value;
-    }
-}
+//     if (!isVideoPlaying.value) {
+//         previewVideoRef.value.play();
+//         isVideoPlaying.value = !isVideoPlaying.value;
+//     } else {
+//         previewVideoRef.value.pause();
+//         isVideoPlaying.value = !isVideoPlaying.value;
+//     }
+// }
 
-function previewVideo(video: VideoHeader, url: string) {
-    selectedVideo.value = video;
-    videoUrl.value = url;
+// function previewVideo(video: VideoHeader, url: string) {
+//     selectedVideo.value = video;
+//     videoUrl.value = url;
 
-    isPreviewOpen.value = true;
-}
+//     isPreviewOpen.value = true;
+// }
 
-function closePreviewDialog() {
-    isVideoPlaying.value = false;
-    isPreviewOpen.value = !isPreviewOpen.value;
-}
+// function closePreviewDialog() {
+//     isVideoPlaying.value = false;
+//     isPreviewOpen.value = !isPreviewOpen.value;
+// }
 
 async function getAllVideos() {
-    isFetchingVideos.value = true;
+    // isFetchingVideos.value = true;
     try {
-        await groupStore.getAllVideos(route.params.id as string);
+        await groupStore.getAllThumbnails(route.params.groupId as string);
     } catch (e) {
         console.log((e as Error).message);
     } finally {
-        isFetchingVideos.value = false;
+        // isFetchingVideos.value = false;
+    }
+}
+
+async function getMeetingVideo() {
+    isFetchingVideos.value = true;
+    try {
+        await groupStore.getMeetingVideo(route.params.groupId as string, route.params.meetingId as string);
+    } catch (e) {
+        console.log((e as Error).message);
+    } finally {
+        // isFetchingVideos.value = false;
     }
 }
 
 function init() {
     getAllVideos();
+    getMeetingVideo()
 }
 init();
 </script>

@@ -14,12 +14,10 @@ x
 <script setup lang="ts">
 import { computed } from "vue";
 
-import { VideoHeader } from "@declarations/AsyncE_backend/AsyncE_backend.did";
 import BaseDialog from "@shared/BaseDialog.vue";
 
 const props = defineProps<{
     isOpen: boolean;
-    video: VideoHeader;
     url: string;
 }>();
 const emits = defineEmits<{

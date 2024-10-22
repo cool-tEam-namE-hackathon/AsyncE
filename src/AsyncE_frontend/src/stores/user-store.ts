@@ -97,23 +97,26 @@ export const useUserStore = defineStore("user", () => {
         actor.value = null;
     }
 
-    async function register(payload: User) {
-        const response = await actor.value?.register(payload.username);
+    async function register({ username, profile_picture_blob }: {
+        username: string;
+        profile_picture_blob: Uint8Array;
+    }) {
+        const response = await actor.value?.register(username);
 
         validateResponse(response);
 
         for (
             let i = 0;
-            i < Math.ceil(payload.profile_picture_blob.length / MB);
+            i < Math.ceil(profile_picture_blob.length / MB);
             ++i
         ) {
             const start = i * MB;
             const end = Math.min(
                 start + MB,
-                payload.profile_picture_blob.length,
+                profile_picture_blob.length,
             );
-            const chunk = payload.profile_picture_blob.slice(start, end);
-            await actor.value?.upload_profile_picture(chunk);
+            const chunk = profile_picture_blob.slice(start, end);
+            await actor.value?.upload_profile_picture(chunk, BigInt(i), BigInt(profile_picture_blob.length));
         }
     }
 

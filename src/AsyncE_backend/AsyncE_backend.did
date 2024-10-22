@@ -136,7 +136,7 @@ service : {
         Err: text;
     });
 
-    get_meeting_thumbnail_size: (nat) -> (variant {
+    get_meeting_thumbnail_size: (nat, nat) -> (variant {
         Ok: nat;
         Err: text;
     });

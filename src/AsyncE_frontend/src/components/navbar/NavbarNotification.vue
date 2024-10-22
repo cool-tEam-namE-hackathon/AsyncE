@@ -140,8 +140,6 @@ const isLoading = ref<{ accept: boolean; reject: boolean }>({
 });
 const invites = ref<GroupInvite[] | GroupInviteResponse[]>([]);
 
-websocketStore.setOnGroupInvited(handleGroupInvite);
-
 async function getAllInvites() {
     try {
         const response = await groupStore.getInvites();
@@ -174,9 +172,11 @@ async function handleInvitation(
     }
 }
 
+websocketStore.setOnGroupInvited(handleGroupInvite);
+
 async function init() {
     getAllInvites();
 }
 
-// init();
+init();
 </script>
