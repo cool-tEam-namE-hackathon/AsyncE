@@ -18,6 +18,7 @@ type MeetingHeader = record {
 
 type Chat = record {
     id: nat;
+    uuid: text;
     group_id: nat;
     content: text;
     username: text;

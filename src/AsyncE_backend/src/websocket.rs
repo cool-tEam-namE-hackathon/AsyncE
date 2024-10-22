@@ -60,6 +60,12 @@ pub fn on_open(args: OnOpenCallbackArgs) {
 }
 
 pub fn on_message(args: OnMessageCallbackArgs) {
+    ic_cdk::println!(
+        "Received candid message: {} {:?}",
+        args.client_principal,
+        args.message
+    );
+
     let app_msg: WebsocketEventMessage = candid::decode_one(&args.message)
         .expect("Cannot decode message data to candid predefined type!");
 

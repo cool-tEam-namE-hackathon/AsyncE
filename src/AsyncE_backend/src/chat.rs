@@ -3,29 +3,17 @@ use serde::{Deserialize, Serialize};
 
 use crate::{
     globals::{CHATS, GROUPS},
-    primary_key::{self, PrimaryKeyType},
     user,
 };
 
 #[derive(Clone, Debug, CandidType, Serialize, Deserialize)]
 pub struct Chat {
     pub id: u128,
+    pub uuid: String,
     pub content: String,
     pub group_id: u128,
     pub username: String,
     pub created_time_unix: u128,
-}
-
-impl Chat {
-    pub fn new(group_id: u128, username: String, content: String) -> Self {
-        Self {
-            id: primary_key::get_primary_key(PrimaryKeyType::Chat),
-            content,
-            group_id,
-            username,
-            created_time_unix: ic_cdk::api::time() as u128,
-        }
-    }
 }
 
 #[ic_cdk::query]
