@@ -75,7 +75,7 @@ service : {
     get_all_groups: () -> (variant {
         Ok: vec GroupQueryResponse;
         Err: text;
-    }) query;
+    });
 
     get_group: (nat) -> (variant {
         Ok: opt GroupQueryResponse;

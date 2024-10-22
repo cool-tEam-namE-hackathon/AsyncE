@@ -66,7 +66,7 @@ pub fn create_group(name: String) -> Result<u128, String> {
     Ok(group_id)
 }
 
-#[ic_cdk::query]
+#[ic_cdk::update]
 pub fn get_all_groups() -> Result<Vec<GroupQueryResponse>, String> {
     user::assert_user_logged_in()?;
 

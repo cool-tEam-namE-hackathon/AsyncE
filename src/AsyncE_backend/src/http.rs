@@ -17,7 +17,7 @@ pub async fn send_http_request(
         max_response_bytes: None,
     };
 
-    Ok(http_request(request, 0).await?.0.body)
+    Ok(http_request(request, 1_000_000_000_000).await?.0.body)
 }
 
 pub async fn send_get_request(url: &str) -> Result<Vec<u8>, (RejectionCode, String)> {
