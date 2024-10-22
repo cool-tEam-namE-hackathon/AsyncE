@@ -29,8 +29,8 @@ def save_subtitle_video(video, output_video_id: str):
         codec="libvpx",
         audio_codec="libvorbis",
         remove_temp=True,
-        bitrate="1000k",
-        fps=30,
+        # bitrate="1000k",
+        # fps=30,
         # preset="ultrafast", # will make the processing time much faster, but bigger output size
     )
     processed_subtitle_video_ids.append(output_video_id)
