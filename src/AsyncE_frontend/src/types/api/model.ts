@@ -1,4 +1,4 @@
-import { VideoHeader } from "@declarations/AsyncE_backend/AsyncE_backend.did";
+import { MeetingHeader } from "@declarations/AsyncE_backend/AsyncE_backend.did";
 
 interface User {
     profile_picture_blob: Uint8Array;
@@ -53,7 +53,7 @@ interface VideoControlProps {
 }
 
 interface VideoList {
-    video: VideoHeader;
+    video: MeetingHeader;
     url: string;
 }
 

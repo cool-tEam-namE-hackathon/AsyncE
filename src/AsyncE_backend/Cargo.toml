@@ -8,12 +8,12 @@ crate-type = ["cdylib"]
 
 [dependencies]
 hex = "0.4.3"
-uuid = "1.11.0"
-rand = "0.8.5"
+# uuid = "1.11.0"
+# rand = "0.8.5"
 candid = "0.10"
-ic-cdk = "0.15"
-ic-cdk-timers = "0.9"
+ic-cdk = "0.16"
+ic-cdk-timers = "0.10"
 ic-websocket-cdk = "0.4.0"
 
 serde = { version = "1.0", features = ["derive"] }
-getrandom = { version = "0.2", features = ["custom"] }
+# getrandom = { version = "0.2", features = ["custom"] }
