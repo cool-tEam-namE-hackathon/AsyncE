@@ -1,4 +1,4 @@
-const MB = 1024 * 1024;
+const MB = Math.floor(1024.0 * 1024.0 * 1.8);
 const USER_DROPDOWN_OPTIONS = [
     {
         name: "Logout",
