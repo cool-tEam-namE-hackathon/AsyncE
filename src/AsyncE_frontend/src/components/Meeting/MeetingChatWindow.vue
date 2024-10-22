@@ -37,7 +37,7 @@
                 placeholder="Type a message..."
                 @keyup.enter="handleChatSend"
             />
-            <Button class="p-2" @click="handleChatSend">
+            <Button class="p-2" :disabled="!message || !message.trim().length" @click="handleChatSend">
                 <Icon
                     icon="lucide:send"
                     width="24"
@@ -89,8 +89,13 @@ async function scrollToBottom() {
 }
 
 async function handleChatSend() {
+    if (!message.value || !message.value.trim().length) {
+        return;
+    }
+
     const payload: Chat = {
         id: BigInt(0),
+        uuid: crypto.randomUUID(),
         content: message.value,
         group_id: BigInt(route.params.id as string),
         created_time_unix: BigInt(0),
@@ -110,7 +115,7 @@ function handleIncomingChat(chat: Chat) {
         messages.value.push(chat);
     }
 
-    const index = messages.value.find((x) => x.uuid === chat.uuuid);
+    const index = messages.value.findIndex((x) => x.uuid === chat.uuid);
     messages.value.splice(index, 1);
     messages.value.push(chat);
 
@@ -123,6 +128,8 @@ async function init() {
     const messageHistory = await groupStore.getChats(route.params.id as string);
 
     messages.value = [...messageHistory, ...messages.value];
+    
+    scrollToBottom();
 }
 
 init();
