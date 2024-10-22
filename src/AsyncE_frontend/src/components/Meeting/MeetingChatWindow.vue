@@ -110,6 +110,10 @@ function handleIncomingChat(chat: Chat) {
         messages.value.push(chat);
     }
 
+    const index = messages.value.find((x) => x.uuid === chat.uuuid);
+    messages.value.splice(index, 1);
+    messages.value.push(chat);
+
     scrollToBottom();
 }
 
