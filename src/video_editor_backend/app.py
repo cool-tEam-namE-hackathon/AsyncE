@@ -4,11 +4,12 @@ import os
 import tempfile
 import uuid
 from io import BytesIO
+from typing import Tuple
 
 import config
 from file_repository import (append_video_file,
                              get_processed_subtitle_video_path, get_video_path)
-from flask import Flask, Response, request, send_file
+from flask import Flask, Response, jsonify, request, send_file
 from subtitles import generate_subtitle_video
 from thumbnail import generate_thumbnail
 
@@ -17,10 +18,9 @@ def generate_uuid():
     return str(uuid.uuid4())
 
 
-def get_chunk_count(video_path: str) -> int:
-    return math.ceil(
-        os.path.getsize(video_path) / config.retrieve_video_chunk_size_bytes
-    )
+def get_chunk_count_and_file_size(video_path: str) -> Tuple[int, int]:
+    size = os.path.getsize(video_path)
+    return math.ceil(size / config.retrieve_video_chunk_size_bytes), size
 
 
 worker_pool_executor = concurrent.futures.ThreadPoolExecutor(max_workers=3)
@@ -29,7 +29,7 @@ app = Flask(__name__)
 
 
 @app.route("/subtitles/<id>")
-def get_subtitle_video_chunk_count(id) -> Response:
+def get_processed_subtitle_video_info(id) -> Response:
     video_path = get_processed_subtitle_video_path(id)
     if video_path == None:
         return Response(
@@ -37,23 +37,23 @@ def get_subtitle_video_chunk_count(id) -> Response:
             status=400,
         )
 
-    chunk_count = get_chunk_count(video_path)
-    return Response(str(chunk_count), status=200)
+    chunk_count, file_size = get_chunk_count_and_file_size(video_path)
+    return jsonify({"chunk_count": chunk_count, "file_size": file_size})
 
 
 @app.route("/subtitles/<id>/<int:number>")
-def get_subtitle_video(id: str, number: int) -> Response:
+def get_processed_subtitle_video(id: str, number: int) -> Response:
     if number < 1:
         return Response("Invalid given number is not possible", status=400)
 
     video_path = get_processed_subtitle_video_path(id)
     if video_path == None:
         return Response(
-            f"Video id '{id}' processing hasn't finished yet or doesn't exist",
+            f"Video id '{id}' either hasnn't yet finished processing or doesn't exist",
             status=400,
         )
 
-    chunk_count = get_chunk_count(video_path)
+    chunk_count, _ = get_chunk_count_and_file_size(video_path)
     if number > chunk_count:
         return Response("Given chunk number exceeds chunk count", status=400)
 
@@ -70,7 +70,7 @@ def get_subtitle_video(id: str, number: int) -> Response:
     )
 
 
-@app.route("/subtitles", methods={"POST"})
+@app.route("/subtitles/start", methods={"POST"})
 def start_chunk_for_subtitle_video() -> Response:
     video_bytes = request.data
 
@@ -79,7 +79,7 @@ def start_chunk_for_subtitle_video() -> Response:
     return Response(id, status=200)
 
 
-@app.route("/subtitles/<id>", methods=["PUT"])
+@app.route("/subtitles/<id>/add", methods=["PUT"])
 def append_chunk_for_subtitle_video(id) -> Response:
     video_bytes = request.data
 
@@ -87,7 +87,7 @@ def append_chunk_for_subtitle_video(id) -> Response:
     return Response(id, status=200)
 
 
-@app.route("/subtitles/<id>", methods=["POST"])
+@app.route("/subtitles/<id>/end", methods=["POST"])
 def create_subtitle_video(id) -> Response:
     video_bytes = request.data
 
