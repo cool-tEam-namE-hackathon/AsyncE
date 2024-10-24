@@ -11,6 +11,13 @@ from subtitles import generate_subtitle_video
 from thumbnail import generate_thumbnail
 from utils import generate_uuid, get_chunk_count_and_file_size
 
+
+def extract_video_chunk(video_path: str, chunk_number: int) -> BytesIO:
+    with open(video_path, "rb") as video_file:
+        video_file.seek((chunk_number - 1) * config.retrieve_video_chunk_size_bytes)
+        return BytesIO(video_file.read(config.retrieve_video_chunk_size_bytes))
+
+
 worker_pool_executor = concurrent.futures.ThreadPoolExecutor(max_workers=3)
 
 app = Flask(__name__)
@@ -34,23 +41,18 @@ def get_processed_subtitle_video_info(id) -> Response:
 @app.route("/subtitles/<id>/<int:number>")
 def get_processed_subtitle_video(id: str, number: int) -> Response:
     if number < 1:
-        return Response("Invalid given number is not possible", status=400)
-
+        return make_response("Invalid given number is not possible", 400)
     video_path = get_processed_subtitle_video_path(id)
     if video_path == None:
         return make_response(
             f"Video id '{id}' either hasnn't yet finished processing or doesn't exist",
             400,
         )
-
     chunk_count, _ = get_chunk_count_and_file_size(video_path)
     if number > chunk_count:
-        return Response("Given chunk number exceeds chunk count", status=400)
+        return make_response("Given chunk number exceeds chunk count", 400)
 
-    with open(video_path, "rb") as video_file:
-        video_file.seek((number - 1) * config.retrieve_video_chunk_size_bytes)
-        video_bytesio = BytesIO(video_file.read(config.retrieve_video_chunk_size_bytes))
-
+    video_bytesio = extract_video_chunk(video_path, number)
     if number == chunk_count:
         os.remove(video_path)
 
