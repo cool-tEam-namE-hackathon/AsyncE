@@ -123,7 +123,7 @@ def process_concat_video(id: str) -> Response:
     append_video_file(videos_to_concat[id][-1], video_bytes)
     future_processed_concat_video = generate_uuid()
     concat_video_worker_pool_executor.submit(
-        concat_videos, videos_to_concat[id], future_processed_concat_video
+        concat_videos, id, future_processed_concat_video
     )
 
     return make_response(future_processed_concat_video, 200)

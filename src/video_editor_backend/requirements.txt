@@ -2,7 +2,7 @@ Flask
 moviepy
 pillow
 pydub
-SpeechRecognition
+speechrecognition
 pocketsphinx
 vosk
 soundfile
