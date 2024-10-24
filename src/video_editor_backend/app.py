@@ -1,73 +1,142 @@
 import concurrent.futures
-import math
 import os
 import tempfile
-import uuid
-from io import BytesIO
-from typing import Tuple
 
 import config
-from file_repository import (append_video_file,
-                             get_processed_subtitle_video_path, get_video_path)
-from flask import Flask, Response, jsonify, request, send_file
+from concat import concat_videos
+from file_repository import (VideoType, append_video_file,
+                             get_processed_video_path, get_video_path,
+                             videos_to_concat)
+from flask import Flask, Response, jsonify, make_response, request, send_file
 from subtitles import generate_subtitle_video
 from thumbnail import generate_thumbnail
+from utils import (extract_video_chunk, generate_new_video_path, generate_uuid,
+                   get_chunk_count_and_file_size)
 
 
-def generate_uuid():
-    return str(uuid.uuid4())
-
-
-def get_chunk_count_and_file_size(video_path: str) -> Tuple[int, int]:
-    size = os.path.getsize(video_path)
-    return math.ceil(size / config.retrieve_video_chunk_size_bytes), size
-
-
-worker_pool_executor = concurrent.futures.ThreadPoolExecutor(max_workers=3)
-
-app = Flask(__name__)
-
-
-@app.route("/subtitles/<id>")
-def get_processed_subtitle_video_info(id) -> Response:
-    video_path = get_processed_subtitle_video_path(id)
+def get_processed_video_info_response(id: str, video_type: VideoType):
+    video_path = get_processed_video_path(id, video_type)
     if video_path == None:
-        return Response(
+        return make_response(
             f"Video id '{id}' processing hasn't finished yet or doesn't exist",
-            status=400,
+            404,
         )
 
     chunk_count, file_size = get_chunk_count_and_file_size(video_path)
-    return jsonify({"chunk_count": chunk_count, "file_size": file_size})
+    return make_response(
+        jsonify({"chunk_count": chunk_count, "file_size": file_size}), 200
+    )
 
 
-@app.route("/subtitles/<id>/<int:number>")
-def get_processed_subtitle_video(id: str, number: int) -> Response:
+def get_processed_video_chunk_response(id: str, number: int, video_type: VideoType):
     if number < 1:
-        return Response("Invalid given number is not possible", status=400)
+        return make_response("Invalid given number is not possible", 400)
 
-    video_path = get_processed_subtitle_video_path(id)
+    video_path = get_processed_video_path(id, video_type)
     if video_path == None:
-        return Response(
-            f"Video id '{id}' either hasnn't yet finished processing or doesn't exist",
-            status=400,
+        return make_response(
+            f"Video with id '{id}' either hasn't yet finished processing or doesn't exist",
+            404,
         )
 
     chunk_count, _ = get_chunk_count_and_file_size(video_path)
     if number > chunk_count:
-        return Response("Given chunk number exceeds chunk count", status=400)
+        return make_response("Given chunk number exceeds chunk count", 400)
 
-    with open(video_path, "rb") as video_file:
-        video_file.seek((number - 1) * config.retrieve_video_chunk_size_bytes)
-        video_bytesio = BytesIO(video_file.read(config.retrieve_video_chunk_size_bytes))
-
+    video_bytesio = extract_video_chunk(video_path, number)
     if number == chunk_count:
         os.remove(video_path)
-
-    return send_file(
-        video_bytesio,
-        mimetype=f"application/octet-stream",
+    return make_response(
+        send_file(
+            video_bytesio,
+            mimetype=f"application/octet-stream",
+        ),
+        200,
     )
+
+
+concat_video_worker_pool_executor = concurrent.futures.ThreadPoolExecutor(
+    max_workers=config.concat_video_processor_workers
+)
+subtitle_video_worker_pool = concurrent.futures.ThreadPoolExecutor(
+    max_workers=config.subtitle_video_processor_workers
+)
+
+app = Flask(__name__)
+
+
+@app.route("/concat/<id>")
+def get_processed_concat_video_info(id: str) -> Response:
+    return get_processed_video_info_response(id, VideoType.CONCAT)
+
+
+@app.route("/concat/<id>/<int:number>")
+def get_processed_concat_video_chunk(id: str, number: int) -> Response:
+    return get_processed_video_chunk_response(id, number, VideoType.CONCAT)
+
+
+@app.route("/concat/start", methods=["POST"])
+def start_chunk_for_concat_video() -> Response:
+    video_bytes = request.data
+
+    id = generate_uuid()
+    video_path = generate_new_video_path(id, VideoType.CONCAT)
+    append_video_file(video_path, video_bytes)
+    videos_to_concat[id].append(video_path)
+
+    return make_response(id, 200)
+
+
+@app.route("/concat/<id>/add", methods=["POST"])
+def append_chunk_for_concat_video(id: str) -> Response:
+    video_bytes = request.data
+
+    if id not in videos_to_concat:
+        return make_response(f"Video with id '{id}' doesn't exist", 404)
+
+    append_video_file(videos_to_concat[id][-1], video_bytes)
+
+    return make_response(id, 200)
+
+
+@app.route("/concat/<id>/new", methods=["POST"])
+def append_chunk_for_concat_video_and_mark_next_video(id: str) -> Response:
+    video_bytes = request.data
+
+    if id not in videos_to_concat:
+        return make_response(f"Video with id '{id}' doesn't exist", 404)
+
+    video_path = generate_new_video_path(generate_uuid(), VideoType.CONCAT)
+    append_video_file(video_path, video_bytes)
+    videos_to_concat[id].append(video_path)
+
+    return make_response(id, 200)
+
+
+@app.route("/concat/<id>/end", methods=["POST"])
+def process_concat_video(id: str) -> Response:
+    video_bytes = request.data
+
+    if id not in videos_to_concat:
+        return make_response(f"Video with id '{id}' doesn't exist", 404)
+
+    append_video_file(videos_to_concat[id][-1], video_bytes)
+    future_processed_concat_video = generate_uuid()
+    concat_video_worker_pool_executor.submit(
+        concat_videos, videos_to_concat[id], future_processed_concat_video
+    )
+
+    return make_response(future_processed_concat_video, 200)
+
+
+@app.route("/subtitles/<id>")
+def get_processed_subtitle_video_info(id: str) -> Response:
+    return get_processed_video_info_response(id, VideoType.SUBTITLE)
+
+
+@app.route("/subtitles/<id>/<int:number>")
+def get_processed_subtitle_video_chunk(id: str, number: int) -> Response:
+    return get_processed_video_chunk_response(id, number, VideoType.SUBTITLE)
 
 
 @app.route("/subtitles/start", methods={"POST"})
@@ -75,27 +144,39 @@ def start_chunk_for_subtitle_video() -> Response:
     video_bytes = request.data
 
     id = generate_uuid()
-    append_video_file(get_video_path(id), video_bytes)
-    return Response(id, status=200)
+    video_path = generate_new_video_path(id, VideoType.SUBTITLE)
+    append_video_file(video_path, video_bytes)
+
+    return make_response(id, 200)
 
 
-@app.route("/subtitles/<id>/add", methods=["PUT"])
-def append_chunk_for_subtitle_video(id) -> Response:
+@app.route("/subtitles/<id>/add", methods=["POST"])
+def append_chunk_for_subtitle_video(id: str) -> Response:
     video_bytes = request.data
 
-    append_video_file(get_video_path(id), video_bytes)
-    return Response(id, status=200)
+    video_path, exists = get_video_path(id, VideoType.SUBTITLE)
+    if not exists:
+        return make_response(f"Video with id '{id}' doesn't exist", 404)
+    append_video_file(video_path, video_bytes)
+
+    return make_response(id, 200)
 
 
 @app.route("/subtitles/<id>/end", methods=["POST"])
-def create_subtitle_video(id) -> Response:
+def process_subtitle_video(id: str) -> Response:
     video_bytes = request.data
 
-    video_path = get_video_path(id)
+    video_path, exists = get_video_path(id, VideoType.SUBTITLE)
+    if not exists:
+        return make_response(f"Video with id '{id}' doesn't exist", 404)
     append_video_file(video_path, video_bytes)
-    output_video_id = generate_uuid()
-    worker_pool_executor.submit(generate_subtitle_video, video_path, output_video_id)
-    return Response(output_video_id, status=200)
+
+    future_processed_subtitle_video_id = generate_uuid()
+    subtitle_video_worker_pool.submit(
+        generate_subtitle_video, video_path, future_processed_subtitle_video_id
+    )
+
+    return make_response(future_processed_subtitle_video_id, 200)
 
 
 @app.route("/thumbnail", methods=["POST"])
@@ -108,7 +189,7 @@ def create_thumbnail_from_video() -> Response:
 
         thumbnail_bytesio = generate_thumbnail(video_file.name)
 
-    return send_file(thumbnail_bytesio, mimetype="image/jpeg")
+    return make_response(send_file(thumbnail_bytesio, mimetype="image/jpeg"), 200)
 
 
 if __name__ == "__main__":
