@@ -9,7 +9,7 @@ from typing import Tuple
 import config
 from file_repository import (append_video_file,
                              get_processed_subtitle_video_path, get_video_path)
-from flask import Flask, Response, jsonify, request, send_file
+from flask import Flask, Response, jsonify, make_response, request, send_file
 from subtitles import generate_subtitle_video
 from thumbnail import generate_thumbnail
 
@@ -32,13 +32,15 @@ app = Flask(__name__)
 def get_processed_subtitle_video_info(id) -> Response:
     video_path = get_processed_subtitle_video_path(id)
     if video_path == None:
-        return Response(
+        return make_response(
             f"Video id '{id}' processing hasn't finished yet or doesn't exist",
-            status=400,
+            400,
         )
 
     chunk_count, file_size = get_chunk_count_and_file_size(video_path)
-    return jsonify({"chunk_count": chunk_count, "file_size": file_size})
+    return make_response(
+        jsonify({"chunk_count": chunk_count, "file_size": file_size}), 200
+    )
 
 
 @app.route("/subtitles/<id>/<int:number>")
@@ -48,9 +50,9 @@ def get_processed_subtitle_video(id: str, number: int) -> Response:
 
     video_path = get_processed_subtitle_video_path(id)
     if video_path == None:
-        return Response(
+        return make_response(
             f"Video id '{id}' either hasnn't yet finished processing or doesn't exist",
-            status=400,
+            400,
         )
 
     chunk_count, _ = get_chunk_count_and_file_size(video_path)
@@ -64,9 +66,12 @@ def get_processed_subtitle_video(id: str, number: int) -> Response:
     if number == chunk_count:
         os.remove(video_path)
 
-    return send_file(
-        video_bytesio,
-        mimetype=f"application/octet-stream",
+    return make_response(
+        send_file(
+            video_bytesio,
+            mimetype=f"application/octet-stream",
+        ),
+        200,
     )
 
 
@@ -74,28 +79,39 @@ def get_processed_subtitle_video(id: str, number: int) -> Response:
 def start_chunk_for_subtitle_video() -> Response:
     video_bytes = request.data
 
-    id = generate_uuid()
-    append_video_file(get_video_path(id), video_bytes)
-    return Response(id, status=200)
+    while True:
+        id = generate_uuid()
+        video_path, exists = get_video_path(id)
+        if not exists:
+            break
+
+    append_video_file(video_path, video_bytes)
+    return make_response(id, 200)
 
 
 @app.route("/subtitles/<id>/add", methods=["PUT"])
 def append_chunk_for_subtitle_video(id) -> Response:
     video_bytes = request.data
 
-    append_video_file(get_video_path(id), video_bytes)
-    return Response(id, status=200)
+    video_path, exists = get_video_path(id)
+    if not exists:
+        return make_response(f"Video id '{id}' doesn't exist", 400)
+    append_video_file(video_path, video_bytes)
+    return make_response(id, 200)
 
 
 @app.route("/subtitles/<id>/end", methods=["POST"])
 def create_subtitle_video(id) -> Response:
     video_bytes = request.data
 
-    video_path = get_video_path(id)
+    video_path, exists = get_video_path(id)
+    if not exists:
+        return make_response(f"Video id '{id}' doesn't exist", 400)
     append_video_file(video_path, video_bytes)
+
     output_video_id = generate_uuid()
     worker_pool_executor.submit(generate_subtitle_video, video_path, output_video_id)
-    return Response(output_video_id, status=200)
+    return make_response(output_video_id, 200)
 
 
 @app.route("/thumbnail", methods=["POST"])
@@ -108,7 +124,7 @@ def create_thumbnail_from_video() -> Response:
 
         thumbnail_bytesio = generate_thumbnail(video_file.name)
 
-    return send_file(thumbnail_bytesio, mimetype="image/jpeg")
+    return make_response(send_file(thumbnail_bytesio, mimetype="image/jpeg"), 200)
 
 
 if __name__ == "__main__":

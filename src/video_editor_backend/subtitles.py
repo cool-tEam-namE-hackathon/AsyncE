@@ -80,7 +80,7 @@ def transcribe_video(video_path: str) -> List[Tuple[int, str]]:
         return transcribe_audio(audio_path)
 
 
-def generate_subtitle_video(input_video_path: str, output_video_id: str) -> None:
+def generate_subtitle_video(input_video_path: str, output_video_id: str):
     transcription = transcribe_video(input_video_path)
     video = VideoFileClip(input_video_path)
     video_length = video.duration
