@@ -13,17 +13,20 @@ recognizer = sr.Recognizer()
 
 
 def sphinx_transcriber(audio_data: sr.AudioData) -> str:
-    print("transcribing using sphinx...")
+    if config.custom_log_prints:
+        print("transcribing using sphinx...")
     return recognizer.recognize_sphinx(audio_data)
 
 
 def vosk_transcriber(audio_data: sr.AudioData) -> str:
-    print("transcribing using vosk...")
+    if config.custom_log_prints:
+        print("transcribing using vosk...")
     return recognizer.recognize_vosk(audio_data)
 
 
 def whisper_transcriber(audio_data: sr.AudioData) -> str:
-    print("transcribing using whisper...")
+    if config.custom_log_prints:
+        print("transcribing using whisper...")
     return recognizer.recognize_whisper(audio_data)
 
 
