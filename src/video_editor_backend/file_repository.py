@@ -59,7 +59,7 @@ def save_concat_video(video, output_video_id: str):
         # fps=30,
         # preset="ultrafast", # will make the processing time much faster, but bigger output size
         verbose=config.verbose_debug_prints,
-        progress_bar=config.verbose_debug_prints,
+        logger=None,
     )
     processed_concat_video_ids.append(output_video_id)
 
@@ -79,6 +79,6 @@ def save_subtitle_video(video, output_video_id: str):
         # fps=30,
         # preset="ultrafast", # will make the processing time much faster, but bigger output size
         verbose=config.verbose_debug_prints,
-        progress_bar=config.verbose_debug_prints,
+        logger=None,
     )
     processed_subtitle_video_ids.append(output_video_id)

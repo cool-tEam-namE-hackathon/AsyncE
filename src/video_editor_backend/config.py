@@ -8,6 +8,8 @@ image_output_format_ext = "jpeg"
 
 retrieve_video_chunk_size_bytes = int(1.8 * 1024 * 1024)
 
-video_processor_workers = 3
+concat_video_processor_workers = 2
+subtitle_video_processor_workers = 1  # do not set higher than 1 if transcription using whisper is enabled (will consume too much memory)
+
 verbose_debug_prints = False
 custom_log_prints = True

@@ -55,8 +55,11 @@ def get_processed_video_chunk_response(id: str, number: int, video_type: VideoTy
     )
 
 
-worker_pool_executor = concurrent.futures.ThreadPoolExecutor(
-    max_workers=config.video_processor_workers
+concat_video_worker_pool_executor = concurrent.futures.ThreadPoolExecutor(
+    max_workers=config.concat_video_processor_workers
+)
+subtitle_video_worker_pool = concurrent.futures.ThreadPoolExecutor(
+    max_workers=config.subtitle_video_processor_workers
 )
 
 app = Flask(__name__)
@@ -119,7 +122,7 @@ def process_concat_video(id: str) -> Response:
 
     append_video_file(videos_to_concat[id][-1], video_bytes)
     future_processed_concat_video = generate_uuid()
-    worker_pool_executor.submit(
+    concat_video_worker_pool_executor.submit(
         concat_videos, videos_to_concat[id], future_processed_concat_video
     )
 
@@ -169,7 +172,7 @@ def process_subtitle_video(id: str) -> Response:
     append_video_file(video_path, video_bytes)
 
     future_processed_subtitle_video_id = generate_uuid()
-    worker_pool_executor.submit(
+    subtitle_video_worker_pool.submit(
         generate_subtitle_video, video_path, future_processed_subtitle_video_id
     )
 
