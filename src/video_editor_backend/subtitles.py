@@ -3,7 +3,6 @@ import tempfile
 from typing import List, Tuple
 
 import config
-import ffmpeg
 import speech_recognition as sr
 from file_repository import save_subtitle_video
 from moviepy.editor import (ColorClip, CompositeVideoClip, TextClip,
@@ -36,16 +35,17 @@ if os.path.isdir("model"):
 transcribers.append(sphinx_transcriber)
 
 
-def transcribe_audio(audio_path: str) -> List[Tuple[int, str]]:
-    audio = AudioSegment.from_wav(audio_path)
+def transcribe_audio(audio) -> List[Tuple[int, str]]:
     audio_duration_ms = len(audio)
+    chunks = []
+    for i in range(0, audio_duration_ms, config.timestamp_chunk_duration_ms):
+        if i + config.timestamp_chunk_duration_ms > audio_duration_ms:
+            chunk_end_ms = audio_duration_ms
+        else:
+            chunk_end_ms = i + config.timestamp_chunk_duration_ms
+        chunks.append(audio[i:chunk_end_ms])
 
-    chunks = [
-        audio[i : i + config.timestamp_chunk_duration_ms]
-        for i in range(0, audio_duration_ms, config.timestamp_chunk_duration_ms)
-    ]
     transcription = []
-
     for i, chunk in enumerate(chunks):
         with tempfile.NamedTemporaryFile() as chunk_audio_file:
             chunk_audio_path = chunk_audio_file.name
@@ -73,11 +73,9 @@ def transcribe_audio(audio_path: str) -> List[Tuple[int, str]]:
 
 
 def transcribe_video(video_path: str) -> List[Tuple[int, str]]:
-    with tempfile.NamedTemporaryFile(suffix=".wav") as audio_file:
-        audio_path = audio_file.name
-        ffmpeg.input(video_path).output(audio_path).overwrite_output().run()
-
-        return transcribe_audio(audio_path)
+    return transcribe_audio(
+        AudioSegment.from_file(video_path, format=config.video_io_format_ext)
+    )
 
 
 def generate_subtitle_video(input_video_path: str, output_video_id: str):

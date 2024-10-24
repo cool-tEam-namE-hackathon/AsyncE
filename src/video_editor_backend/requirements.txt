@@ -1,5 +1,4 @@
 Flask
-ffmpeg-python
 moviepy
 pillow
 pydub
