@@ -19,7 +19,7 @@ class VideoType(Enum):
 def get_video_path(
     video_id: str, video_type: VideoType, check_file_exists: bool = True
 ) -> Tuple[str, bool]:
-    video_path = f"{video_type.value}_{video_id}.{config.video_io_format_ext}"
+    video_path = f"{video_type.value}_{video_id}.{config.video_io_format_extension}"
     if check_file_exists and os.path.isfile(video_path):
         return video_path, True
     return video_path, False

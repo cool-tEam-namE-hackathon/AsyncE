@@ -7,7 +7,7 @@ from PIL import Image
 
 def convert_image_to_bytesio(image) -> BytesIO:
     bytes_io = BytesIO()
-    image.save(bytes_io, format=config.image_output_format_ext)
+    image.save(bytes_io, format=config.image_output_format_extension)
     bytes_io.seek(0)
     return bytes_io
 

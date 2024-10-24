@@ -77,7 +77,7 @@ def transcribe_audio(audio) -> List[Tuple[int, str]]:
 
 def transcribe_video(video_path: str) -> List[Tuple[int, str]]:
     return transcribe_audio(
-        AudioSegment.from_file(video_path, format=config.video_io_format_ext)
+        AudioSegment.from_file(video_path, format=config.video_io_format_extension)
     )
 
 
