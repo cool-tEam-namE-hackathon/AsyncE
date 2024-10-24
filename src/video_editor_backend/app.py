@@ -1,10 +1,7 @@
 import concurrent.futures
-import math
 import os
 import tempfile
-import uuid
 from io import BytesIO
-from typing import Tuple
 
 import config
 from file_repository import (append_video_file,
@@ -12,16 +9,7 @@ from file_repository import (append_video_file,
 from flask import Flask, Response, jsonify, make_response, request, send_file
 from subtitles import generate_subtitle_video
 from thumbnail import generate_thumbnail
-
-
-def generate_uuid():
-    return str(uuid.uuid4())
-
-
-def get_chunk_count_and_file_size(video_path: str) -> Tuple[int, int]:
-    size = os.path.getsize(video_path)
-    return math.ceil(size / config.retrieve_video_chunk_size_bytes), size
-
+from utils import generate_uuid, get_chunk_count_and_file_size
 
 worker_pool_executor = concurrent.futures.ThreadPoolExecutor(max_workers=3)
 
