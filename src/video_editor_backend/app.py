@@ -18,13 +18,15 @@ def extract_video_chunk(video_path: str, chunk_number: int) -> BytesIO:
         return BytesIO(video_file.read(config.retrieve_video_chunk_size_bytes))
 
 
-worker_pool_executor = concurrent.futures.ThreadPoolExecutor(max_workers=3)
+worker_pool_executor = concurrent.futures.ThreadPoolExecutor(
+    max_workers=config.video_processor_workers
+)
 
 app = Flask(__name__)
 
 
 @app.route("/subtitles/<id>")
-def get_processed_subtitle_video_info(id) -> Response:
+def get_processed_subtitle_video_info(id: str) -> Response:
     video_path = get_processed_subtitle_video_path(id)
     if video_path == None:
         return make_response(
@@ -80,7 +82,7 @@ def start_chunk_for_subtitle_video() -> Response:
 
 
 @app.route("/subtitles/<id>/add", methods=["PUT"])
-def append_chunk_for_subtitle_video(id) -> Response:
+def append_chunk_for_subtitle_video(id: str) -> Response:
     video_bytes = request.data
 
     video_path, exists = get_video_path(id)
@@ -91,7 +93,7 @@ def append_chunk_for_subtitle_video(id) -> Response:
 
 
 @app.route("/subtitles/<id>/end", methods=["POST"])
-def create_subtitle_video(id) -> Response:
+def create_subtitle_video(id: str) -> Response:
     video_bytes = request.data
 
     video_path, exists = get_video_path(id)
