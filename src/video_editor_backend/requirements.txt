@@ -1,9 +1,8 @@
 Flask
-ffmpeg-python
 moviepy
 pillow
 pydub
-SpeechRecognition
+speechrecognition
 pocketsphinx
 vosk
 soundfile
