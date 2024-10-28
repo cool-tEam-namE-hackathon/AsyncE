@@ -161,6 +161,7 @@ pub fn upload_video(
     video_upload_uuid: String,
     chunk_index: u128,
     total_data_length: u128,
+    with_subtitles: bool
 ) -> Result<(), String> {
     user::assert_user_logged_in()?;
     assert_check_group(group_id)?;

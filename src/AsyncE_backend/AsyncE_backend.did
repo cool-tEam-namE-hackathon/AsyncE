@@ -114,7 +114,7 @@ service : {
         Err: text;
     });
 
-    upload_video: (nat, nat, blob, bool, text, text, nat, nat) -> (variant {
+    upload_video: (nat, nat, blob, bool, text, text, nat, nat, bool) -> (variant {
         Ok: null;
         Err: text;
     });
