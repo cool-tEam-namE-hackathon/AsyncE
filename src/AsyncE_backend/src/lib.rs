@@ -31,8 +31,7 @@ fn init() {
     };
 
     ic_websocket_cdk::init(WsInitParams::new(handlers));
-    // init_rng()
-    ic_cdk::println!("MB: {}", chunk::MB)
+    http::poll_concat_requests();
 }
 
 #[ic_cdk::pre_upgrade]
