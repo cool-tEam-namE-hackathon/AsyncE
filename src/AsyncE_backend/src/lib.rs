@@ -39,7 +39,7 @@ fn init() {
 fn pre_upgrade() {
     let users_store = USERS.with_borrow(|users| users.clone());
     let groups_store = GROUPS.with_borrow(|groups| groups.clone());
-    let videos_store = MEETINGS.with_borrow(|videos| videos.clone());
+    let meetings_store = MEETINGS.lock().clone();
     let group_invites_store = GROUP_INVITES.with_borrow(|group_invites| group_invites.clone());
     let chat_store = CHATS.with_borrow(|chats| chats.clone());
     let primary_key_store =
@@ -48,7 +48,7 @@ fn pre_upgrade() {
     ic_cdk::storage::stable_save((
         users_store,
         groups_store,
-        videos_store,
+        meetings_store,
         group_invites_store,
         chat_store,
         primary_key_store,
@@ -61,7 +61,7 @@ fn post_upgrade() {
     let (
         user_store,
         group_store,
-        videos_store,
+        meetings_store,
         group_invites_store,
         chat_store,
         primary_key_containers_store,
@@ -69,7 +69,7 @@ fn post_upgrade() {
 
     USERS.with_borrow_mut(|users| *users = user_store);
     GROUPS.with_borrow_mut(|groups| *groups = group_store);
-    MEETINGS.with_borrow_mut(|videos| *videos = videos_store);
+    *MEETINGS.lock() = meetings_store;
     GROUP_INVITES.with_borrow_mut(|group_invites| *group_invites = group_invites_store);
     CHATS.with_borrow_mut(|chats| *chats = chat_store);
     PRIMARY_KEY_CONTAINERS.with_borrow_mut(|primary_key_containers| {

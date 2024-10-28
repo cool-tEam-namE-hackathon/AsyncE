@@ -1,15 +1,61 @@
+use std::time::Duration;
+
 use ic_cdk::api::{
     call::RejectionCode,
     management_canister::http_request::{
         http_request, CanisterHttpRequestArgument, HttpMethod, HttpResponse,
     },
 };
+use parking_lot::FairMutex;
 use serde::Deserialize;
 
-use crate::chunk;
+use crate::{chunk, globals::MEETINGS, meeting::MeetingProcessType};
+
+pub struct ConcatRequest {
+    group_id: u128,
+    meeting_id: u128,
+    uuid: String,
+}
 
 lazy_static::lazy_static! {
     pub static ref HTTP_OK: candid::Nat = candid::Nat::from(200u128);
+    pub static ref CONCAT_REQUESTS: FairMutex<Vec<ConcatRequest>> = FairMutex::new(Vec::new());
+}
+
+pub fn poll_concat_requests() {
+    ic_cdk_timers::set_timer(Duration::from_secs(60), || {
+        ic_cdk::spawn(async move {
+            let list = CONCAT_REQUESTS.lock();
+            for req in list.iter() {
+                let processed_video_data = match get_processed_video_concat(&req.uuid).await {
+                    Ok(processed_video_data) => processed_video_data,
+                    Err(err) => {
+                        ic_cdk::eprintln!("Error while getting processed video concat: {}", err);
+                        continue;
+                    }
+                };
+
+                let processed_video_data = match processed_video_data {
+                    Some(processed_video_data) => processed_video_data,
+                    None => continue,
+                };
+
+                let mut meetings = MEETINGS.lock();
+                let meetings = meetings
+                    .get_mut(&req.group_id)
+                    .ok_or(String::from("No meetings found on this group!"))
+                    .unwrap();
+
+                let meeting = meetings
+                    .get_mut(&req.meeting_id)
+                    .ok_or(String::from("No meeting found on this meeting ID!"))
+                    .unwrap();
+
+                meeting.process_type = MeetingProcessType::None;
+                meeting.full_video_data = processed_video_data;
+            }
+        })
+    });
 }
 
 #[derive(Deserialize)]
@@ -103,56 +149,58 @@ pub async fn send_thumbnail_request(body: Vec<u8>) -> Result<Vec<u8>, String> {
         return map_response_body_to_err(response);
     }
 
-    return Ok(response.body);
+    Ok(response.body)
 }
 
-pub async fn send_concat_video_request(video1: Vec<u8>, video2: Vec<u8>) -> Result<(), String> {
-    let uuid_response1 = send_post_request("http://localhost:5555/concat/start", Vec::new())
-        .await
-        .map_err(|_| String::from("Failed to send HTTP request for processing concat"))?;
-    if uuid_response1.status != *HTTP_OK {
-        return map_response_body_to_err(uuid_response1);
-    }
+async fn send_video_concat_as_chunks(
+    video: Vec<u8>,
+    uuid: &str,
+    next_state_url: &str,
+) -> Result<(), String> {
+    let chunks = video.chunks(chunk::MB);
+    let chunk_len = chunks.len();
+    for (i, chunk) in chunks.into_iter().enumerate() {
+        let url = if i == chunk_len - 1 {
+            format!("http://localhost:5555/concat/{}/{}", uuid, next_state_url)
+        } else {
+            format!("http://localhost:5555/concat/{}/add", uuid)
+        };
 
-    let uuid_response2 = send_post_request("http://localhost:5555/concat/start", Vec::new())
-        .await
-        .map_err(|_| String::from("Failed to send HTTP request for processing concat"))?;
-    if uuid_response2.status != *HTTP_OK {
-        return map_response_body_to_err(uuid_response2);
-    }
-
-    let uuid1 = String::from_utf8(uuid_response1.body)
-        .map_err(|_| String::from("Cannot convert bytes to uuid"))?;
-
-    let uuid2 = String::from_utf8(uuid_response2.body)
-        .map_err(|_| String::from("Cannot convert bytes to uuid"))?;
-
-    for (video, uuid) in [(video1, &uuid1), (video2, &uuid2)] {
-        let chunks = video.chunks(chunk::MB).collect::<Vec<_>>();
-        let chunk_len = chunks.len();
-        for (i, chunk) in chunks.into_iter().enumerate() {
-            let url = if i == chunk_len - 1 {
-                format!("http://localhost:5555/concat/{}/end", uuid)
-            } else {
-                format!("http://localhost:5555/concat/{}/add", uuid)
-            };
-
-            let response = send_post_request(url, chunk.to_vec()).await.map_err(|_| {
-                String::from("Failed to send HTTP request for processing concat.add")
-            })?;
-            if response.status != *HTTP_OK {
-                return map_response_body_to_err(response);
-            }
+        let response = send_post_request(url, chunk.to_vec())
+            .await
+            .map_err(|_| String::from("Failed to send HTTP request for processing concat.add"))?;
+        if response.status != *HTTP_OK {
+            return map_response_body_to_err(response);
         }
     }
 
-    let url = format!("http://localhost:5555/concat/{}/{}", uuid1, uuid2);
-    let response = send_post_request(url, Vec::new())
+    Ok(())
+}
+
+pub async fn send_concat_video_request(
+    group_id: u128,
+    meeting_id: u128,
+    video1: Vec<u8>,
+    video2: Vec<u8>,
+) -> Result<(), String> {
+    let uuid_response = send_post_request("http://localhost:5555/concat/start", Vec::new())
         .await
-        .map_err(|_| String::from("Failed to send HTTP request for processing concat.add"))?;
-    if response.status != *HTTP_OK {
-        return map_response_body_to_err(response);
+        .map_err(|_| String::from("Failed to send HTTP request for processing concat"))?;
+    if uuid_response.status != *HTTP_OK {
+        return map_response_body_to_err(uuid_response);
     }
+
+    let uuid = String::from_utf8(uuid_response.body)
+        .map_err(|_| String::from("Cannot convert bytes to uuid"))?;
+
+    send_video_concat_as_chunks(video1, &uuid, "next").await?;
+    send_video_concat_as_chunks(video2, &uuid, "end").await?;
+
+    CONCAT_REQUESTS.lock().push(ConcatRequest {
+        group_id,
+        meeting_id,
+        uuid,
+    });
 
     Ok(())
 }
@@ -174,6 +222,35 @@ pub async fn get_processed_video_subtitles(uuid: &str) -> Result<Option<Vec<u8>>
         let url = format!("http://localhost:5555/subtitles/{}/{}", uuid, i);
         let response = send_get_request(url).await.map_err(|_| {
             String::from("Failed to send HTTP request for getting processed video subtitles chunk")
+        })?;
+
+        if response.status != *HTTP_OK {
+            return Ok(None);
+        }
+
+        data.extend(response.body);
+    }
+
+    Ok(Some(data))
+}
+
+pub async fn get_processed_video_concat(uuid: &str) -> Result<Option<Vec<u8>>, String> {
+    let url = format!("http://localhost:5555/concat/{}", uuid);
+    let uuid_response = send_get_request(url).await.map_err(|_| {
+        String::from("Failed to send HTTP request for getting processed video concat")
+    })?;
+    if uuid_response.status != *HTTP_OK {
+        return Ok(None);
+    }
+
+    let response = serde_json::from_slice::<ChunkInfoResponse>(&uuid_response.body)
+        .map_err(|err| format!("Deserialize to chunk info from json error: {}", err))?;
+
+    let mut data = Vec::with_capacity(response.file_size);
+    for i in 0..response.chunk_count {
+        let url = format!("http://localhost:5555/concat/{}/{}", uuid, i);
+        let response = send_get_request(url).await.map_err(|_| {
+            String::from("Failed to send HTTP request for getting processed video concat chunk")
         })?;
 
         if response.status != *HTTP_OK {
