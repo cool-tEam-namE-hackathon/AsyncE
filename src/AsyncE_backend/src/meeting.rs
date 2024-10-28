@@ -107,8 +107,9 @@ pub fn get_meetings(group_id: u128) -> Result<Vec<MeetingHeader>, String> {
     user::assert_user_logged_in()?;
     assert_check_group(group_id)?;
 
-    let meetings = MEETINGS.lock();
-    Ok(meetings
+    Ok(MEETINGS
+        .lock()
+        .unwrap()
         .get(&group_id)
         .cloned()
         .unwrap_or_default()
@@ -125,6 +126,7 @@ pub fn get_meeting_detail(group_id: u128, meeting_id: u128) -> Result<MeetingHea
 
     MEETINGS
         .lock()
+        .unwrap()
         .get(&group_id)
         .ok_or(String::from("No meetings found on this group!"))?
         .get(&meeting_id)
@@ -144,6 +146,7 @@ pub fn create_meeting(group_id: u128, title: String) -> Result<u128, String> {
 
     MEETINGS
         .lock()
+        .unwrap()
         .entry(group_id)
         .or_default()
         .insert(meeting_id, meeting);
@@ -168,7 +171,7 @@ pub fn upload_video(
 
     let selfname = user::get_selfname_force()?;
 
-    let mut meetings = MEETINGS.lock();
+    let mut meetings = MEETINGS.lock().unwrap();
     let meetings = meetings
         .get_mut(&group_id)
         .ok_or(String::from("No meetings found on this group!"))?;
@@ -227,7 +230,7 @@ fn send_concat_video_request(group_id: u128, meeting_id: u128, video1: Vec<u8>, 
 
 fn get_thumbnail_from_video_data(group_id: u128, meeting_id: u128, data: Vec<u8>) {
     ic_cdk::spawn(async move {
-        let mut meetings = MEETINGS.lock();
+        let mut meetings = MEETINGS.lock().unwrap();
         let meetings = meetings
             .get_mut(&group_id)
             .ok_or(String::from("No meetings found on this group!"))
@@ -253,7 +256,7 @@ pub fn get_video_meeting_size(group_id: u128, meeting_id: u128) -> Result<u128, 
     user::assert_user_logged_in()?;
     assert_check_group(group_id)?;
 
-    let meetings = MEETINGS.lock();
+    let meetings = MEETINGS.lock().unwrap();
     let meetings = meetings
         .get(&group_id)
         .ok_or(String::from("No meetings found on this group!"))?;
@@ -274,7 +277,7 @@ pub fn get_video_meeting_chunk_blob(
     user::assert_user_logged_in()?;
     assert_check_group(group_id)?;
 
-    let meetings = MEETINGS.lock();
+    let meetings = MEETINGS.lock().unwrap();
     let meetings = meetings
         .get(&group_id)
         .ok_or(String::from("No meetings found on this group!"))?;
@@ -301,7 +304,7 @@ pub fn get_video_frame_size(
     user::assert_user_logged_in()?;
     assert_check_group(group_id)?;
 
-    let meetings = MEETINGS.lock();
+    let meetings = MEETINGS.lock().unwrap();
     let meetings = meetings
         .get(&group_id)
         .ok_or(String::from("No meetings found on this group!"))?;
@@ -328,7 +331,7 @@ pub fn get_video_frame_chunk_blob(
     user::assert_user_logged_in()?;
     assert_check_group(group_id)?;
 
-    let meetings = MEETINGS.lock();
+    let meetings = MEETINGS.lock().unwrap();
     let meetings = meetings
         .get(&group_id)
         .ok_or(String::from("No meetings found on this group!"))?;
@@ -354,7 +357,7 @@ pub fn get_meeting_thumbnaiL_size(group_id: u128, meeting_id: u128) -> Result<u1
     user::assert_user_logged_in()?;
     assert_check_group(group_id)?;
 
-    let meetings = MEETINGS.lock();
+    let meetings = MEETINGS.lock().unwrap();
     let meetings = meetings
         .get(&group_id)
         .ok_or(String::from("No meetings found on this group!"))?;
@@ -375,7 +378,7 @@ pub fn get_meeting_thumbnail_chunk_blob(
     user::assert_user_logged_in()?;
     assert_check_group(group_id)?;
 
-    let meetings = MEETINGS.lock();
+    let meetings = MEETINGS.lock().unwrap();
     let meetings = meetings
         .get(&group_id)
         .ok_or(String::from("No meetings found on this group!"))?;

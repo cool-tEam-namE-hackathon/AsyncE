@@ -1,11 +1,11 @@
 use std::{
     cell::RefCell,
     collections::{BTreeMap, BTreeSet},
+    sync::Mutex,
 };
 
 use candid::Principal;
 use ic_websocket_cdk::ClientPrincipal;
-use parking_lot::FairMutex;
 
 use crate::{
     chat::Chat, group::Group, meeting::Meeting, primary_key::PrimaryKeyContainer, user::User,
@@ -31,5 +31,5 @@ thread_local! {
 }
 
 lazy_static::lazy_static! {
-    pub static ref MEETINGS: FairMutex<MeetingStore> = FairMutex::default();
+    pub static ref MEETINGS: Mutex<MeetingStore> = Mutex::default();
 }
