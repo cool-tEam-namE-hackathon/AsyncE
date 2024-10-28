@@ -199,17 +199,12 @@ pub fn upload_video(
 
             if !meeting.full_video_data.is_empty() {
                 meeting.process_type = MeetingProcessType::Concat;
-
-                let video1 = meeting.full_video_data.clone();
-                let video2 = data.clone();
                 
-                ic_cdk::spawn(async move {
-                    if let Err(err) = http::send_concat_video_request(group_id, meeting_id, video1, video2).await {
-                        ic_cdk::eprintln!("Error while sending video concat request: {}", err);
-                    }
-                });
+                send_concat_video_request(group_id, meeting_id, meeting.full_video_data.clone(), data.clone())
             } else {
                 meeting.full_video_data = data.clone();
+                
+                get_thumbnail_from_video_data(group_id, meeting_id, data.clone())
             }
 
             let mut video_frame = VideoFrame::new(selfname, title);
@@ -218,6 +213,37 @@ pub fn upload_video(
         }
 
         Ok(())
+    })
+}
+
+fn send_concat_video_request(group_id: u128, meeting_id: u128, video1: Vec<u8>, video2: Vec<u8>) {
+    ic_cdk::spawn(async move {
+        if let Err(err) = http::send_concat_video_request(group_id, meeting_id, video1, video2).await {
+            ic_cdk::eprintln!("Error while sending video concat request: {}", err);
+        }
+    });
+}
+
+fn get_thumbnail_from_video_data(group_id: u128, meeting_id: u128, data: Vec<u8>) {
+    ic_cdk::spawn(async move {
+        let mut meetings = MEETINGS.lock();
+        let meetings = meetings
+            .get_mut(&group_id)
+            .ok_or(String::from("No meetings found on this group!"))
+            .unwrap();
+
+        let meeting = meetings
+            .get_mut(&meeting_id)
+            .ok_or(String::from("No meeting found on this video ID!"))
+            .unwrap();
+
+        meeting.thumbnail_data = match http::send_thumbnail_request(data).await {
+            Ok(thumbnail_data) => thumbnail_data,
+            Err(err) => {
+                ic_cdk::eprintln!("Error while sending thumbnail request: {}", err);
+                return;
+            }
+        }
     })
 }
 

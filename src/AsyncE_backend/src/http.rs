@@ -142,39 +142,37 @@ pub async fn send_process_subtitles_request(body: Vec<u8>) -> Result<String, Str
 }
 
 pub async fn send_thumbnail_request(body: Vec<u8>) -> Result<Vec<u8>, String> {
-    let response = send_post_request("http://localhost:5555/thumbnail", body)
+    let uuid_response = send_post_request("http://localhost:5555/thumbnail/start", Vec::new())
         .await
-        .map_err(|_| String::from("Failed to send HTTP request for processing thumbnail"))?;
-    if response.status != *HTTP_OK {
-        return map_response_body_to_err(response);
+        .map_err(|_| String::from("Failed to send HTTP request for processing thumbnail.start"))?;
+    if uuid_response.status != *HTTP_OK {
+        return map_response_body_to_err(uuid_response);
     }
 
-    Ok(response.body)
-}
+    let uuid = String::from_utf8(uuid_response.body)
+        .map_err(|_| String::from("Cannot convert bytes to uuid"))?;
 
-async fn send_video_concat_as_chunks(
-    video: Vec<u8>,
-    uuid: &str,
-    next_state_url: &str,
-) -> Result<(), String> {
-    let chunks = video.chunks(chunk::MB);
-    let chunk_len = chunks.len();
-    for (i, chunk) in chunks.into_iter().enumerate() {
-        let url = if i == chunk_len - 1 {
-            format!("http://localhost:5555/concat/{}/{}", uuid, next_state_url)
-        } else {
-            format!("http://localhost:5555/concat/{}/add", uuid)
-        };
+    let chunks = body.chunks(chunk::MB).collect::<Vec<_>>();
+    for chunk in chunks.into_iter() {
+        let url = format!("http://localhost:5555/thumbnail/{}/add", uuid);
 
-        let response = send_post_request(url, chunk.to_vec())
-            .await
-            .map_err(|_| String::from("Failed to send HTTP request for processing concat.add"))?;
+        let response = send_post_request(url, chunk.to_vec()).await.map_err(|_| {
+            String::from("Failed to send HTTP request for processing thumbnail.add")
+        })?;
         if response.status != *HTTP_OK {
             return map_response_body_to_err(response);
         }
     }
 
-    Ok(())
+    let url = format!("http://localhost:5555/thumbnail/{}/end", uuid);
+    let response = send_post_request(url, Vec::new())
+        .await
+        .map_err(|_| String::from("Failed to send HTTP request for processing thumbnail.end"))?;
+    if response.status != *HTTP_OK {
+        return map_response_body_to_err(response);
+    }
+
+    Ok(response.body)
 }
 
 pub async fn send_concat_video_request(
@@ -193,8 +191,36 @@ pub async fn send_concat_video_request(
     let uuid = String::from_utf8(uuid_response.body)
         .map_err(|_| String::from("Cannot convert bytes to uuid"))?;
 
-    send_video_concat_as_chunks(video1, &uuid, "next").await?;
-    send_video_concat_as_chunks(video2, &uuid, "end").await?;
+    let chunks = video1.chunks(chunk::MB);
+    for chunk in chunks.into_iter() {
+        let url = format!("http://localhost:5555/concat/{}/add", uuid);
+
+        let response = send_post_request(url, chunk.to_vec())
+            .await
+            .map_err(|_| String::from("Failed to send HTTP request for processing concat.add"))?;
+        if response.status != *HTTP_OK {
+            return map_response_body_to_err(response);
+        }
+    }
+
+    let chunks = video2.chunks(chunk::MB);
+    let chunk_len = chunks.len();
+    for (i, chunk) in chunks.into_iter().enumerate() {
+        let url = if i == chunk_len - 1 {
+            format!("http://localhost:5555/concat/{}/end", uuid)
+        } else if i == 0 {
+            format!("http://localhost:5555/concat/{}/new", uuid)
+        } else {
+            format!("http://localhost:5555/concat/{}/add", uuid)
+        };
+
+        let response = send_post_request(url, chunk.to_vec())
+            .await
+            .map_err(|_| String::from("Failed to send HTTP request for processing concat.add"))?;
+        if response.status != *HTTP_OK {
+            return map_response_body_to_err(response);
+        }
+    }
 
     CONCAT_REQUESTS.lock().push(ConcatRequest {
         group_id,
