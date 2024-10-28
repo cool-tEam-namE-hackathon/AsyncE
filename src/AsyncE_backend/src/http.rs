@@ -23,7 +23,7 @@ lazy_static::lazy_static! {
 }
 
 pub fn poll_concat_requests() {
-    ic_cdk_timers::set_timer(Duration::from_secs(60), || {
+    ic_cdk_timers::set_timer_interval(Duration::from_secs(60), || {
         ic_cdk::spawn(async move {
             let list = CONCAT_REQUESTS.lock();
             for req in list.iter() {
