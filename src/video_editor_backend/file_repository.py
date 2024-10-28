@@ -11,13 +11,13 @@ processed_subtitle_video_ids = []
 processed_concat_video_ids = []
 
 
-class VideoType(Enum):
+class VideoProcessingType(Enum):
     CONCAT = "cat"
     SUBTITLE = "sub"
 
 
 def get_video_path(
-    video_id: str, video_type: VideoType, check_file_exists: bool = True
+    video_id: str, video_type: VideoProcessingType, check_file_exists: bool = True
 ) -> Tuple[str, bool]:
     video_path = f"{video_type.value}_{video_id}.{config.video_io_format_extension}"
     if check_file_exists and os.path.isfile(video_path):
@@ -30,13 +30,18 @@ def append_video_file(video_path: str, video_bytes: bytes):
         video_file.write(video_bytes)
 
 
-def get_processed_video_path(video_id: str, video_type: VideoType) -> Union[str, None]:
+def get_processed_video_path(
+    video_id: str, video_type: VideoProcessingType
+) -> Union[str, None]:
     if (
-        video_type == VideoType.SUBTITLE
+        video_type == VideoProcessingType.SUBTITLE
         and video_id not in processed_subtitle_video_ids
     ):
         return
-    elif video_type == VideoType.CONCAT and video_id not in processed_concat_video_ids:
+    elif (
+        video_type == VideoProcessingType.CONCAT
+        and video_id not in processed_concat_video_ids
+    ):
         return
     video_path, exists = get_video_path(video_id, video_type)
     if not exists:
@@ -46,7 +51,7 @@ def get_processed_video_path(video_id: str, video_type: VideoType) -> Union[str,
 
 def save_concat_video(video, output_video_id: str):
     output_video_path, _ = get_video_path(
-        output_video_id, VideoType.CONCAT, check_file_exists=False
+        output_video_id, VideoProcessingType.CONCAT, check_file_exists=False
     )
     if config.custom_log_prints:
         print(f"saving video to {output_video_path}")
@@ -66,7 +71,7 @@ def save_concat_video(video, output_video_id: str):
 
 def save_subtitle_video(video, output_video_id: str):
     output_video_path, _ = get_video_path(
-        output_video_id, VideoType.SUBTITLE, check_file_exists=False
+        output_video_id, VideoProcessingType.SUBTITLE, check_file_exists=False
     )
     if config.custom_log_prints:
         print(f"saving video to {output_video_path}")

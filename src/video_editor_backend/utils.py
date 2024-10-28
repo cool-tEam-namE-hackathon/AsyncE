@@ -5,7 +5,7 @@ from io import BytesIO
 from typing import Tuple
 
 import config
-from file_repository import VideoType, get_video_path
+from file_repository import VideoProcessingType, get_video_path
 
 
 def generate_uuid():
@@ -17,7 +17,7 @@ def get_chunk_count_and_file_size(path: str) -> Tuple[int, int]:
     return math.ceil(size / config.retrieve_video_chunk_size_bytes), size
 
 
-def generate_new_video_path(id: str, video_type: VideoType) -> str:
+def generate_new_video_path(id: str, video_type: VideoProcessingType) -> str:
     video_path, _ = get_video_path(id, video_type, check_file_exists=False)
     return video_path
 
