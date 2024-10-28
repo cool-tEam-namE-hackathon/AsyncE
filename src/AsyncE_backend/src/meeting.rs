@@ -198,7 +198,7 @@ pub fn upload_video(
             ))?;
 
             if !meeting.full_video_data.is_empty() {
-                // concat_mp4(&mut meeting.full_video_data, &data)?;
+                meeting.process_type = MeetingProcessType::Concat;
 
                 let video1 = meeting.full_video_data.clone();
                 let video2 = data.clone();
@@ -208,7 +208,6 @@ pub fn upload_video(
                         ic_cdk::eprintln!("Error while sending video concat request: {}", err);
                     }
                 });
-                
             } else {
                 meeting.full_video_data = data.clone();
             }
