@@ -8,12 +8,19 @@ type GroupQueryResponse = record {
     created_time_unix: nat;
 };
 
+type MeetingProcessType = variant {
+    None: null;
+    Concat: null;
+    Subtitle: null;
+};
+
 type MeetingHeader = record {
     id: nat;
     title: text;
     created_by: text;
     frames_count: nat;
     created_time_unix: nat;
+    process_type: MeetingProcessType;
 };
 
 type Chat = record {
