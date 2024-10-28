@@ -14,6 +14,7 @@ processed_concat_video_ids = []
 class VideoProcessingType(Enum):
     CONCAT = "cat"
     SUBTITLE = "sub"
+    THUMBNAIL = "thu"
 
 
 def get_video_path(

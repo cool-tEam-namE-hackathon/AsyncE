@@ -181,15 +181,40 @@ def process_subtitle_video(id: str) -> Response:
     return make_response(future_processed_subtitle_video_id, 200)
 
 
-@app.route("/thumbnail", methods=["POST"])
-def create_thumbnail_from_video() -> Response:
+@app.route("/thumbnail/start", methods=["POST"])
+def start_chunk_for_video_thumbnail() -> Response:
     video_bytes = request.data
 
-    with tempfile.NamedTemporaryFile() as video_file:
-        video_file.write(video_bytes)
-        video_file.flush()
+    id = generate_uuid()
+    video_path = generate_new_video_path(id, VideoProcessingType.THUMBNAIL)
+    append_video_file(video_path, video_bytes)
 
-        thumbnail_bytesio = generate_thumbnail(video_file.name)
+    return make_response(id, 200)
+
+
+@app.route("/thumbnail/<id>/add", methods=["POST"])
+def append_chunk_for_video_thumbnail(id: str) -> Response:
+    video_bytes = request.data
+
+    video_path, exists = get_video_path(id, VideoProcessingType.THUMBNAIL)
+    if not exists:
+        return make_response(f"Video with id '{id}' doesn't exist", 404)
+    append_video_file(video_path, video_bytes)
+
+    return make_response(id, 200)
+
+
+@app.route("/thumbnail/<id>/end", methods=["POST"])
+def create_thumbnail_from_video(id: str) -> Response:
+    video_bytes = request.data
+
+    video_path, exists = get_video_path(id, VideoProcessingType.THUMBNAIL)
+    if not exists:
+        return make_response(f"Video with id '{id}' doesn't exist", 404)
+    append_video_file(video_path, video_bytes)
+
+    thumbnail_bytesio = generate_thumbnail(video_path)
+    os.remove(video_path)
 
     return make_response(send_file(thumbnail_bytesio, mimetype="image/jpeg"), 200)
 
