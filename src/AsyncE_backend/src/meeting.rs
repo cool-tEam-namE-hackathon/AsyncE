@@ -166,6 +166,8 @@ pub fn upload_video(
     total_data_length: u128,
     with_subtitles: bool
 ) -> Result<(), String> {
+    ic_cdk::println!("Yeahhh {}", with_subtitles);
+
     user::assert_user_logged_in()?;
     assert_check_group(group_id)?;
 
@@ -183,6 +185,8 @@ pub fn upload_video(
     if meeting.process_type != MeetingProcessType::None {
         return Err(String::from("Video is still on procesing... Please try again later.."))
     }
+
+    ic_cdk::println!("Cool");
 
     VIDEO_UPLOADS.with_borrow_mut(|video_uploads| {
         let video_upload = video_uploads
@@ -208,7 +212,9 @@ pub fn upload_video(
             } else {
                 meeting.full_video_data = data.clone();
                 
-                get_thumbnail_from_video_data(group_id, meeting_id, data.clone())
+                ic_cdk::println!("Wooooooooo");
+                get_thumbnail_from_video_data(group_id, meeting_id, data.clone());
+                ic_cdk::println!("What");
             }
 
             let mut video_frame = VideoFrame::new(selfname, title);
@@ -230,6 +236,14 @@ fn send_concat_video_request(group_id: u128, meeting_id: u128, video1: Vec<u8>, 
 
 fn get_thumbnail_from_video_data(group_id: u128, meeting_id: u128, data: Vec<u8>) {
     ic_cdk::spawn(async move {
+        let thumbnail_data = match http::send_thumbnail_request(data).await {
+            Ok(thumbnail_data) => thumbnail_data,
+            Err(err) => {
+                ic_cdk::eprintln!("Error while sending thumbnail request: {}", err);
+                return;
+            }
+        };
+
         let mut meetings = MEETINGS.lock().unwrap();
         let meetings = meetings
             .get_mut(&group_id)
@@ -240,14 +254,7 @@ fn get_thumbnail_from_video_data(group_id: u128, meeting_id: u128, data: Vec<u8>
             .get_mut(&meeting_id)
             .ok_or(String::from("No meeting found on this video ID!"))
             .unwrap();
-
-        meeting.thumbnail_data = match http::send_thumbnail_request(data).await {
-            Ok(thumbnail_data) => thumbnail_data,
-            Err(err) => {
-                ic_cdk::eprintln!("Error while sending thumbnail request: {}", err);
-                return;
-            }
-        }
+        meeting.thumbnail_data = thumbnail_data;
     })
 }
 

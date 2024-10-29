@@ -143,7 +143,12 @@ pub async fn send_process_subtitles_request(body: Vec<u8>) -> Result<String, Str
 pub async fn send_thumbnail_request(body: Vec<u8>) -> Result<Vec<u8>, String> {
     let uuid_response = send_post_request("http://localhost:5555/thumbnail/start", Vec::new())
         .await
-        .map_err(|_| String::from("Failed to send HTTP request for processing thumbnail.start"))?;
+        .map_err(|err| {
+            format!(
+                "Failed to send HTTP request for processing thumbnail.start {:?} {}",
+                err.0, err.1
+            )
+        })?;
     if uuid_response.status != *HTTP_OK {
         return map_response_body_to_err(uuid_response);
     }
