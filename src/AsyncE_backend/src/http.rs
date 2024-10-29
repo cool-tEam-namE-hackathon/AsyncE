@@ -1,4 +1,4 @@
-use std::time::Duration;
+use std::{sync::Mutex, time::Duration};
 
 use ic_cdk::api::{
     call::RejectionCode,
@@ -6,7 +6,6 @@ use ic_cdk::api::{
         http_request, CanisterHttpRequestArgument, HttpMethod, HttpResponse,
     },
 };
-use parking_lot::FairMutex;
 use serde::Deserialize;
 
 use crate::{chunk, globals::MEETINGS, meeting::MeetingProcessType};
@@ -19,13 +18,13 @@ pub struct ConcatRequest {
 
 lazy_static::lazy_static! {
     pub static ref HTTP_OK: candid::Nat = candid::Nat::from(200u128);
-    pub static ref CONCAT_REQUESTS: FairMutex<Vec<ConcatRequest>> = FairMutex::new(Vec::new());
+    pub static ref CONCAT_REQUESTS: Mutex<Vec<ConcatRequest>> = Mutex::new(Vec::new());
 }
 
 pub fn poll_concat_requests() {
     ic_cdk_timers::set_timer_interval(Duration::from_secs(60), || {
         ic_cdk::spawn(async move {
-            let list = CONCAT_REQUESTS.lock();
+            let list = CONCAT_REQUESTS.lock().unwrap();
             for req in list.iter() {
                 let processed_video_data = match get_processed_video_concat(&req.uuid).await {
                     Ok(processed_video_data) => processed_video_data,
@@ -40,7 +39,7 @@ pub fn poll_concat_requests() {
                     None => continue,
                 };
 
-                let mut meetings = MEETINGS.lock();
+                let mut meetings = MEETINGS.lock().unwrap();
                 let meetings = meetings
                     .get_mut(&req.group_id)
                     .ok_or(String::from("No meetings found on this group!"))
@@ -222,7 +221,7 @@ pub async fn send_concat_video_request(
         }
     }
 
-    CONCAT_REQUESTS.lock().push(ConcatRequest {
+    CONCAT_REQUESTS.lock().unwrap().push(ConcatRequest {
         group_id,
         meeting_id,
         uuid,

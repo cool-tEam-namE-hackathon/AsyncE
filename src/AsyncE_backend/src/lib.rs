@@ -38,7 +38,7 @@ fn init() {
 fn pre_upgrade() {
     let users_store = USERS.with_borrow(|users| users.clone());
     let groups_store = GROUPS.with_borrow(|groups| groups.clone());
-    let meetings_store = MEETINGS.lock().clone();
+    let meetings_store = MEETINGS.lock().unwrap().clone();
     let group_invites_store = GROUP_INVITES.with_borrow(|group_invites| group_invites.clone());
     let chat_store = CHATS.with_borrow(|chats| chats.clone());
     let primary_key_store =
@@ -68,7 +68,7 @@ fn post_upgrade() {
 
     USERS.with_borrow_mut(|users| *users = user_store);
     GROUPS.with_borrow_mut(|groups| *groups = group_store);
-    *MEETINGS.lock() = meetings_store;
+    *MEETINGS.lock().unwrap() = meetings_store;
     GROUP_INVITES.with_borrow_mut(|group_invites| *group_invites = group_invites_store);
     CHATS.with_borrow_mut(|chats| *chats = chat_store);
     PRIMARY_KEY_CONTAINERS.with_borrow_mut(|primary_key_containers| {
