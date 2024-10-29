@@ -96,10 +96,10 @@
         <ScrollBar orientation="horizontal" />
     </ScrollArea> -->
 
-    <video v-if="meetingVideo" autoplay muted controls>
+    <!-- <video v-if="meetingVideo" autoplay muted controls>
         <source :src="meetingVideo" type="video/mp4" />
         Your browser does not support the video tag.
-    </video>
+    </video> -->
 </template>
 
 <script setup lang="ts">
@@ -159,6 +159,7 @@ async function getAllVideos() {
     // isFetchingVideos.value = true;
     try {
         await groupStore.getAllThumbnails(route.params.groupId as string);
+        console.log(videoThumbnail.value)
     } catch (e) {
         console.log((e as Error).message);
     } finally {

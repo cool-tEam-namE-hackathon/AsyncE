@@ -37,7 +37,11 @@
                 placeholder="Type a message..."
                 @keyup.enter="handleChatSend"
             />
-            <Button class="p-2" :disabled="!message || !message.trim().length" @click="handleChatSend">
+            <Button
+                class="p-2"
+                :disabled="!message || !message.trim().length"
+                @click="handleChatSend"
+            >
                 <Icon
                     icon="lucide:send"
                     width="24"
@@ -112,14 +116,16 @@ async function handleChatSend() {
 
 function handleIncomingChat(chat: Chat) {
     if (chat.username !== username.value) {
-        messages.value.push(chat);
+        const index = messages.value.findIndex((x) => x.uuid === chat.uuid);
+
+        if (index !== -1) {
+            messages.value[index] = chat;
+        } else {
+            messages.value.push(chat);
+        }
+
+        scrollToBottom();
     }
-
-    const index = messages.value.findIndex((x) => x.uuid === chat.uuid);
-    messages.value.splice(index, 1);
-    messages.value.push(chat);
-
-    scrollToBottom();
 }
 
 websocketStore.setOnChatReceive(handleIncomingChat);
@@ -128,7 +134,7 @@ async function init() {
     const messageHistory = await groupStore.getChats(route.params.id as string);
 
     messages.value = [...messageHistory, ...messages.value];
-    
+
     scrollToBottom();
 }
 

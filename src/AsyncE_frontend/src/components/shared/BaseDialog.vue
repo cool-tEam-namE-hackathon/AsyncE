@@ -4,6 +4,7 @@
             v-bind="attrs"
             :hide-close-button="hideCloseButton"
             class="sm:max-w-md"
+            @interact-outside="handleClickOutside"
         >
             <DialogHeader>
                 <DialogTitle>
@@ -33,6 +34,7 @@ import {
     DialogHeader,
     DialogTitle,
 } from "@ui/dialog";
+import { FocusOutsideEvent } from "radix-vue/dist/DismissableLayer";
 
 const props = defineProps<BaseDialogProps>();
 const emits = defineEmits(["on-close-dialog"]);
@@ -43,4 +45,10 @@ const isOpen = computed({
 });
 
 const attrs = useAttrs();
+
+function handleClickOutside(e: FocusOutsideEvent) {
+    if (!props.isClosable) {
+        e.preventDefault();
+    }
+}
 </script>

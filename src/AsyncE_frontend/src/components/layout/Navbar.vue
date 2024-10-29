@@ -50,8 +50,6 @@ import { storeToRefs } from "pinia";
 
 import { useUserStore } from "@stores/user-store";
 
-import { useRouter } from "vue-router";
-
 import { USER_DROPDOWN_OPTIONS } from "@data/user-constants";
 
 import NavbarNotification from "@components/navbar/NavbarNotification.vue";
@@ -62,8 +60,6 @@ import { Icon } from "@iconify/vue";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@components/ui/avatar";
 
-const router = useRouter();
-
 const userStore = useUserStore();
 
 const { isAuthenticated, username, profilePicture } = storeToRefs(userStore);
@@ -72,10 +68,9 @@ async function login() {
     await userStore.login();
     window.location.reload();
 }
-function logout() {
+async function logout() {
     userStore.logout();
-    router.push("/");
-    window.location.reload();
+    window.location.href = "/";
 }
 
 function handleOptionClick(option: string) {

@@ -165,6 +165,7 @@ async function handleInvitation(
         invites.value = invites.value.filter(
             (invite) => invite.group_id !== groupId,
         );
+        groupStore.getAllGroups();
     } catch (e) {
         console.log(e);
     } finally {

@@ -154,6 +154,7 @@ export const useGroupStore = defineStore("group", () => {
         groupId: string,
         meetingId: string,
         title: string,
+        subtitle: boolean
     ) {
         const totalChunks = Math.ceil(data.length / MB);
         const uuid = crypto.randomUUID();
@@ -176,6 +177,7 @@ export const useGroupStore = defineStore("group", () => {
                     uuid,
                     BigInt(i),
                     BigInt(data.length),
+                    subtitle,
                 )
                 .then((response) => {
                     validateResponse(response);
@@ -219,7 +221,6 @@ export const useGroupStore = defineStore("group", () => {
         }
 
         await Promise.all(videoPromises);
-        console.log("here", videoMeetingData);
         meetingVideo.value = blobToURL(videoMeetingData);
     }
 
