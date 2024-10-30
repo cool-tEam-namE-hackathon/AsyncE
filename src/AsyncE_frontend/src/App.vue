@@ -15,7 +15,11 @@
         <Footer />
 
         <!-- REGISTER -->
-        <base-dialog :open="isOpen" :hide-close-button="true">
+        <base-dialog
+            :open="isOpen"
+            :hide-close-button="true"
+            :is-closable="false"
+        >
             <template #title> Input your username </template>
 
             <template #description> Username must be unique </template>

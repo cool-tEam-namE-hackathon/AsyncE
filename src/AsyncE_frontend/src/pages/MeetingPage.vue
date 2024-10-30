@@ -3,38 +3,71 @@
         <!-- INPUT GROUP TITLE -->
         <base-dialog
             :open="isConfirmationModalOpen"
+            :is-closable="false"
             @on-close-dialog="toggleConfirmationModal"
+            class="rounded-lg shadow-xl max-w-md w-full"
         >
             <template #title>
-                <div>Confirm</div>
+                <h2 class="text-xl font-medium mb-2">Upload Video</h2>
             </template>
 
             <template #content>
-                <div class="space-y-3">
-                    <Label>Title</Label>
-                    <Input v-model="videoTitle" />
+                <div class="space-y-6">
+                    <div>
+                        <Label
+                            for="videoTitle"
+                            class="block text-sm font-medium mb-1"
+                        >
+                            Video Title
+                        </Label>
+                        <Input
+                            id="videoTitle"
+                            v-model="videoTitle"
+                            class="w-full px-3 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            placeholder="Enter video title"
+                        />
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <Label class="text-sm font-medium">
+                            Generate Subtitles
+                        </Label>
+                        <Switch v-model:checked="generateSubtitle" />
+                    </div>
+                    <div
+                        v-show="generateSubtitle"
+                        class="text-sm text-gray-500"
+                    >
+                        Generating subtitles will take some time depending on
+                        the video size.
+                    </div>
                 </div>
             </template>
 
             <template #footer>
-                <Button
-                    :disabled="isUploading || !videoTitle"
-                    :is-loading="isUploading"
-                    @click="saveRecording"
-                >
-                    <template #default> Upload Video </template>
-
-                    <template #loading>
-                        <Icon
-                            icon="prime:spinner"
-                            width="16"
-                            height="16"
-                            class="text-black animate-spin mr-1"
-                        />
-                        Uploading...
-                        {{ uploadVideoProgress.toFixed(0) }}%
-                    </template>
-                </Button>
+                <div class="flex justify-end space-x-3">
+                    <Button
+                        variant="secondary"
+                        @click="toggleConfirmationModal"
+                    >
+                        Cancel
+                    </Button>
+                    <Button
+                        :disabled="isUploading || !videoTitle"
+                        :is-loading="isUploading"
+                        @click="saveRecording"
+                    >
+                        <template #default> Upload Video </template>
+                        <template #loading>
+                            <Icon
+                                icon="prime:spinner"
+                                width="16"
+                                height="16"
+                                class="text-white animate-spin mr-1"
+                            />
+                            Uploading... {{ uploadVideoProgress.toFixed(0) }}%
+                        </template>
+                    </Button>
+                </div>
             </template>
         </base-dialog>
 
@@ -130,6 +163,7 @@ import VideoControls from "@components/video/VideoControls.vue";
 import { Button } from "@components/ui/button";
 import Input from "@components/ui/input/Input.vue";
 import Label from "@components/ui/label/Label.vue";
+import Switch from "@components/ui/switch/Switch.vue";
 
 import BaseDialog from "@components/shared/BaseDialog.vue";
 
@@ -137,7 +171,6 @@ import { fetchFile, toBlobURL } from "@ffmpeg/util";
 
 const route = useRoute();
 const groupStore = useGroupStore();
-const userStore = useUserStore();
 
 const ffmpeg = ref<FFmpeg>();
 
@@ -150,6 +183,7 @@ const url = ref<string>("");
 const isRecording = ref<boolean>(false);
 const isUploading = ref<boolean>(false);
 const isConfirmationModalOpen = ref<boolean>(false);
+const generateSubtitle = ref<boolean>(false);
 
 const recordedChunks = ref<Blob[]>([]);
 
@@ -198,11 +232,8 @@ function startRecording() {
     if (!displayCamera.value) return;
 
     const combinedStream = new MediaStream(displayCamera.value);
-    const options = {
-        mimeType: "video/webm",
-    };
 
-    mediaRecorder.value = new MediaRecorder(combinedStream, options);
+    mediaRecorder.value = new MediaRecorder(combinedStream);
     mediaRecorder.value.ondataavailable = (e) => {
         if (e.data.size > 0) {
             recordedChunks.value.push(e.data);
@@ -225,11 +256,9 @@ async function saveRecording() {
 
     const blob = new Blob(recordedChunks.value, { type: "video/webm" });
 
-    const mp4Video = await convertToMp4(blob);
+    const data = new Uint8Array(await blob.arrayBuffer());
 
-    const data = new Uint8Array(await mp4Video.arrayBuffer());
-
-    url.value = URL.createObjectURL(mp4Video);
+    url.value = URL.createObjectURL(blob);
 
     try {
         await groupStore.uploadVideo(
@@ -237,6 +266,7 @@ async function saveRecording() {
             route.params.groupId as string,
             route.params.meetingId as string,
             videoTitle.value,
+            generateSubtitle.value
         );
     } catch (e) {
         console.log((e as Error).message);

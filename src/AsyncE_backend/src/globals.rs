@@ -1,6 +1,7 @@
 use std::{
     cell::RefCell,
     collections::{BTreeMap, BTreeSet},
+    sync::Mutex,
 };
 
 use candid::Principal;
@@ -22,10 +23,13 @@ pub type VideoUploadStore = BTreeMap<String, Vec<u8>>;
 thread_local! {
     pub static USERS: RefCell<UserStore> = RefCell::default();
     pub static GROUPS: RefCell<GroupStore> = RefCell::default();
-    pub static MEETINGS: RefCell<MeetingStore> = RefCell::default();
     pub static GROUP_INVITES: RefCell<GroupInviteStore> = RefCell::default();
     pub static WEBSOCKET_CLIENTS: RefCell<WebSocketClientStore> = RefCell::default();
     pub static CHATS: RefCell<ChatStore> = RefCell::default();
     pub static PRIMARY_KEY_CONTAINERS: RefCell<PrimaryKeyContainer> = RefCell::default();
     pub static VIDEO_UPLOADS: RefCell<VideoUploadStore> = RefCell::default();
+}
+
+lazy_static::lazy_static! {
+    pub static ref MEETINGS: Mutex<MeetingStore> = Mutex::default();
 }

@@ -1,6 +1,6 @@
 <template>
     <div class="flex-1 py-8">
-        <div class="container mx-auto px-4">
+        <div class="container mx-auto">
             <div class="flex justify-between items-center mb-10">
                 <h1 class="text-2xl font-bold text-gray-900">Your Groups</h1>
                 <router-link to="/create-group">
@@ -44,6 +44,38 @@
                         </div>
                     </div>
                 </div>
+            </div>
+
+            <div
+                v-if="!groupList.length"
+                class="flex flex-col items-center justify-center bg-white shadow-md rounded-lg p-8"
+            >
+                <Icon
+                    icon="mdi-light:account-group"
+                    width="6rem"
+                    height="6rem"
+                    class="text-gray-400 mb-4"
+                />
+                <h2 class="text-2xl font-semibold text-gray-800 mb-2">
+                    No Groups Yet
+                </h2>
+                <p class="text-gray-600 mb-6 text-center">
+                    You haven't created or joined any groups yet. Start by
+                    creating a new group!
+                </p>
+                <router-link to="/create-group">
+                    <Button>
+                        <template #default>
+                            <Icon
+                                class="mr-2"
+                                icon="mdi-light:plus-circle"
+                                width="1.2rem"
+                                height="1.2rem"
+                            />
+                            Create New Group
+                        </template>
+                    </Button>
+                </router-link>
             </div>
         </div>
     </div>

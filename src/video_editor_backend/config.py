@@ -1,9 +1,9 @@
-enable_transcription_using_whisper = True
+enable_transcription_using_whisper = False
 subtitle_height_px = 100
 timestamp_chunk_duration_seconds = 5
 timestamp_chunk_duration_ms = timestamp_chunk_duration_seconds * 1000
 
-video_io_format_extension = "webm"
+video_io_format_extension = "mkv"
 image_output_format_extension = "jpeg"
 
 retrieve_video_chunk_size_bytes = int(1.8 * 1024 * 1024)

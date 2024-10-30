@@ -3,6 +3,7 @@
         <!-- INVITE USER DIALOG -->
         <base-dialog
             :open="isInviteUserDialogOpen"
+            :is-closable="true"
             @on-close-dialog="toggleInviteModal"
         >
             <template #title> Invite user </template>
@@ -67,8 +68,10 @@
             </template>
         </base-dialog>
 
+        <!-- CREATE MEETING DIALOG -->
         <base-dialog
             :open="isCreateMeetingDialogOpen"
+            :is-closable="true"
             @on-close-dialog="toggleCreateMeetingDialog"
         >
             <template #title> Create New Meeting </template>
@@ -98,12 +101,16 @@
             </template>
         </base-dialog>
 
-        <div class="flex gap-3 h-full">
-            <div class="flex-1 flex flex-col border rounded-md p-4">
-                <div class="flex justify-between items-center mb-4">
+        <!-- Main Content -->
+        <div class="flex flex-col md:flex-row gap-6 h-full">
+            <!-- MEETING LIST SECTION -->
+            <div
+                class="flex-1 flex flex-col border rounded-md p-6 shadow-sm w-full"
+            >
+                <div class="flex justify-between items-center mb-6">
                     <h2 class="text-xl font-bold">List of meetings</h2>
                     <Button
-                        class="text-white rounded-full flex items-center gap-3"
+                        class="rounded-full"
                         @click="toggleCreateMeetingDialog"
                     >
                         <Icon
@@ -118,52 +125,46 @@
                 <div
                     v-for="(meeting, index) in meetingList"
                     :key="index"
-                    class="bg-gray-50 p-3 rounded-lg hover:bg-gray-100 transition duration-200 ease-in-out mb-3"
+                    class="bg-gray-50 p-4 rounded-lg hover:bg-gray-100 transition duration-200 ease-in-out cursor-pointer mb-4 shadow-sm"
                     @click="goToMeetingPage(meeting.id.toString())"
                 >
                     <span class="font-semibold">{{ meeting.title }}</span>
                 </div>
             </div>
 
-            <div class="flex flex-col gap-3 w-1/4 h-full">
-                <div class="flex flex-col border rounded-md p-4 h-1/4">
-                    <div class="rounded-lg mb-4">
-                        <div class="flex justify-between items-center mb-4">
-                            <div class="flex items-center">
-                                <h2 class="text-xl font-bold">List of users</h2>
-                            </div>
-                            <Button
-                                class="text-white p-2 rounded-full"
-                                @click="toggleInviteModal"
-                            >
-                                <Icon
-                                    icon="mdi:invite"
-                                    width="24"
-                                    height="24"
-                                    class="text-white"
-                                />
-                            </Button>
-                        </div>
+            <!-- USER LIST AND CHAT SECTION -->
+            <div class="flex flex-col gap-6 w-full md:w-1/4 h-full">
+                <!-- USER LIST -->
+                <div
+                    class="flex flex-col border rounded-md p-6 h-2/5 shadow-sm"
+                >
+                    <div class="flex justify-between items-center mb-4">
+                        <h2 class="text-xl font-bold">List of users</h2>
+                        <Button class="rounded-full" @click="toggleInviteModal">
+                            <Icon
+                                icon="mdi:invite"
+                                width="24"
+                                height="24"
+                                class="text-white"
+                            />
+                        </Button>
+                    </div>
+                    <div class="overflow-auto h-full space-y-3">
                         <div
                             v-for="(user, index) in currentGroup?.users"
                             :key="index"
-                            class="mb-2"
                         >
                             <div
-                                class="p-2 bg-gray-50 hover:bg-gray-100 transition duration-200 ease-in-out rounded-md text-sm"
+                                class="p-2 bg-gray-50 hover:bg-gray-100 transition duration-200 ease-in-out rounded-md text-sm shadow-sm"
                             >
                                 {{ user }}
                             </div>
                         </div>
-                        <!-- <div
-                            class="max-h-60 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-gray-800"
-                        >
-                            No users
-                        </div> -->
                     </div>
                 </div>
 
-                <div class="h-3/4">
+                <!-- CHAT WINDOW -->
+                <div class="h-3/5 shadow-sm">
                     <meeting-chat-window />
                 </div>
             </div>

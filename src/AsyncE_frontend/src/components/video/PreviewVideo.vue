@@ -1,5 +1,5 @@
 <template>
-    <base-dialog :open="dialogValue" @on-close-dialog="closePreviewDialog">
+    <!-- <base-dialog :open="dialogValue" @on-close-dialog="closePreviewDialog">
         <template #title>
             <span>{{ video.title }}</span>
         </template>
@@ -7,7 +7,8 @@
         <template #content>
             <video :src="url" class="rounded-md" autoplay />
         </template>
-    </base-dialog>
+    </base-dialog> -->
+    <div></div>
 </template>
 x
 

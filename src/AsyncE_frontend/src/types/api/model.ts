@@ -60,6 +60,7 @@ interface VideoList {
 interface BaseDialogProps {
     open?: boolean;
     hideCloseButton?: boolean;
+    isClosable: boolean;
 }
 
 interface DropdownOptions {
