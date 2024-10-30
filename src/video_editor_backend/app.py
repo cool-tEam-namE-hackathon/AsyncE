@@ -1,6 +1,5 @@
 import concurrent.futures
 import os
-import tempfile
 
 import config
 from concat import concat_videos
