@@ -63,10 +63,10 @@ struct ChunkInfoResponse {
     file_size: usize,
 }
 
-pub fn map_response_body_to_err<T>(response: HttpResponse) -> Result<T, String> {
+pub fn map_response_body_to_err<T>(url: &str, response: HttpResponse) -> Result<T, String> {
     let unk = format!("Unknown error: {:?}", response.body);
     let body_str = String::from_utf8(response.body).unwrap_or(unk);
-    let body_str = format!("HTTP calls error: {}", body_str);
+    let body_str = format!("HTTP calls error: {} {} {}", url, response.status, body_str);
 
     Err(body_str)
 }
@@ -103,7 +103,7 @@ pub async fn send_post_request(
 }
 
 pub async fn send_process_subtitles_request(body: Vec<u8>) -> Result<String, String> {
-    let uuid_response = send_post_request("http://localhost:5555/subtitles/start", Vec::new())
+    let uuid_response = send_post_request("http://localhost:17191/subtitles/start", Vec::new())
         .await
         .map_err(|(code, body)| {
             format!(
@@ -113,7 +113,7 @@ pub async fn send_process_subtitles_request(body: Vec<u8>) -> Result<String, Str
         })?;
 
     if uuid_response.status != *HTTP_OK {
-        return map_response_body_to_err(uuid_response);
+        return map_response_body_to_err("subtitles.start", uuid_response);
     }
 
     let uuid = String::from_utf8(uuid_response.body).map_err(|_| {
@@ -124,16 +124,16 @@ pub async fn send_process_subtitles_request(body: Vec<u8>) -> Result<String, Str
     let chunk_len = chunks.len();
     for (i, chunk) in chunks.into_iter().enumerate() {
         let url = if i == chunk_len - 1 {
-            format!("http://localhost:5555/subtitles/{}/end", uuid)
+            format!("http://localhost:17191/subtitles/{}/end", uuid)
         } else {
-            format!("http://localhost:5555/subtitles/{}/add", uuid)
+            format!("http://localhost:17191/subtitles/{}/add", uuid)
         };
 
-        let response = send_post_request(url, chunk.to_vec())
+        let response = send_post_request(&url, chunk.to_vec())
             .await
             .map_err(|_| String::from("Failed to send HTTP request for processing subtitle.add"))?;
         if response.status != *HTTP_OK {
-            return map_response_body_to_err(response);
+            return map_response_body_to_err(&url, response);
         }
     }
 
@@ -141,7 +141,7 @@ pub async fn send_process_subtitles_request(body: Vec<u8>) -> Result<String, Str
 }
 
 pub async fn send_thumbnail_request(body: Vec<u8>) -> Result<Vec<u8>, String> {
-    let uuid_response = send_post_request("http://localhost:5555/thumbnail/start", Vec::new())
+    let uuid_response = send_post_request("http://localhost:17191/thumbnail/start", Vec::new())
         .await
         .map_err(|err| {
             format!(
@@ -150,7 +150,7 @@ pub async fn send_thumbnail_request(body: Vec<u8>) -> Result<Vec<u8>, String> {
             )
         })?;
     if uuid_response.status != *HTTP_OK {
-        return map_response_body_to_err(uuid_response);
+        return map_response_body_to_err("thumbnail.start", uuid_response);
     }
 
     let uuid = String::from_utf8(uuid_response.body)
@@ -158,22 +158,22 @@ pub async fn send_thumbnail_request(body: Vec<u8>) -> Result<Vec<u8>, String> {
 
     let chunks = body.chunks(chunk::MB).collect::<Vec<_>>();
     for chunk in chunks.into_iter() {
-        let url = format!("http://localhost:5555/thumbnail/{}/add", uuid);
+        let url = format!("http://localhost:17191/thumbnail/{}/add", uuid);
 
         let response = send_post_request(url, chunk.to_vec()).await.map_err(|_| {
             String::from("Failed to send HTTP request for processing thumbnail.add")
         })?;
         if response.status != *HTTP_OK {
-            return map_response_body_to_err(response);
+            return map_response_body_to_err("thumbnail.add", response);
         }
     }
 
-    let url = format!("http://localhost:5555/thumbnail/{}/end", uuid);
+    let url = format!("http://localhost:17191/thumbnail/{}/end", uuid);
     let response = send_post_request(url, Vec::new())
         .await
         .map_err(|_| String::from("Failed to send HTTP request for processing thumbnail.end"))?;
     if response.status != *HTTP_OK {
-        return map_response_body_to_err(response);
+        return map_response_body_to_err("thumbnail.end", response);
     }
 
     Ok(response.body)
@@ -185,11 +185,11 @@ pub async fn send_concat_video_request(
     video1: Vec<u8>,
     video2: Vec<u8>,
 ) -> Result<(), String> {
-    let uuid_response = send_post_request("http://localhost:5555/concat/start", Vec::new())
+    let uuid_response = send_post_request("http://localhost:17191/concat/start", Vec::new())
         .await
         .map_err(|_| String::from("Failed to send HTTP request for processing concat"))?;
     if uuid_response.status != *HTTP_OK {
-        return map_response_body_to_err(uuid_response);
+        return map_response_body_to_err("concat.start", uuid_response);
     }
 
     let uuid = String::from_utf8(uuid_response.body)
@@ -197,13 +197,13 @@ pub async fn send_concat_video_request(
 
     let chunks = video1.chunks(chunk::MB);
     for chunk in chunks.into_iter() {
-        let url = format!("http://localhost:5555/concat/{}/add", uuid);
+        let url = format!("http://localhost:17191/concat/{}/add", uuid);
 
         let response = send_post_request(url, chunk.to_vec())
             .await
             .map_err(|_| String::from("Failed to send HTTP request for processing concat.add"))?;
         if response.status != *HTTP_OK {
-            return map_response_body_to_err(response);
+            return map_response_body_to_err("concat.add", response);
         }
     }
 
@@ -211,18 +211,18 @@ pub async fn send_concat_video_request(
     let chunk_len = chunks.len();
     for (i, chunk) in chunks.into_iter().enumerate() {
         let url = if i == chunk_len - 1 {
-            format!("http://localhost:5555/concat/{}/end", uuid)
+            format!("http://localhost:17191/concat/{}/end", uuid)
         } else if i == 0 {
-            format!("http://localhost:5555/concat/{}/new", uuid)
+            format!("http://localhost:17191/concat/{}/new", uuid)
         } else {
-            format!("http://localhost:5555/concat/{}/add", uuid)
+            format!("http://localhost:17191/concat/{}/add", uuid)
         };
 
-        let response = send_post_request(url, chunk.to_vec())
+        let response = send_post_request(&url, chunk.to_vec())
             .await
             .map_err(|_| String::from("Failed to send HTTP request for processing concat.add"))?;
         if response.status != *HTTP_OK {
-            return map_response_body_to_err(response);
+            return map_response_body_to_err(&url, response);
         }
     }
 
@@ -236,12 +236,12 @@ pub async fn send_concat_video_request(
 }
 
 pub async fn get_processed_video_subtitles(uuid: &str) -> Result<Option<Vec<u8>>, String> {
-    let url = format!("http://localhost:5555/subtitles/{}", uuid);
+    let url = format!("http://localhost:17191/subtitles/{}", uuid);
     let uuid_response = send_get_request(url).await.map_err(|_| {
         String::from("Failed to send HTTP request for getting processed video subtitles")
     })?;
     if uuid_response.status != *HTTP_OK {
-        return Ok(None);
+        return map_response_body_to_err("subtitles.get", uuid_response);
     }
 
     let response = serde_json::from_slice::<ChunkInfoResponse>(&uuid_response.body)
@@ -249,13 +249,13 @@ pub async fn get_processed_video_subtitles(uuid: &str) -> Result<Option<Vec<u8>>
 
     let mut data = Vec::with_capacity(response.file_size);
     for i in 0..response.chunk_count {
-        let url = format!("http://localhost:5555/subtitles/{}/{}", uuid, i);
+        let url = format!("http://localhost:17191/subtitles/{}/{}", uuid, i);
         let response = send_get_request(url).await.map_err(|_| {
             String::from("Failed to send HTTP request for getting processed video subtitles chunk")
         })?;
 
         if response.status != *HTTP_OK {
-            return Ok(None);
+            return map_response_body_to_err("subtitles.get.i", response);
         }
 
         data.extend(response.body);
@@ -265,12 +265,12 @@ pub async fn get_processed_video_subtitles(uuid: &str) -> Result<Option<Vec<u8>>
 }
 
 pub async fn get_processed_video_concat(uuid: &str) -> Result<Option<Vec<u8>>, String> {
-    let url = format!("http://localhost:5555/concat/{}", uuid);
+    let url = format!("http://localhost:17191/concat/{}", uuid);
     let uuid_response = send_get_request(url).await.map_err(|_| {
         String::from("Failed to send HTTP request for getting processed video concat")
     })?;
     if uuid_response.status != *HTTP_OK {
-        return Ok(None);
+        return map_response_body_to_err("concat.get", uuid_response);
     }
 
     let response = serde_json::from_slice::<ChunkInfoResponse>(&uuid_response.body)
@@ -278,13 +278,13 @@ pub async fn get_processed_video_concat(uuid: &str) -> Result<Option<Vec<u8>>, S
 
     let mut data = Vec::with_capacity(response.file_size);
     for i in 0..response.chunk_count {
-        let url = format!("http://localhost:5555/concat/{}/{}", uuid, i);
+        let url = format!("http://localhost:17191/concat/{}/{}", uuid, i);
         let response = send_get_request(url).await.map_err(|_| {
             String::from("Failed to send HTTP request for getting processed video concat chunk")
         })?;
 
         if response.status != *HTTP_OK {
-            return Ok(None);
+            return map_response_body_to_err("concat.get.i", uuid_response);
         }
 
         data.extend(response.body);

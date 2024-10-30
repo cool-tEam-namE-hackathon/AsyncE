@@ -137,10 +137,10 @@
         </div>
     </div>
 
-    <!-- <video v-if="url" autoplay muted controls>
+    <video v-if="url" autoplay muted controls>
         <source :src="url" type="video/mp4" />
         Your browser does not support the video tag.
-    </video> -->
+    </video>
 </template>
 
 <script setup lang="ts">
@@ -232,11 +232,8 @@ function startRecording() {
     if (!displayCamera.value) return;
 
     const combinedStream = new MediaStream(displayCamera.value);
-    const options = {
-        mimeType: "video/webm",
-    };
 
-    mediaRecorder.value = new MediaRecorder(combinedStream, options);
+    mediaRecorder.value = new MediaRecorder(combinedStream);
     mediaRecorder.value.ondataavailable = (e) => {
         if (e.data.size > 0) {
             recordedChunks.value.push(e.data);

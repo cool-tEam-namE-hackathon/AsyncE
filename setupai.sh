@@ -1,5 +1,5 @@
 #!/bin/bash
 
-python3 -m env .venv
+python3.12 -m venv .venv
 source .venv/bin/activate
-pip install -r src/video_editor_backend/requirements.txt
+python3.12 -m pip install -r src/video_editor_backend/requirements.txt

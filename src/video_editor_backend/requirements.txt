@@ -6,4 +6,4 @@ speechrecognition
 pocketsphinx
 vosk
 soundfile
-openai-whisper
+ 

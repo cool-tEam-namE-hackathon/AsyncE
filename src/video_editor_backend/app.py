@@ -220,4 +220,4 @@ def create_thumbnail_from_video(id: str) -> Response:
 
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(port=17191,debug=True)
