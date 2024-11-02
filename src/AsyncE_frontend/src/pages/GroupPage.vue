@@ -97,7 +97,7 @@
                             <h2 class="text-xl font-semibold">
                                 Record New Video
                             </h2>
-                            <video-controls
+                            <VideoControls
                                 v-model:selectedCamera="selectedCamera"
                                 :camera-list="cameraList"
                                 :enabled-camera="enabledCamera"
@@ -218,7 +218,6 @@ const route = useRoute();
 const groupStore = useGroupStore();
 const userStore = useUserStore();
 
-const selectedCamera = ref<string>();
 const uploadedChunk = ref<{
     screen: number;
     camera: number;
@@ -255,12 +254,13 @@ const { videoInputs: cameras, audioInputs: microphones } = useDevicesList({
     requestPermissions: true,
 });
 
+const selectedCamera = computed(() => cameras.value[0]?.deviceId);
 const currentMicrophone = computed(() => microphones.value[0]?.deviceId);
 
 const { stream: displayCamera, enabled: enabledCamera } = useUserMedia({
     constraints: {
-        video: { deviceId: selectedCamera },
-        audio: { deviceId: currentMicrophone },
+        video: { deviceId: selectedCamera.value },
+        audio: { deviceId: currentMicrophone.value },
     },
 });
 
@@ -269,10 +269,12 @@ const isRecordingDisabled = computed(() => {
 });
 
 const cameraList = computed(() => {
-    return cameras.value.map(({ label, deviceId }) => ({
-        deviceId,
-        name: label,
-    }));
+    return cameras.value
+        .filter(({ deviceId }) => deviceId !== "")
+        .map(({ label, deviceId }) => ({
+            deviceId,
+            name: label,
+        }));
 });
 
 const recordingPhaseText = computed(() => {

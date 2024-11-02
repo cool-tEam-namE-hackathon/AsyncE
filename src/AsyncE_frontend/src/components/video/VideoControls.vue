@@ -1,10 +1,10 @@
 <template>
     <div class="flex gap-3">
-        <base-select
+        <BaseSelect
             class="w-[100px]"
             v-model="selectedCamera"
             placeholder="Select camera"
-            :options="cameraList"
+            :options="props.cameraList"
         />
         <Button
             :variant="enabledCamera ? 'default' : 'outline'"
@@ -52,11 +52,8 @@
 <script setup lang="ts">
 import { computed } from "vue";
 import { VideoControlProps } from "@/types/api/model";
-
 import { Icon } from "@iconify/vue";
-
 import { Button } from "@ui/button";
-
 import BaseSelect from "@shared/BaseSelect.vue";
 
 const props = defineProps<VideoControlProps>();
