@@ -1,7 +1,8 @@
-import globals from "globals";
 import pluginJs from "@eslint/js";
-import tseslint from "typescript-eslint";
+import pluginImport from "eslint-plugin-import";
 import pluginVue from "eslint-plugin-vue";
+import globals from "globals";
+import tseslint from "typescript-eslint";
 
 export default [
     { files: ["**/*.{js,mjs,cjs,ts,vue}"] },
@@ -14,6 +15,29 @@ export default [
         languageOptions: { parserOptions: { parser: tseslint.parser } },
         rules: {
             "vue/multi-word-component-names": 0,
+        },
+    },
+    {
+        // Configuration for sorting imports
+        files: ["**/*.{js,mjs,cjs,ts,vue}"],
+        plugins: {
+            import: pluginImport,
+        },
+        rules: {
+            "import/order": [
+                "error",
+                {
+                    groups: [
+                        "external",
+                        "builtin",
+                        "internal",
+                        "sibling",
+                        "parent",
+                        "index",
+                    ],
+                    alphabetize: { order: "asc", caseInsensitive: true },
+                },
+            ],
         },
     },
 ];

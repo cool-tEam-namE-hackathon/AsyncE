@@ -45,7 +45,7 @@ export default defineConfig({
                 global: "globalThis",
             },
         },
-        exclude: ['@ffmpeg/ffmpeg', '@ffmpeg/util'],
+        exclude: ["@ffmpeg/ffmpeg", "@ffmpeg/util"],
     },
     server: {
         proxy: {

@@ -184,35 +184,26 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watchEffect, computed } from "vue";
-
-import { FFmpeg } from "@ffmpeg/ffmpeg";
-
-import type { LogEvent } from "@ffmpeg/ffmpeg/dist/esm/types";
-
-import { useRoute } from "vue-router";
-import { useUserStore } from "@stores/user-store";
-import { useGroupStore } from "@stores/group-store";
-import { storeToRefs } from "pinia";
-
-import { useUserMedia, useDevicesList, useDebounceFn } from "@vueuse/core";
-
-import { Icon } from "@iconify/vue";
-
-import VideoControls from "@components/video/VideoControls.vue";
 import ChatWindow from "@components/chat/ChatWindow.vue";
-
+import BaseDialog from "@components/shared/BaseDialog.vue";
+import BaseProgress from "@components/shared/BaseProgress.vue";
 import { Button } from "@components/ui/button";
 import Input from "@components/ui/input/Input.vue";
 import Label from "@components/ui/label/Label.vue";
-
-import BaseDialog from "@components/shared/BaseDialog.vue";
-import BaseProgress from "@components/shared/BaseProgress.vue";
-
-import { RecordedChunks } from "@/types/api/model";
-import { generateUUID, createChunks } from "@/utils/helpers";
-import { MB } from "@/data/user-constants";
+import VideoControls from "@components/video/VideoControls.vue";
+import { FFmpeg } from "@ffmpeg/ffmpeg";
+import type { LogEvent } from "@ffmpeg/ffmpeg/dist/esm/types";
 import { fetchFile, toBlobURL } from "@ffmpeg/util";
+import { Icon } from "@iconify/vue";
+import { useGroupStore } from "@stores/group-store";
+import { useUserStore } from "@stores/user-store";
+import { useDebounceFn, useDevicesList, useUserMedia } from "@vueuse/core";
+import { storeToRefs } from "pinia";
+import { computed, ref, watchEffect } from "vue";
+import { useRoute } from "vue-router";
+import { MB } from "@/data/user-constants";
+import { RecordedChunks } from "@/types/api/model";
+import { createChunks, generateUUID } from "@/utils/helpers";
 
 const route = useRoute();
 const groupStore = useGroupStore();

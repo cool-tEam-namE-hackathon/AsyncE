@@ -49,9 +49,8 @@ export const useGroupStore = defineStore("group", () => {
     }
 
     async function fetchGroupProfilePicture(groupId: bigint) {
-        const response = await actor.value?.get_group_profile_picture_size(
-            groupId,
-        );
+        const response =
+            await actor.value?.get_group_profile_picture_size(groupId);
         const profilePictureSize = Number(validateResponse(response));
         const profilePictureData = new Uint8Array(profilePictureSize);
 
@@ -168,7 +167,7 @@ export const useGroupStore = defineStore("group", () => {
                 (totalBytesUploaded / data.length) * 100;
         }
 
-        console.log("all good")
+        console.log("all good");
     }
 
     async function inviteUser(id: bigint, name: string) {

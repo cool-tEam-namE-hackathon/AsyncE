@@ -19,8 +19,8 @@ export const useWebsocketStore = defineStore("websocket", () => {
 
     const ws = ref<IcWebSocket<_SERVICE, WebsocketEventMessage>>();
 
-    let onGroupInvited = (group: GroupInviteResponse) => { };
-    let onChatReceive = (chat: Chat) => { };
+    let onGroupInvited = (group: GroupInviteResponse) => {};
+    let onChatReceive = (chat: Chat) => {};
 
     function sendMessage(chat: Chat) {
         if (ws.value) {
@@ -86,7 +86,7 @@ export const useWebsocketStore = defineStore("websocket", () => {
                 reject(null);
             };
 
-            setTimeout(resolve, 3000)
+            setTimeout(resolve, 3000);
         });
     }
 
