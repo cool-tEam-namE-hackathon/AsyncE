@@ -1,6 +1,6 @@
 <template>
     <div class="container m-auto px-4">
-        <div class="bg-white shadow-md rounded-lg p-6 w-full max-w-2xl mx-auto">
+        <div class="mx-auto w-full max-w-2xl rounded-lg bg-white p-6 shadow-md">
             <div class="mb-6">
                 <h1 class="text-2xl font-bold text-gray-900">
                     Create a New Group
@@ -39,7 +39,7 @@
                             icon="prime:spinner"
                             width="16"
                             height="16"
-                            class="text-white animate-spin mr-1"
+                            class="mr-1 animate-spin text-white"
                         />
                         Creating Group...
                     </template>
@@ -50,19 +50,14 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from "vue";
-
-import { useRouter } from "vue-router";
-
-import { useGroupStore } from "@stores/group-store";
-
-import { fileToBlob } from "@/utils/helpers";
-
-import { Icon } from "@iconify/vue";
-
+import Button from "@components/ui/button/Button.vue";
 import Input from "@components/ui/input/Input.vue";
 import Label from "@components/ui/label/Label.vue";
-import Button from "@components/ui/button/Button.vue";
+import { Icon } from "@iconify/vue";
+import { useGroupStore } from "@stores/group-store";
+import { ref, computed } from "vue";
+import { useRouter } from "vue-router";
+import { fileToBlob } from "@/utils/helpers";
 
 const router = useRouter();
 const groupStore = useGroupStore();

@@ -1,5 +1,5 @@
 <template>
-    <header class="container py-4 flex items-center">
+    <header class="container flex items-center py-4">
         <!-- NAVBAR -->
         <router-link to="/" class="flex items-center justify-center">
             <Icon icon="mynaui:globe" width="24" height="24" />
@@ -8,7 +8,7 @@
             <!-- NOT AUTHENTICATED -->
             <button
                 v-if="!isAuthenticated || !username"
-                class="text-sm font-medium hover:underline underline-offset-4"
+                class="text-sm font-medium underline-offset-4 hover:underline"
                 @click="login"
             >
                 Login
@@ -46,19 +46,13 @@
     </header>
 </template>
 <script setup lang="ts">
-import { storeToRefs } from "pinia";
-
-import { useUserStore } from "@stores/user-store";
-
-import { USER_DROPDOWN_OPTIONS } from "@data/user-constants";
-
 import NavbarNotification from "@components/navbar/NavbarNotification.vue";
-
-import BaseDropdown from "@shared/BaseDropdown.vue";
-
-import { Icon } from "@iconify/vue";
-
 import { Avatar, AvatarFallback, AvatarImage } from "@components/ui/avatar";
+import { USER_DROPDOWN_OPTIONS } from "@data/user-constants";
+import { Icon } from "@iconify/vue";
+import BaseDropdown from "@shared/BaseDropdown.vue";
+import { useUserStore } from "@stores/user-store";
+import { storeToRefs } from "pinia";
 
 const userStore = useUserStore();
 

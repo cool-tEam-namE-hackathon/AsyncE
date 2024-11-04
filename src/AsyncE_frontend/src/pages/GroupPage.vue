@@ -1,5 +1,5 @@
 <template>
-    <div class="container mt-10 rounded-lg h-full mb-6">
+    <div class="container mb-6 mt-10 h-full rounded-lg">
         <!-- INVITE USER DIALOG -->
         <base-dialog
             :open="isInviteUserDialogOpen"
@@ -60,7 +60,7 @@
                             icon="prime:spinner"
                             width="16"
                             height="16"
-                            class="text-black animate-spin mr-1"
+                            class="mr-1 animate-spin text-black"
                         />
                         Inviting...
                     </template>
@@ -93,7 +93,7 @@
                             icon="prime:spinner"
                             width="16"
                             height="16"
-                            class="text-black animate-spin mr-1"
+                            class="mr-1 animate-spin text-black"
                         />
                         Creating...
                     </template>
@@ -102,12 +102,12 @@
         </base-dialog>
 
         <!-- Main Content -->
-        <div class="flex flex-col md:flex-row gap-6 h-full">
+        <div class="flex h-full flex-col gap-6 md:flex-row">
             <!-- MEETING LIST SECTION -->
             <div
-                class="flex-1 flex flex-col border rounded-md p-6 shadow-sm w-full"
+                class="flex w-full flex-1 flex-col rounded-md border p-6 shadow-sm"
             >
-                <div class="flex justify-between items-center mb-6">
+                <div class="mb-6 flex items-center justify-between">
                     <h2 class="text-xl font-bold">List of meetings</h2>
                     <Button
                         class="rounded-full"
@@ -125,7 +125,7 @@
                 <div
                     v-for="(meeting, index) in meetingList"
                     :key="index"
-                    class="bg-gray-50 p-4 rounded-lg hover:bg-gray-100 transition duration-200 ease-in-out cursor-pointer mb-4 shadow-sm"
+                    class="mb-4 cursor-pointer rounded-lg bg-gray-50 p-4 shadow-sm transition duration-200 ease-in-out hover:bg-gray-100"
                     @click="goToMeetingPage(meeting.id.toString())"
                 >
                     <span class="font-semibold">{{ meeting.title }}</span>
@@ -133,12 +133,12 @@
             </div>
 
             <!-- USER LIST AND CHAT SECTION -->
-            <div class="flex flex-col gap-6 w-full md:w-1/4 h-full">
+            <div class="flex h-full w-full flex-col gap-6 md:w-1/4">
                 <!-- USER LIST -->
                 <div
-                    class="flex flex-col border rounded-md p-6 h-2/5 shadow-sm"
+                    class="flex h-2/5 flex-col rounded-md border p-6 shadow-sm"
                 >
-                    <div class="flex justify-between items-center mb-4">
+                    <div class="mb-4 flex items-center justify-between">
                         <h2 class="text-xl font-bold">List of users</h2>
                         <Button class="rounded-full" @click="toggleInviteModal">
                             <Icon
@@ -149,13 +149,13 @@
                             />
                         </Button>
                     </div>
-                    <div class="overflow-auto h-full space-y-3">
+                    <div class="h-full space-y-3 overflow-auto">
                         <div
                             v-for="(user, index) in currentGroup?.members"
                             :key="index"
                         >
                             <div
-                                class="p-2 bg-gray-50 hover:bg-gray-100 transition duration-200 ease-in-out rounded-md text-sm shadow-sm"
+                                class="rounded-md bg-gray-50 p-2 text-sm shadow-sm transition duration-200 ease-in-out hover:bg-gray-100"
                             >
                                 {{ user.username }} ({{ user.role }})
                             </div>
@@ -173,22 +173,17 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from "vue";
-
-import { storeToRefs } from "pinia";
-
-import { useDebounceFn } from "@vueuse/core";
-
-import { useRoute, useRouter } from "vue-router";
-import { useUserStore } from "@stores/user-store";
-import { useGroupStore } from "@stores/group-store";
-
-import { Icon } from "@iconify/vue";
-import { Button } from "@components/ui/button";
-import { Input } from "@components/ui/input";
-
 import MeetingChatWindow from "@components/Meeting/MeetingChatWindow.vue";
 import BaseDialog from "@components/shared/BaseDialog.vue";
+import { Button } from "@components/ui/button";
+import { Input } from "@components/ui/input";
+import { Icon } from "@iconify/vue";
+import { useGroupStore } from "@stores/group-store";
+import { useUserStore } from "@stores/user-store";
+import { useDebounceFn } from "@vueuse/core";
+import { storeToRefs } from "pinia";
+import { ref, computed } from "vue";
+import { useRoute, useRouter } from "vue-router";
 
 const route = useRoute();
 const router = useRouter();

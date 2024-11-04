@@ -1,5 +1,3 @@
-import { createRouter, createWebHistory } from "vue-router";
-
 import {
     Home,
     CreateGroup,
@@ -8,6 +6,7 @@ import {
     MeetingPage,
     NotFoundPage,
 } from "@lazy-loading-routes";
+import { createRouter, createWebHistory } from "vue-router";
 
 const routes = [
     {

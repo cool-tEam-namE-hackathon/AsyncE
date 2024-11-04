@@ -1,13 +1,13 @@
 <template>
     <div
-        class="bg-gray-100 flex flex-col justify-center items-center px-4 h-full"
+        class="flex h-full flex-col items-center justify-center bg-gray-100 px-4"
     >
         <div class="text-center">
             <h1 class="text-9xl font-bold text-gray-800">404</h1>
-            <h2 class="text-4xl font-semibold text-gray-600 mt-4">
+            <h2 class="mt-4 text-4xl font-semibold text-gray-600">
                 Page Not Found
             </h2>
-            <p class="text-lg text-gray-500 mt-4 mb-8">
+            <p class="mb-8 mt-4 text-lg text-gray-500">
                 Oops! The page you're looking for doesn't exist.
             </p>
             <Button
@@ -33,11 +33,9 @@
 </template>
 
 <script setup lang="ts">
-import { useRouter } from "vue-router";
-
-import { Icon } from "@iconify/vue";
-
 import { Button } from "@components/ui/button";
+import { Icon } from "@iconify/vue";
+import { useRouter } from "vue-router";
 
 const router = useRouter();
 </script>

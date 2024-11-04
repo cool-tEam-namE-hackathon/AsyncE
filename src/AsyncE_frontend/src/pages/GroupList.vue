@@ -1,7 +1,7 @@
 <template>
     <div class="flex-1 py-8">
         <div class="container mx-auto">
-            <div class="flex justify-between items-center mb-10">
+            <div class="mb-10 flex items-center justify-between">
                 <h1 class="text-2xl font-bold text-gray-900">Your Groups</h1>
                 <router-link to="/create-group">
                     <Button>
@@ -18,25 +18,25 @@
                 </router-link>
             </div>
 
-            <div class="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6">
+            <div class="grid grid-cols-3 gap-6 md:grid-cols-4 lg:grid-cols-5">
                 <div
                     v-for="(group, index) in groupList"
                     :key="index"
-                    class="flex flex-col bg-white shadow-md rounded-lg overflow-hidden cursor-pointer"
+                    class="flex cursor-pointer flex-col overflow-hidden rounded-lg bg-white shadow-md"
                     @click="router.push(`/group/${group.id}`)"
                 >
                     <img
-                        class="flex-1 object-cover w-full h-auto"
+                        class="h-auto w-full flex-1 object-cover"
                         :src="blobToURL(group.profile_picture_blob)"
                     />
                     <div class="p-4">
-                        <h2 class="text-xl font-semibold text-gray-800 mb-2">
+                        <h2 class="mb-2 text-xl font-semibold text-gray-800">
                             {{ group.name }}
                         </h2>
-                        <p class="text-gray-600 mb-4">
+                        <p class="mb-4 text-gray-600">
                             {{ group.members.length }} members
                         </p>
-                        <div class="flex justify-between items-center">
+                        <div class="flex items-center justify-between">
                             <Button> View Group </Button>
                         </div>
                     </div>
@@ -45,18 +45,18 @@
 
             <div
                 v-if="!groupList.length"
-                class="flex flex-col items-center justify-center bg-gray-100 shadow-md rounded-xl p-10 mt-10 border border-gray-300 text-center"
+                class="mt-10 flex flex-col items-center justify-center rounded-xl border border-gray-300 bg-gray-100 p-10 text-center shadow-md"
             >
                 <Icon
                     icon="mdi-light:account-group"
                     width="5rem"
                     height="5rem"
-                    class="text-gray-500 mb-6"
+                    class="mb-6 text-gray-500"
                 />
-                <h2 class="text-3xl font-semibold text-gray-900 mb-3">
+                <h2 class="mb-3 text-3xl font-semibold text-gray-900">
                     No Groups Found
                 </h2>
-                <p class="text-gray-700 mb-8 max-w-lg">
+                <p class="mb-8 max-w-lg text-gray-700">
                     Looks like you haven’t created or joined any groups yet.
                     Start your journey by creating a new group and connecting
                     with others!
@@ -79,15 +79,11 @@
     </div>
 </template>
 <script setup lang="ts">
-import { storeToRefs } from "pinia";
-
-import { useRouter } from "vue-router";
-import { useGroupStore } from "@stores/group-store";
-
-import { Icon } from "@iconify/vue";
-
 import { Button } from "@components/ui/button";
-
+import { Icon } from "@iconify/vue";
+import { useGroupStore } from "@stores/group-store";
+import { storeToRefs } from "pinia";
+import { useRouter } from "vue-router";
 import { blobToURL } from "@/utils/helpers";
 
 const router = useRouter();

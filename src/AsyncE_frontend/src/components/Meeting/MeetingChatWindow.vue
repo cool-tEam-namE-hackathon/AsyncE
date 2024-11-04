@@ -1,6 +1,6 @@
 <template>
-    <div class="flex flex-col bg-white border rounded-lg mb-3 h-full">
-        <div class="flex items-center p-4 gap-1">
+    <div class="mb-3 flex h-full flex-col rounded-lg border bg-white">
+        <div class="flex items-center gap-1 p-4">
             <Icon icon="ci:chat" width="24" height="24" class="text-black" />
             <h1>Chat</h1>
         </div>
@@ -11,10 +11,10 @@
                 :key="index"
                 :class="[
                     message.username === username ? 'text-right' : 'text-left',
-                    'space-y-1 mb-2',
+                    'mb-2 space-y-1',
                 ]"
             >
-                <div class="text-xs text-gray-400 mt-2">
+                <div class="mt-2 text-xs text-gray-400">
                     {{ message.username }}
                 </div>
                 <span
@@ -22,7 +22,7 @@
                         message.username === username
                             ? 'bg-black text-white'
                             : 'bg-gray-200 text-black',
-                        'inline-block p-2 rounded-md text-sm max-w-[80%] break-words',
+                        'inline-block max-w-[80%] break-words rounded-md p-2 text-sm',
                     ]"
                 >
                     {{ message.content }}
@@ -54,22 +54,16 @@
 </template>
 
 <script setup lang="ts">
-import { nextTick, ref } from "vue";
-
-import { storeToRefs } from "pinia";
-
-import { useRoute } from "vue-router";
-
-import { useUserStore } from "@stores/user-store";
-import { useWebsocketStore } from "@stores/websocket-store";
-import { useGroupStore } from "@stores/group-store";
-
-import { Icon } from "@iconify/vue";
-
 import { Button } from "@components/ui/button";
 import { Input } from "@components/ui/input";
-
 import { Chat } from "@declarations/AsyncE_backend/AsyncE_backend.did";
+import { Icon } from "@iconify/vue";
+import { useGroupStore } from "@stores/group-store";
+import { useUserStore } from "@stores/user-store";
+import { useWebsocketStore } from "@stores/websocket-store";
+import { storeToRefs } from "pinia";
+import { nextTick, ref } from "vue";
+import { useRoute } from "vue-router";
 
 const route = useRoute();
 const websocketStore = useWebsocketStore();
