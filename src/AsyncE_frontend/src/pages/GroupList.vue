@@ -38,9 +38,6 @@
                         </p>
                         <div class="flex justify-between items-center">
                             <Button> View Group </Button>
-                            <Button variant="ghost" size="sm">
-                                <Settings class="h-4 w-4" />
-                            </Button>
                         </div>
                     </div>
                 </div>
@@ -48,20 +45,21 @@
 
             <div
                 v-if="!groupList.length"
-                class="flex flex-col items-center justify-center bg-white shadow-md rounded-lg p-8"
+                class="flex flex-col items-center justify-center bg-gray-100 shadow-md rounded-xl p-10 mt-10 border border-gray-300 text-center"
             >
                 <Icon
                     icon="mdi-light:account-group"
-                    width="6rem"
-                    height="6rem"
-                    class="text-gray-400 mb-4"
+                    width="5rem"
+                    height="5rem"
+                    class="text-gray-500 mb-6"
                 />
-                <h2 class="text-2xl font-semibold text-gray-800 mb-2">
-                    No Groups Yet
+                <h2 class="text-3xl font-semibold text-gray-900 mb-3">
+                    No Groups Found
                 </h2>
-                <p class="text-gray-600 mb-6 text-center">
-                    You haven't created or joined any groups yet. Start by
-                    creating a new group!
+                <p class="text-gray-700 mb-8 max-w-lg">
+                    Looks like you haven’t created or joined any groups yet.
+                    Start your journey by creating a new group and connecting
+                    with others!
                 </p>
                 <router-link to="/create-group">
                     <Button>

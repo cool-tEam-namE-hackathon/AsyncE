@@ -5,7 +5,7 @@
     <div v-else class="h-dvh flex flex-col">
         <Navbar />
         <router-view v-slot="{ Component }">
-            <Suspense>
+            <Suspense timeout="0">
                 <component :is="Component" />
                 <template #fallback>
                     <base-spinner />

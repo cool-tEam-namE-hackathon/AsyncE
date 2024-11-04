@@ -23,6 +23,24 @@
                 </div>
             </template>
         </Button>
+
+        <Button
+            :variant="enabledScreen ? 'default' : 'outline'"
+            :disabled="!selectedCamera"
+            @click="emits('on-toggle-screen', enabledScreen)"
+        >
+            <template #default>
+                <div class="flex items-center">
+                    <Icon
+                        class="mr-2"
+                        icon="lucide:camera"
+                        width="24"
+                        height="24"
+                    />
+                    Screen
+                </div>
+            </template>
+        </Button>
         <Button :disabled="isRecordingDisabled" @click="emits('on-record')">
             <template #default>
                 <Icon

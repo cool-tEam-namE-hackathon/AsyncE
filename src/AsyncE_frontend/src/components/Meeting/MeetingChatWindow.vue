@@ -5,7 +5,7 @@
             <h1>Chat</h1>
         </div>
         <hr />
-        <div ref="chatRef" class="flex-1 overflow-auto px-4">
+        <div ref="chatRef" class="flex-1 overflow-y-auto px-4">
             <div
                 v-for="(message, index) in messages"
                 :key="index"
@@ -22,7 +22,7 @@
                         message.username === username
                             ? 'bg-black text-white'
                             : 'bg-gray-200 text-black',
-                        'inline-block p-2 rounded-md text-sm',
+                        'inline-block p-2 rounded-md text-sm max-w-[80%] break-words',
                     ]"
                 >
                     {{ message.content }}

@@ -5,7 +5,6 @@ import { createActor } from "@declarations/AsyncE_backend/index";
 
 import { AuthClient } from "@dfinity/auth-client";
 import { ActorSubclass, Identity } from "@dfinity/agent";
-import { User } from "@/types/api/model";
 import { _SERVICE } from "@declarations/AsyncE_backend/AsyncE_backend.did";
 import { blobToURL, validateResponse } from "@/utils/helpers";
 import { MB } from "@/data/user-constants";
@@ -97,7 +96,10 @@ export const useUserStore = defineStore("user", () => {
         actor.value = null;
     }
 
-    async function register({ username, profile_picture_blob }: {
+    async function register({
+        username,
+        profile_picture_blob,
+    }: {
         username: string;
         profile_picture_blob: Uint8Array;
     }) {
@@ -105,18 +107,15 @@ export const useUserStore = defineStore("user", () => {
 
         validateResponse(response);
 
-        for (
-            let i = 0;
-            i < Math.ceil(profile_picture_blob.length / MB);
-            ++i
-        ) {
+        for (let i = 0; i < Math.ceil(profile_picture_blob.length / MB); ++i) {
             const start = i * MB;
-            const end = Math.min(
-                start + MB,
-                profile_picture_blob.length,
-            );
+            const end = Math.min(start + MB, profile_picture_blob.length);
             const chunk = profile_picture_blob.slice(start, end);
-            await actor.value?.upload_profile_picture(chunk, BigInt(i), BigInt(profile_picture_blob.length));
+            await actor.value?.upload_profile_picture(
+                chunk,
+                BigInt(i),
+                BigInt(profile_picture_blob.length),
+            );
         }
     }
 
