@@ -151,13 +151,13 @@
                     </div>
                     <div class="overflow-auto h-full space-y-3">
                         <div
-                            v-for="(user, index) in currentGroup?.users"
+                            v-for="(user, index) in currentGroup?.members"
                             :key="index"
                         >
                             <div
                                 class="p-2 bg-gray-50 hover:bg-gray-100 transition duration-200 ease-in-out rounded-md text-sm shadow-sm"
                             >
-                                {{ user }}
+                                {{ user.username }} ({{ user.role }})
                             </div>
                         </div>
                     </div>

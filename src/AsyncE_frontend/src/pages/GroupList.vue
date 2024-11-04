@@ -34,7 +34,7 @@
                             {{ group.name }}
                         </h2>
                         <p class="text-gray-600 mb-4">
-                            {{ group.users.length }} members
+                            {{ group.members.length }} members
                         </p>
                         <div class="flex justify-between items-center">
                             <Button> View Group </Button>
