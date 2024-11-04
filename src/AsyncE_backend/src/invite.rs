@@ -3,6 +3,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::{
     globals::{GROUPS, GROUP_INVITES, USERS},
+    group::{GroupMember, GroupMemberRole},
     user, websocket,
 };
 
@@ -40,11 +41,11 @@ pub fn invite_user(group_id: u128, username: String) -> Result<(), String> {
             .get(&group_id)
             .ok_or(String::from("Cannot find group with this ID!"))?;
 
-        if group.owner != selfname && !group.users.contains(&selfname) {
+        if !group.is_member(&selfname) {
             return Err(String::from("This user is not in this group!"));
         }
 
-        if group.users.contains(&username) {
+        if group.is_member(&username) {
             return Err(String::from("Chosen user is already in this group!"));
         }
 
@@ -112,7 +113,9 @@ pub fn update_group_invite(group_id: u128, approved: bool) -> Result<(), String>
                     .get_mut(&group_id)
                     .ok_or(String::from("Cannot find group with this ID!"))?;
 
-                group.users.push(selfname);
+                group
+                    .members
+                    .push(GroupMember::new(selfname, GroupMemberRole::Member));
             }
 
             Ok(())

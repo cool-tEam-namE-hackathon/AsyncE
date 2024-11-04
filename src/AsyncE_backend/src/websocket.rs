@@ -21,6 +21,11 @@ pub enum WebsocketEventMessage {
     Ping,
     GroupInvited(GroupInviteResponse),
     AddChat(Chat),
+    NewVideoPart {
+        group_id: u128,
+        meeting_id: u128,
+        created_by: String,
+    },
 }
 
 impl WebsocketEventMessage {
@@ -77,7 +82,8 @@ pub fn on_message(args: OnMessageCallbackArgs) {
     match app_msg {
         WebsocketEventMessage::Ping => {}
 
-        WebsocketEventMessage::GroupInvited { .. } => {}
+        WebsocketEventMessage::GroupInvited { .. } | WebsocketEventMessage::NewVideoPart { .. } => {
+        }
 
         WebsocketEventMessage::AddChat(mut chat) => {
             let name = USERS
@@ -92,7 +98,7 @@ pub fn on_message(args: OnMessageCallbackArgs) {
                 let group = groups
                     .get(&chat.group_id)
                     .expect("Cannot find group with this ID!");
-                if group.owner != name && !group.users.contains(&name) {
+                if !group.is_member(&name) {
                     panic!("This user is not in this group!")
                 }
 
@@ -114,11 +120,11 @@ pub fn on_message(args: OnMessageCallbackArgs) {
 }
 
 pub fn broadcast_chat(group: &Group, chat: Chat) {
-    for username in group.users.iter() {
+    for group_member in group.members.iter() {
         USERS.with_borrow(|users| {
             if let Some(principal) = users
                 .iter()
-                .find(|x| x.1.username.eq_ignore_ascii_case(username))
+                .find(|x| x.1.username.eq_ignore_ascii_case(&group_member.username))
                 .map(|x| x.0)
             {
                 send_websocket_message(*principal, WebsocketEventMessage::AddChat(chat.clone()));
@@ -169,4 +175,12 @@ pub fn send_group_invited_notif(principal: Principal, group_id: u128, group_name
             group_name: group_name.to_string(),
         }),
     );
+}
+
+pub fn broadcast_new_video_part(group_id: u128, meeting_id: u128, created_by: String) {
+    broadcast_websocket_message(WebsocketEventMessage::NewVideoPart {
+        group_id,
+        meeting_id,
+        created_by,
+    })
 }
