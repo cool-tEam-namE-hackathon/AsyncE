@@ -1,11 +1,5 @@
-import { RecordedChunks } from "@/types/api/model";
-
 function fileToBlob(file: File) {
-    return file
-        ? new Blob([file], {
-              type: file.type,
-          })
-        : null;
+    return file ? new Blob([file], { type: file.type }) : null;
 }
 
 function blobToURL(data: Uint8Array | number[]) {

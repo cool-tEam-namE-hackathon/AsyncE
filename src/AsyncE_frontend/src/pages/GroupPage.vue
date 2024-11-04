@@ -201,9 +201,6 @@ import { useDebounceFn, useDevicesList, useUserMedia } from "@vueuse/core";
 import { storeToRefs } from "pinia";
 import { computed, ref, watchEffect } from "vue";
 import { useRoute } from "vue-router";
-import { RecordedChunks } from "@/types/api/model";
-import { createChunks, generateUUID } from "@/utils/helpers";
-import { MB } from "@/utils/user-constants";
 
 const route = useRoute();
 const groupStore = useGroupStore();
@@ -344,7 +341,7 @@ function stopRecording() {
     isRecording.value = false;
 }
 
-async function sendPerChunk(chunk: Uint8Array, index: number, fileId: string) {
+/* async function sendPerChunk(chunk: Uint8Array, index: number, fileId: string) {
     return new Promise<void>((resolve) => {
         setTimeout(() => {
             // Simulate upload action
@@ -352,9 +349,9 @@ async function sendPerChunk(chunk: Uint8Array, index: number, fileId: string) {
             resolve();
         }, 500);
     });
-}
+} */
 
-async function prepareChunks(
+/* async function prepareChunks(
     videoData: Uint8Array,
     type: keyof RecordedChunks,
 ) {
@@ -371,7 +368,7 @@ async function prepareChunks(
 
         uploadedChunk.value[type] += chunk.byteLength;
     }
-}
+} */
 
 async function saveRecording() {
     const blob = new Blob(recordedChunks.value, { type: "video/webm" });
