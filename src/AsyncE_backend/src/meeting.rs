@@ -6,7 +6,7 @@ use crate::{
     globals::{MEETINGS, VIDEO_UPLOADS},
     group, http,
     primary_key::{self, PrimaryKeyType},
-    user,
+    user, websocket,
 };
 
 #[derive(Copy, Clone, Debug, Default, CandidType, Deserialize, PartialEq, Eq, PartialOrd, Ord)]
@@ -95,7 +95,7 @@ fn assert_check_group(group_id: u128) -> Result<(), String> {
 
     let name = user::get_selfname_force()?;
 
-    if group.owner != name && !group.users.contains(&name) {
+    if group.owner != name && !group.members.iter().any(|x| x.username.eq_ignore_ascii_case(&name)) {
         return Err(String::from("Current user does not belong to this group!"));
     }
 
@@ -217,9 +217,11 @@ pub fn upload_video(
                 ic_cdk::println!("What");
             }
 
-            let mut video_frame = VideoFrame::new(selfname, title);
+            let mut video_frame = VideoFrame::new(selfname.clone(), title);
             video_frame.data = data;
             meeting.frames.push(video_frame);
+
+            websocket::broadcast_new_video_part(group_id, meeting_id, selfname);
         }
 
         Ok(())
