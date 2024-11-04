@@ -115,21 +115,14 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from "vue";
-
-import { useGroupStore } from "@stores/group-store";
-
-import { GroupInvite } from "@/types/api/model";
-
-import { useWebsocketStore } from "@stores/websocket-store";
-
-import { Icon } from "@iconify/vue";
-
 import Button from "@components/ui/button/Button.vue";
-
-import BasePopover from "@shared/BasePopover.vue";
-
 import { GroupInviteResponse } from "@declarations/AsyncE_backend/AsyncE_backend.did";
+import { Icon } from "@iconify/vue";
+import BasePopover from "@shared/BasePopover.vue";
+import { useGroupStore } from "@stores/group-store";
+import { useWebsocketStore } from "@stores/websocket-store";
+import { ref } from "vue";
+import { GroupInvite } from "@/types/api/model";
 
 const groupStore = useGroupStore();
 const websocketStore = useWebsocketStore();

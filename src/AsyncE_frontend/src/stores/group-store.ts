@@ -1,15 +1,11 @@
-import { ref } from "vue";
-
-import { defineStore } from "pinia";
-
-import { useUserStore } from "@stores/user-store";
-
-import { storeToRefs } from "pinia";
-
-import { Group } from "@/types/api/model";
-import { MB } from "@/data/user-constants";
 import { GroupQueryResponse } from "@declarations/AsyncE_backend/AsyncE_backend.did";
+import { useUserStore } from "@stores/user-store";
+import { defineStore } from "pinia";
+import { storeToRefs } from "pinia";
+import { ref } from "vue";
+import { Group } from "@/types/api/model";
 import { validateResponse } from "@/utils/helpers";
+import { MB } from "@/utils/user-constants";
 
 export const useGroupStore = defineStore("group", () => {
     const { actor } = storeToRefs(useUserStore());

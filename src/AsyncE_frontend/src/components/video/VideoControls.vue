@@ -50,11 +50,11 @@
 </template>
 
 <script setup lang="ts">
+import { Icon } from "@iconify/vue";
+import BaseSelect from "@shared/BaseSelect.vue";
+import { Button } from "@ui/button";
 import { computed } from "vue";
 import { VideoControlProps } from "@/types/api/model";
-import { Icon } from "@iconify/vue";
-import { Button } from "@ui/button";
-import BaseSelect from "@shared/BaseSelect.vue";
 
 const props = defineProps<VideoControlProps>();
 const emits = defineEmits<{

@@ -49,15 +49,11 @@
     </div>
 </template>
 <script setup lang="ts">
-import { storeToRefs } from "pinia";
-
-import { useRouter } from "vue-router";
-import { useGroupStore } from "@stores/group-store";
-
-import { Icon } from "@iconify/vue";
-
 import { Button } from "@components/ui/button";
-
+import { Icon } from "@iconify/vue";
+import { useGroupStore } from "@stores/group-store";
+import { storeToRefs } from "pinia";
+import { useRouter } from "vue-router";
 import { blobToURL } from "@/utils/helpers";
 
 const router = useRouter();

@@ -1,6 +1,5 @@
-import { createRouter, createWebHistory } from "vue-router";
-
 import { Home, CreateGroup, GroupPage, GroupList } from "@lazy-loading-routes";
+import { createRouter, createWebHistory } from "vue-router";
 
 const routes = [
     {

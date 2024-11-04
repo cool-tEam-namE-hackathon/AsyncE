@@ -76,26 +76,20 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from "vue";
-import { storeToRefs } from "pinia";
-
-import Navbar from "@components/layout/Navbar.vue";
 import Footer from "@components/layout/Footer.vue";
-
+import Navbar from "@components/layout/Navbar.vue";
+import BaseDialog from "@components/shared/BaseDialog.vue";
+import BaseSpinner from "@components/shared/BaseSpinner.vue";
 import Button from "@components/ui/button/Button.vue";
 import Input from "@components/ui/input/Input.vue";
 import Label from "@components/ui/label/Label.vue";
-
-import BaseSpinner from "@components/shared/BaseSpinner.vue";
-import BaseDialog from "@components/shared/BaseDialog.vue";
-
 import { Icon } from "@iconify/vue";
-
 import { useUserStore } from "@stores/user-store";
 import { useWebsocketStore } from "@stores/websocket-store";
-
-import { fileToBlob } from "./utils/helpers";
+import { storeToRefs } from "pinia";
+import { ref } from "vue";
 import { User } from "./types/api/model";
+import { fileToBlob } from "./utils/helpers";
 
 const userStore = useUserStore();
 const websocketStore = useWebsocketStore();
@@ -109,9 +103,9 @@ const error = ref<string>("");
 const username = ref<string>("");
 const imageBlob = ref<Blob | null>(null);
 
-const isFormValid = computed(() => {
+/* const isFormValid = computed(() => {
     return !(username.value && imageBlob.value?.size);
-});
+}); */
 
 async function register() {
     if (!imageBlob.value) {

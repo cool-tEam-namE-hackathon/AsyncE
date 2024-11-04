@@ -1,14 +1,12 @@
-import { ref, toRaw } from "vue";
-import { defineStore } from "pinia";
-
-import { createActor } from "@declarations/AsyncE_backend/index";
-
-import { AuthClient } from "@dfinity/auth-client";
-import { ActorSubclass, Identity } from "@dfinity/agent";
-import { User } from "@/types/api/model";
 import { _SERVICE } from "@declarations/AsyncE_backend/AsyncE_backend.did";
+import { createActor } from "@declarations/AsyncE_backend/index";
+import { ActorSubclass, Identity } from "@dfinity/agent";
+import { AuthClient } from "@dfinity/auth-client";
+import { defineStore } from "pinia";
+import { ref, toRaw } from "vue";
+import { User } from "@/types/api/model";
 import { blobToURL, validateResponse } from "@/utils/helpers";
-import { MB } from "@/data/user-constants";
+import { MB } from "@/utils/user-constants";
 
 const client = ref<AuthClient | null>(null);
 const isAuthenticated = ref<boolean>(false);

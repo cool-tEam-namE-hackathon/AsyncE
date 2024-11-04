@@ -201,9 +201,9 @@ import { useDebounceFn, useDevicesList, useUserMedia } from "@vueuse/core";
 import { storeToRefs } from "pinia";
 import { computed, ref, watchEffect } from "vue";
 import { useRoute } from "vue-router";
-import { MB } from "@/data/user-constants";
 import { RecordedChunks } from "@/types/api/model";
 import { createChunks, generateUUID } from "@/utils/helpers";
+import { MB } from "@/utils/user-constants";
 
 const route = useRoute();
 const groupStore = useGroupStore();

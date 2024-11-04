@@ -1,18 +1,15 @@
-import { ref } from "vue";
-
-import { defineStore, storeToRefs } from "pinia";
-
-import { useUserStore } from "@/stores/user-store";
-
-import IcWebSocket, { createWsConfig } from "ic-websocket-js";
-import { canisterId as backendCanisterId } from "@declarations/AsyncE_backend/index";
-import { SignIdentity } from "@dfinity/agent";
 import {
     _SERVICE,
     Chat,
     GroupInviteResponse,
     WebsocketEventMessage,
 } from "@declarations/AsyncE_backend/AsyncE_backend.did";
+import { canisterId as backendCanisterId } from "@declarations/AsyncE_backend/index";
+import { SignIdentity } from "@dfinity/agent";
+import IcWebSocket, { createWsConfig } from "ic-websocket-js";
+import { defineStore, storeToRefs } from "pinia";
+import { ref } from "vue";
+import { useUserStore } from "@/stores/user-store";
 
 export const useWebsocketStore = defineStore("websocket", () => {
     const { actor, identity } = storeToRefs(useUserStore());
