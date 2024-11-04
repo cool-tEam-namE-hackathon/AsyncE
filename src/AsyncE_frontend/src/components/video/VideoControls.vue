@@ -35,7 +35,7 @@
                 <Icon
                     :class="[
                         recordingPhaseText === 'Stop'
-                            ? 'text-red-500 animate-pulse'
+                            ? 'animate-pulse text-red-500'
                             : '',
                         'mr-2',
                     ]"

@@ -1,6 +1,6 @@
 <template>
     <div class="container m-auto px-4">
-        <div class="bg-white shadow-md rounded-lg p-6 w-full max-w-2xl mx-auto">
+        <div class="mx-auto w-full max-w-2xl rounded-lg bg-white p-6 shadow-md">
             <div class="mb-6">
                 <h1 class="text-2xl font-bold text-gray-900">
                     Create a New Group
@@ -39,7 +39,7 @@
                             icon="prime:spinner"
                             width="16"
                             height="16"
-                            class="text-white animate-spin mr-1"
+                            class="mr-1 animate-spin text-white"
                         />
                         Creating Group...
                     </template>

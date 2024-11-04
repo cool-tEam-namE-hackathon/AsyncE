@@ -2,7 +2,7 @@
     <div v-if="!isInitialized">
         <base-spinner />
     </div>
-    <div v-else class="h-dvh flex flex-col">
+    <div v-else class="flex h-dvh flex-col">
         <Navbar />
         <router-view v-slot="{ Component }">
             <Suspense>
@@ -37,7 +37,7 @@
                                 'focus-visible:ring-0': true,
                             }"
                         />
-                        <div v-if="error" class="text-red-500 text-sm mt-2">
+                        <div v-if="error" class="mt-2 text-sm text-red-500">
                             {{ error }}
                         </div>
                     </div>
@@ -65,7 +65,7 @@
                             icon="prime:spinner"
                             width="16"
                             height="16"
-                            class="text-black animate-spin mr-1"
+                            class="mr-1 animate-spin text-black"
                         />
                         Registering...
                     </template>
@@ -88,8 +88,8 @@ import { useUserStore } from "@stores/user-store";
 import { useWebsocketStore } from "@stores/websocket-store";
 import { storeToRefs } from "pinia";
 import { ref } from "vue";
-import { User } from "./types/api/model";
-import { fileToBlob } from "./utils/helpers";
+import { User } from "@/types/api/model";
+import { fileToBlob } from "@/utils/helpers";
 
 const userStore = useUserStore();
 const websocketStore = useWebsocketStore();
@@ -99,7 +99,6 @@ const isOpen = ref<boolean>(false);
 const isInitialized = ref<boolean>(false);
 const isLoading = ref<boolean>(false);
 const error = ref<string>("");
-
 const username = ref<string>("");
 const imageBlob = ref<Blob | null>(null);
 

@@ -1,5 +1,5 @@
 <template>
-    <header class="container py-4 flex items-center">
+    <header class="container flex items-center py-4">
         <!-- NAVBAR -->
         <router-link to="/" class="flex items-center justify-center">
             <Icon icon="mynaui:globe" width="24" height="24" />
@@ -8,7 +8,7 @@
             <!-- NOT AUTHENTICATED -->
             <button
                 v-if="!isAuthenticated || !username"
-                class="text-sm font-medium hover:underline underline-offset-4"
+                class="text-sm font-medium underline-offset-4 hover:underline"
                 @click="login"
             >
                 Login

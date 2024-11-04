@@ -1,20 +1,20 @@
 <template>
     <footer
-        class="flex flex-col mt-auto gap-2 sm:flex-row py-6 w-full shrink-0 items-center px-4 md:px-6 border-t"
+        class="mt-auto flex w-full shrink-0 flex-col items-center gap-2 border-t px-4 py-6 sm:flex-row md:px-6"
     >
         <p class="text-xs text-gray-500 dark:text-gray-400">
             © 2024 AsyncE. All rights reserved.
         </p>
-        <div class="sm:ml-auto flex gap-4 sm:gap-6">
+        <div class="flex gap-4 sm:ml-auto sm:gap-6">
             <router-link
                 to="/"
-                class="text-xs hover:underline underline-offset-4"
+                class="text-xs underline-offset-4 hover:underline"
             >
                 Terms of Service
             </router-link>
             <router-link
                 to="/"
-                class="text-xs hover:underline underline-offset-4"
+                class="text-xs underline-offset-4 hover:underline"
             >
                 Privacy
             </router-link>

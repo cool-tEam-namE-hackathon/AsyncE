@@ -4,7 +4,7 @@
         <template #trigger>
             <Button
                 variant="outline"
-                class="relative rounded-full p-0 border-none px-2 shadow-none"
+                class="relative rounded-full border-none p-0 px-2 shadow-none"
             >
                 <Icon
                     icon="nimbus:notification"
@@ -15,7 +15,7 @@
 
                 <span
                     v-show="invites.length"
-                    class="flex items-center justify-center absolute top-0 right-0 bg-red-500 h-5 w-5 text-white text-xs font-bold rounded-full"
+                    class="absolute right-0 top-0 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-xs font-bold text-white"
                 >
                     {{ invites.length }}
                 </span>
@@ -23,15 +23,15 @@
         </template>
 
         <template #content>
-            <div class="overflow-auto max-h-72 h-fit">
-                <div class="px-4 mt-2 text-sm font-medium">Group Invites</div>
+            <div class="h-fit max-h-72 overflow-auto">
+                <div class="mt-2 px-4 text-sm font-medium">Group Invites</div>
                 <hr v-show="invites.length" class="mt-2" />
                 <div
                     v-for="invite in invites"
                     :key="Number(invite.group_id)"
                     class="py-2 text-sm"
                 >
-                    <div class="px-4 mb-2">{{ invite.group_name }}</div>
+                    <div class="mb-2 px-4">{{ invite.group_name }}</div>
                     <div class="flex items-center gap-3 px-4">
                         <Button
                             size="sm"
@@ -51,7 +51,7 @@
                                     icon="charm:tick"
                                     width="16"
                                     height="16"
-                                    class="text-black mr-1"
+                                    class="mr-1 text-black"
                                 />
                                 Approve
                             </template>
@@ -61,7 +61,7 @@
                                     icon="prime:spinner"
                                     width="16"
                                     height="16"
-                                    class="text-black animate-spin mr-1"
+                                    class="mr-1 animate-spin text-black"
                                 />
                                 Approving...
                             </template>
@@ -84,7 +84,7 @@
                                     icon="oui:cross"
                                     width="16"
                                     height="16"
-                                    class="text-black mr-1"
+                                    class="mr-1 text-black"
                                 />
                                 Reject
                             </template>
@@ -94,7 +94,7 @@
                                     icon="prime:spinner"
                                     width="16"
                                     height="16"
-                                    class="text-black animate-spin mr-1"
+                                    class="mr-1 animate-spin text-black"
                                 />
                                 Rejecting...
                             </template>
@@ -104,7 +104,7 @@
 
                 <div
                     v-if="!invites.length"
-                    class="mt-2 text-sm text-muted font-medium"
+                    class="text-muted mt-2 text-sm font-medium"
                 >
                     <hr />
                     <div class="p-4 text-gray-400">You have no invitation</div>

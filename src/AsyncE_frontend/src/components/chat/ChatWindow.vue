@@ -2,11 +2,11 @@
     <div class="fixed bottom-32 right-4 z-50">
         <div
             v-show="isChatWindowOpen"
-            class="w-72 bg-white border rounded-lg shadow-lg mb-3 z-50"
+            class="z-50 mb-3 w-72 rounded-lg border bg-white shadow-lg"
         >
             <h1 class="p-4">Chat</h1>
             <hr />
-            <div ref="chatRef" class="h-80 px-4 overflow-auto">
+            <div ref="chatRef" class="h-80 overflow-auto px-4">
                 <div
                     v-for="(message, index) in messages"
                     :key="index"
@@ -14,10 +14,10 @@
                         message.username === username
                             ? 'text-right'
                             : 'text-left',
-                        'space-y-1 mb-2',
+                        'mb-2 space-y-1',
                     ]"
                 >
-                    <div class="text-xs text-gray-400 mt-2">
+                    <div class="mt-2 text-xs text-gray-400">
                         {{ message.username }}
                     </div>
                     <span
@@ -25,7 +25,7 @@
                             message.username === username
                                 ? 'bg-black text-white'
                                 : 'bg-gray-200 text-black',
-                            'inline-block p-2 rounded-md text-sm',
+                            'inline-block rounded-md p-2 text-sm',
                         ]"
                     >
                         {{ message.content }}
@@ -52,7 +52,7 @@
         </div>
 
         <Button
-            class="absolute right-0 rounded-full px-2 py-6 shadow-lg z-50"
+            class="absolute right-0 z-50 rounded-full px-2 py-6 shadow-lg"
             @click="toggleChatWindow"
         >
             <Icon

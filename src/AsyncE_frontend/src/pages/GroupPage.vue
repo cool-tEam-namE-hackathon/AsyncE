@@ -3,7 +3,7 @@
         <!-- UPLOAD PROGRESS MODAL -->
         <base-dialog :open="isOpen" :hide-close-button="true">
             <template #title>
-                <span class="text-lg font-semibold mb-4">
+                <span class="mb-4 text-lg font-semibold">
                     Uploading Recordings
                 </span>
             </template>
@@ -73,7 +73,7 @@
                             icon="prime:spinner"
                             width="16"
                             height="16"
-                            class="text-black animate-spin mr-1"
+                            class="mr-1 animate-spin text-black"
                         />
                         Inviting...
                     </template>
@@ -86,14 +86,14 @@
         <span>{{ uploadVideoProgress }}</span>
 
         <!-- MEDIA -->
-        <div class="mx-auto py-8 h-full">
-            <div class="flex flex-col gap-8 h-full">
+        <div class="mx-auto h-full py-8">
+            <div class="flex h-full flex-col gap-8">
                 <div class="flex gap-6">
                     <!-- VIDEO -->
                     <div
-                        class="flex flex-col flex-1 bg-white rounded-lg shadow-lg h-full p-4"
+                        class="flex h-full flex-1 flex-col rounded-lg bg-white p-4 shadow-lg"
                     >
-                        <div class="flex items-center justify-between mb-3">
+                        <div class="mb-3 flex items-center justify-between">
                             <h2 class="text-xl font-semibold">
                                 Record New Video
                             </h2>
@@ -113,7 +113,7 @@
                         <!-- NO CAMERA OR SCREEN YET -->
                         <div
                             v-if="!displayCamera"
-                            class="flex flex-col items-center justify-center bg-gray-200 rounded-lg h-full py-4"
+                            class="flex h-full flex-col items-center justify-center rounded-lg bg-gray-200 py-4"
                         >
                             <Icon
                                 icon="fluent:video-off-32-regular"
@@ -124,7 +124,7 @@
                             <p class="text-xl font-semibold">
                                 Video stream unavailable
                             </p>
-                            <p class="text-sm mt-2">
+                            <p class="mt-2 text-sm">
                                 Please start your camera or screen share
                             </p>
                         </div>
@@ -132,7 +132,7 @@
                         <video
                             v-else
                             ref="cameraRef"
-                            class="object-cover w-full h-full rounded-lg"
+                            class="h-full w-full rounded-lg object-cover"
                             muted
                             autoplay
                         />
@@ -140,7 +140,7 @@
 
                     <!-- USER MANAGEMENT -->
                     <div
-                        class="p-4 rounded-lg border-solid border-[1px] border-slate-200 w-64"
+                        class="w-64 rounded-lg border-[1px] border-solid border-slate-200 p-4"
                     >
                         <div class="flex items-center gap-2">
                             <Icon
@@ -160,14 +160,14 @@
                                 icon="lucide:user-plus"
                                 width="24"
                                 height="24"
-                                class="text-white mr-2"
+                                class="mr-2 text-white"
                             />
                             Invite new users
                         </Button>
                     </div>
                 </div>
                 <h1>{{ message }}</h1>
-                <div class="flex-1 h-1/4">
+                <div class="h-1/4 flex-1">
                     <p>Here</p>
                 </div>
             </div>

@@ -1,7 +1,7 @@
 <template>
     <div class="flex-1 py-8">
         <div class="container mx-auto px-4">
-            <div class="flex justify-between items-center mb-10">
+            <div class="mb-10 flex items-center justify-between">
                 <h1 class="text-2xl font-bold text-gray-900">Your Groups</h1>
                 <router-link to="/create-group">
                     <Button>
@@ -18,25 +18,25 @@
                 </router-link>
             </div>
 
-            <div class="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6">
+            <div class="grid grid-cols-3 gap-6 md:grid-cols-4 lg:grid-cols-5">
                 <div
                     v-for="(group, index) in groupList"
                     :key="index"
-                    class="flex flex-col bg-white shadow-md rounded-lg overflow-hidden"
+                    class="flex flex-col overflow-hidden rounded-lg bg-white shadow-md"
                     @click="router.push(`/group/${group.id}`)"
                 >
                     <img
-                        class="flex-1 object-cover w-full h-auto"
+                        class="h-auto w-full flex-1 object-cover"
                         :src="blobToURL(group.profile_picture_blob)"
                     />
                     <div class="p-4">
-                        <h2 class="text-xl font-semibold text-gray-800 mb-2">
+                        <h2 class="mb-2 text-xl font-semibold text-gray-800">
                             {{ group.name }}
                         </h2>
-                        <p class="text-gray-600 mb-4">
+                        <p class="mb-4 text-gray-600">
                             {{ group.users.length }} members
                         </p>
-                        <div class="flex justify-between items-center">
+                        <div class="flex items-center justify-between">
                             <Button> View Group </Button>
                             <Button variant="ghost" size="sm">
                                 <Settings class="h-4 w-4" />

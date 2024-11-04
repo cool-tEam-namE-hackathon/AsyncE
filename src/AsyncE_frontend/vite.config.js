@@ -79,7 +79,6 @@ export default defineConfig({
         alias: {
             "@": resolve("./src"),
             "@lazy-loading-routes": resolve("./src/lazy-loading-routes"),
-            "@types": resolve("./src/types"),
             "@components": resolve("./src/components"),
             "@ui": resolve("./src/components/ui"),
             "@shared": resolve("./src/components/shared"),
