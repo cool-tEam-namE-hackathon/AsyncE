@@ -27,7 +27,7 @@ pub fn get_chats(group_id: u128) -> Result<Vec<Chat>, String> {
             .get(&group_id)
             .ok_or(String::from("Cannot find group with this ID!"))?;
 
-        if group.owner != selfname && !group.users.contains(&selfname) {
+        if !group.is_member(&selfname) {
             return Err(String::from("This user is not in this group!"));
         }
 
@@ -39,6 +39,65 @@ pub fn get_chats(group_id: u128) -> Result<Vec<Chat>, String> {
                 .values()
                 .cloned()
                 .collect::<Vec<_>>())
+        })
+    })
+}
+
+#[ic_cdk::update]
+pub fn edit_chat(group_id: u128, chat_id: u128, new_content: String) -> Result<(), String> {
+    user::assert_user_logged_in()?;
+
+    let selfname = user::get_selfname_force()?;
+
+    GROUPS.with_borrow(|groups| {
+        let group = groups
+            .get(&group_id)
+            .ok_or(String::from("Cannot find group with this ID!"))?;
+
+        if !group.is_member(&selfname) {
+            return Err(String::from("This user is not in this group!"));
+        }
+
+        CHATS.with_borrow_mut(|chats| {
+            let chats = chats
+                .get_mut(&group_id)
+                .ok_or(String::from("Cannot find any chat from this group!"))?;
+
+            let chat = chats
+                .get_mut(&chat_id)
+                .ok_or(String::from("Cannot get chat with this ID!"))?;
+            chat.content = new_content;
+
+            Ok(())
+        })
+    })
+}
+
+#[ic_cdk::update]
+pub fn delete_chat(group_id: u128, chat_id: u128) -> Result<(), String> {
+    user::assert_user_logged_in()?;
+
+    let selfname = user::get_selfname_force()?;
+
+    GROUPS.with_borrow(|groups| {
+        let group = groups
+            .get(&group_id)
+            .ok_or(String::from("Cannot find group with this ID!"))?;
+
+        if !group.is_member(&selfname) {
+            return Err(String::from("This user is not in this group!"));
+        }
+
+        CHATS.with_borrow_mut(|chats| {
+            let chats = chats
+                .get_mut(&group_id)
+                .ok_or(String::from("Cannot find any chat from this group!"))?;
+
+            chats
+                .remove(&chat_id)
+                .ok_or(String::from("Cannot get chat with this ID!"))?;
+
+            Ok(())
         })
     })
 }

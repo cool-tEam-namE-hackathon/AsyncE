@@ -12,7 +12,10 @@ pub mod user;
 pub mod websocket;
 
 use crate::{
-    chat::Chat, group::GroupQueryResponse, invite::GroupInviteResponse, meeting::MeetingHeader,
+    chat::Chat,
+    group::{GroupMemberRole, GroupQueryResponse},
+    invite::GroupInviteResponse,
+    meeting::MeetingHeader,
     websocket::WebsocketEventMessage,
 };
 use globals::{CHATS, GROUPS, GROUP_INVITES, MEETINGS, PRIMARY_KEY_CONTAINERS, USERS};

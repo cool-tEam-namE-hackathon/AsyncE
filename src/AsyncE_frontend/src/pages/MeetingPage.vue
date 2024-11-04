@@ -287,12 +287,14 @@ function startRecording() {
     };
 
     mediaRecorder.value.start();
+    mediaRecorder.value.requestData();
     isRecording.value = true;
 }
 
 function stopRecording() {
     if (!mediaRecorder.value) return;
 
+    mediaRecorder.value.requestData();
     mediaRecorder.value.stop();
     isRecording.value = false;
 }

@@ -3,9 +3,19 @@ import "./ws_types.did";
 type GroupQueryResponse = record {
     id: nat;
     name: text;
-    users: vec text;
     owner: text;
+    members: vec GroupMember;
     created_time_unix: nat;
+};
+
+type GroupMemberRole = variant {
+    Admin: null;
+    Member: null;
+};
+
+type GroupMember = record {
+    role: GroupMemberRole;
+    username: text;
 };
 
 type MeetingProcessType = variant {
@@ -41,6 +51,11 @@ type WebsocketEventMessage = variant {
     Ping: null;
     GroupInvited: GroupInviteResponse;
     AddChat: Chat;
+    NewVideoPart: record {
+        group_id: u128;
+        meeting_id: u128;
+        created_by: string;
+    };
 };
 
 service : {
@@ -103,6 +118,16 @@ service : {
         Ok: blob;
         Err: text;
     }) query;
+
+    kick_member: (nat, string) -> (variant {
+        Ok: null;
+        Err: text;
+    });
+
+    edit_member_role: (nat, string, GroupMemberRole) -> (variant {
+        Ok: null;
+        Err: text;
+    });
 
     get_meetings: (nat) -> (variant {
         Ok: vec MeetingHeader;
@@ -178,4 +203,14 @@ service : {
         Ok: vec Chat;
         Err: text;
     });
+
+    edit_chat: (nat, nat, string) -> (variant {
+        Ok: null;
+        Err: text;
+    });
+
+    delete_chat: (nat, nat) -> (variant {
+        Ok: null;
+        Err: text;
+    });    
 }
