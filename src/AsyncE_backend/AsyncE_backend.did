@@ -52,9 +52,9 @@ type WebsocketEventMessage = variant {
     GroupInvited: GroupInviteResponse;
     AddChat: Chat;
     NewVideoPart: record {
-        group_id: u128;
-        meeting_id: u128;
-        created_by: string;
+        group_id: nat;
+        meeting_id: nat;
+        created_by: text;
     };
 };
 
@@ -89,6 +89,11 @@ service : {
         Err: text;
     }) query;
 
+    buy_subscription: () -> (variant {
+        Ok: null;
+        Err: text;
+    });
+
     create_group: (text) -> (variant {
         Ok: nat;
         Err: text;
@@ -119,12 +124,12 @@ service : {
         Err: text;
     }) query;
 
-    kick_member: (nat, string) -> (variant {
+    kick_member: (nat, text) -> (variant {
         Ok: null;
         Err: text;
     });
 
-    edit_member_role: (nat, string, GroupMemberRole) -> (variant {
+    edit_member_role: (nat, text, GroupMemberRole) -> (variant {
         Ok: null;
         Err: text;
     });
@@ -204,7 +209,7 @@ service : {
         Err: text;
     });
 
-    edit_chat: (nat, nat, string) -> (variant {
+    edit_chat: (nat, nat, text) -> (variant {
         Ok: null;
         Err: text;
     });

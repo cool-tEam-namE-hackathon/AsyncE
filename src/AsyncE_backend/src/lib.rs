@@ -35,6 +35,7 @@ fn init() {
 
     ic_websocket_cdk::init(WsInitParams::new(handlers));
     http::poll_concat_requests();
+    user::poll_user_subscriptions();
 }
 
 #[ic_cdk::pre_upgrade]

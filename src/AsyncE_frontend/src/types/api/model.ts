@@ -1,7 +1,12 @@
-import { MeetingHeader } from "@declarations/AsyncE_backend/AsyncE_backend.did";
+import { GroupMemberRole, MeetingHeader } from "@declarations/AsyncE_backend/AsyncE_backend.did";
 
 interface User {
     profile_picture_blob: Uint8Array;
+    username: string;
+}
+
+interface GroupMember {
+    role: GroupMemberRole;
     username: string;
 }
 
@@ -10,7 +15,7 @@ interface Group {
     profile_picture_blob: Uint8Array | number[];
     owner: string;
     name: string;
-    users: string[];
+    members: GroupMember[];
 }
 
 interface Video {

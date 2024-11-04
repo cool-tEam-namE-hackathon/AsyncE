@@ -33,7 +33,7 @@ export const useGroupStore = defineStore("group", () => {
             id: groupResponse.id,
             name: groupResponse.name,
             owner: groupResponse.name,
-            users: groupResponse.users,
+            members: groupResponse.members,
             profile_picture_blob: new Uint8Array(),
         };
     }

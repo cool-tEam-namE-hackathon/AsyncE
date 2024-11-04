@@ -1,11 +1,21 @@
+use std::time::Duration;
+
 use candid::{CandidType, Principal};
 use serde::Deserialize;
 
 use crate::{chunk, globals::USERS};
 
 #[derive(Clone, Debug, Default, CandidType, Deserialize)]
+pub struct UserSubscription {
+    pub time_started: u64,
+    pub duration_in_days: u64,
+}
+
+#[derive(Clone, Debug, Default, CandidType, Deserialize)]
 pub struct User {
+    pub balance: u128,
     pub username: String,
+    pub subscription: Option<UserSubscription>,
     pub created_time_unix: u128,
     pub profile_picture_blob: Vec<u8>,
 }
@@ -85,7 +95,9 @@ pub fn register(name: String) -> Result<(), String> {
     validate_user_register(&name, principal)?;
 
     let user = User {
+        balance: 10,
         username: name,
+        subscription: None,
         created_time_unix: ic_cdk::api::time() as u128,
         profile_picture_blob: Vec::new(),
     };
@@ -174,4 +186,49 @@ pub fn get_profile_picture_chunk_blob(index: u128) -> Result<Vec<u8>, String> {
             })
             .ok_or(String::from("Cannot find user with this principal!"))
     })
+}
+
+#[ic_cdk::update]
+pub fn buy_subscription() -> Result<(), String> {
+    assert_user_logged_in()?;
+
+    let principal = ic_cdk::caller();
+    USERS.with_borrow_mut(|users| {
+        let user = users
+            .get_mut(&principal)
+            .ok_or(String::from("Cannot find current user!"))?;
+        if user.balance < 5 {
+            return Err(String::from("Balance is not sufficient!"));
+        }
+
+        if let Some(subscription) = user.subscription.as_mut() {
+            subscription.duration_in_days += 30;
+        } else {
+            user.subscription = Some(UserSubscription {
+                time_started: ic_cdk::api::time(),
+                duration_in_days: 30,
+            });
+        }
+        user.balance -= 5;
+
+        Ok(())
+    })
+}
+
+pub fn poll_user_subscriptions() {
+    ic_cdk_timers::set_timer_interval(Duration::from_secs(60 * 60), || {
+        USERS.with_borrow_mut(|users| {
+            users.values_mut().for_each(|user| {
+                if let Some(subscription) = user.subscription.as_mut() {
+                    let duration =
+                        Duration::from_secs(subscription.duration_in_days * 60 * 60 * 24);
+                    let time_passed =
+                        Duration::from_nanos(ic_cdk::api::time() - subscription.time_started);
+                    if time_passed > duration {
+                        user.subscription = None;
+                    }
+                }
+            })
+        })
+    });
 }
