@@ -1,7 +1,10 @@
-import globals from "globals";
 import pluginJs from "@eslint/js";
-import tseslint from "typescript-eslint";
+import prettierConfig from "eslint-config-prettier";
+import pluginImport from "eslint-plugin-import";
+import prettierPlugin from "eslint-plugin-prettier";
 import pluginVue from "eslint-plugin-vue";
+import globals from "globals";
+import tseslint from "typescript-eslint";
 
 export default [
     { files: ["**/*.{js,mjs,cjs,ts,vue}"] },
@@ -16,4 +19,31 @@ export default [
             "vue/multi-word-component-names": 0,
         },
     },
+    {
+        // Configuration for sorting imports
+        files: ["**/*.{js,mjs,cjs,ts,vue}"],
+        plugins: {
+            import: pluginImport,
+            prettier: prettierPlugin,
+        },
+        rules: {
+            "import/order": [
+                "error",
+                {
+                    groups: [
+                        "external",
+                        "builtin",
+                        "internal",
+                        "sibling",
+                        "parent",
+                        "index",
+                    ],
+                    "newlines-between": "never",
+                    alphabetize: { order: "asc", caseInsensitive: true },
+                },
+            ],
+            "prettier/prettier": "error",
+        },
+    },
+    prettierConfig,
 ];
