@@ -233,7 +233,9 @@ function startRecording() {
 
     const combinedStream = new MediaStream(displayCamera.value);
 
-    mediaRecorder.value = new MediaRecorder(combinedStream);
+    mediaRecorder.value = new MediaRecorder(combinedStream, {
+        mimeType: "video/webm; codecs=vp8,opus"
+    });
     mediaRecorder.value.ondataavailable = (e) => {
         if (e.data.size > 0) {
             recordedChunks.value.push(e.data);
@@ -241,12 +243,14 @@ function startRecording() {
     };
 
     mediaRecorder.value.start();
+    mediaRecorder.value.requestData();
     isRecording.value = true;
 }
 
 function stopRecording() {
     if (!mediaRecorder.value) return;
 
+    mediaRecorder.value.requestData();
     mediaRecorder.value.stop();
     isRecording.value = false;
 }
