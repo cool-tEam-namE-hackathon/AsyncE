@@ -274,7 +274,11 @@ function startRecording() {
 
     const canvasStream = canvasRef.value.captureStream(60);
 
-    const combinedStream = new MediaStream([...canvasStream.getVideoTracks()]);
+    const combinedStream = new MediaStream([
+        ...canvasStream.getVideoTracks(),
+        ...(displayCamera.value ? displayCamera.value.getAudioTracks() : []),
+        ...(displayStream.value ? displayStream.value.getAudioTracks() : []),
+    ]);
 
     mediaRecorder.value = new MediaRecorder(combinedStream, {
         mimeType: "video/webm; codecs=vp9",
