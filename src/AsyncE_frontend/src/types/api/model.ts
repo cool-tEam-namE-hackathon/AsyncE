@@ -1,4 +1,7 @@
-import { GroupMemberRole, MeetingHeader } from "@declarations/AsyncE_backend/AsyncE_backend.did";
+import {
+    GroupMemberRole,
+    MeetingHeader,
+} from "@declarations/AsyncE_backend/AsyncE_backend.did";
 
 interface User {
     profile_picture_blob: Uint8Array;

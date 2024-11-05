@@ -1,17 +1,13 @@
-import { ref } from "vue";
-
-import { defineStore } from "pinia";
-
-import { useUserStore } from "@stores/user-store";
-
-import { storeToRefs } from "pinia";
-
-import { Group } from "@/types/api/model";
-import { MB } from "@/data/user-constants";
 import {
     GroupQueryResponse,
     MeetingHeader,
 } from "@declarations/AsyncE_backend/AsyncE_backend.did";
+import { useUserStore } from "@stores/user-store";
+import { defineStore } from "pinia";
+import { storeToRefs } from "pinia";
+import { ref } from "vue";
+import { MB } from "@/data/user-constants";
+import { Group } from "@/types/api/model";
 import { blobToURL, validateResponse } from "@/utils/helpers";
 
 export const useGroupStore = defineStore("group", () => {
@@ -58,9 +54,8 @@ export const useGroupStore = defineStore("group", () => {
     }
 
     async function fetchGroupProfilePicture(groupId: bigint) {
-        const response = await actor.value?.get_group_profile_picture_size(
-            groupId,
-        );
+        const response =
+            await actor.value?.get_group_profile_picture_size(groupId);
         const profilePictureSize = Number(validateResponse(response));
         const profilePictureData = new Uint8Array(profilePictureSize);
 
@@ -154,7 +149,7 @@ export const useGroupStore = defineStore("group", () => {
         groupId: string,
         meetingId: string,
         title: string,
-        subtitle: boolean
+        subtitle: boolean,
     ) {
         const totalChunks = Math.ceil(data.length / MB);
         const uuid = crypto.randomUUID();

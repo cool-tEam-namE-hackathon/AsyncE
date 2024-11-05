@@ -103,11 +103,9 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from "vue";
-
-import { storeToRefs } from "pinia";
-
 import { useGroupStore } from "@stores/group-store";
+import { storeToRefs } from "pinia";
+import { ref } from "vue";
 import { useRoute } from "vue-router";
 
 // import { Icon } from "@iconify/vue";
@@ -159,7 +157,7 @@ async function getAllVideos() {
     // isFetchingVideos.value = true;
     try {
         await groupStore.getAllThumbnails(route.params.groupId as string);
-        console.log(videoThumbnail.value)
+        console.log(videoThumbnail.value);
     } catch (e) {
         console.log((e as Error).message);
     } finally {
@@ -170,7 +168,10 @@ async function getAllVideos() {
 async function getMeetingVideo() {
     isFetchingVideos.value = true;
     try {
-        await groupStore.getMeetingVideo(route.params.groupId as string, route.params.meetingId as string);
+        await groupStore.getMeetingVideo(
+            route.params.groupId as string,
+            route.params.meetingId as string,
+        );
     } catch (e) {
         console.log((e as Error).message);
     } finally {
@@ -180,7 +181,7 @@ async function getMeetingVideo() {
 
 function init() {
     getAllVideos();
-    getMeetingVideo()
+    getMeetingVideo();
 }
 init();
 </script>

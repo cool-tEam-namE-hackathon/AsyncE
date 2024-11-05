@@ -2,7 +2,7 @@
     <div v-if="!isInitialized">
         <base-spinner />
     </div>
-    <div v-else class="h-dvh flex flex-col">
+    <div v-else class="flex h-dvh flex-col">
         <Navbar />
         <router-view v-slot="{ Component }">
             <Suspense timeout="0">
@@ -41,7 +41,7 @@
                                 'focus-visible:ring-0': true,
                             }"
                         />
-                        <div v-if="error" class="text-red-500 text-sm mt-2">
+                        <div v-if="error" class="mt-2 text-sm text-red-500">
                             {{ error }}
                         </div>
                     </div>
@@ -69,7 +69,7 @@
                             icon="prime:spinner"
                             width="16"
                             height="16"
-                            class="text-black animate-spin mr-1"
+                            class="mr-1 animate-spin text-black"
                         />
                         Registering...
                     </template>
@@ -80,26 +80,20 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from "vue";
-import { storeToRefs } from "pinia";
-
-import Navbar from "@components/layout/Navbar.vue";
 import Footer from "@components/layout/Footer.vue";
-
+import Navbar from "@components/layout/Navbar.vue";
+import BaseDialog from "@components/shared/BaseDialog.vue";
+import BaseSpinner from "@components/shared/BaseSpinner.vue";
 import Button from "@components/ui/button/Button.vue";
 import Input from "@components/ui/input/Input.vue";
 import Label from "@components/ui/label/Label.vue";
-
-import BaseSpinner from "@components/shared/BaseSpinner.vue";
-import BaseDialog from "@components/shared/BaseDialog.vue";
-
 import { Icon } from "@iconify/vue";
-
 import { useUserStore } from "@stores/user-store";
 import { useWebsocketStore } from "@stores/websocket-store";
-
-import { fileToBlob } from "./utils/helpers";
+import { storeToRefs } from "pinia";
+import { ref, computed } from "vue";
 import { User } from "./types/api/model";
+import { fileToBlob } from "./utils/helpers";
 
 const userStore = useUserStore();
 const websocketStore = useWebsocketStore();

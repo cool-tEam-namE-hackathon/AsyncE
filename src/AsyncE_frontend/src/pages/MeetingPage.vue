@@ -1,14 +1,14 @@
 <template>
-    <div class="container h-full flex flex-col">
+    <div class="container flex h-full flex-col">
         <!-- INPUT GROUP TITLE -->
         <base-dialog
             :open="isConfirmationModalOpen"
             :is-closable="false"
             @on-close-dialog="toggleConfirmationModal"
-            class="rounded-lg shadow-xl max-w-md w-full"
+            class="w-full max-w-md rounded-lg shadow-xl"
         >
             <template #title>
-                <h2 class="text-xl font-medium mb-2">Upload Video</h2>
+                <h2 class="mb-2 text-xl font-medium">Upload Video</h2>
             </template>
 
             <template #content>
@@ -16,14 +16,14 @@
                     <div>
                         <Label
                             for="videoTitle"
-                            class="block text-sm font-medium mb-1"
+                            class="mb-1 block text-sm font-medium"
                         >
                             Video Title
                         </Label>
                         <Input
                             id="videoTitle"
                             v-model="videoTitle"
-                            class="w-full px-3 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            class="w-full rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
                             placeholder="Enter video title"
                         />
                     </div>
@@ -62,7 +62,7 @@
                                 icon="prime:spinner"
                                 width="16"
                                 height="16"
-                                class="text-white animate-spin mr-1"
+                                class="mr-1 animate-spin text-white"
                             />
                             Uploading... {{ uploadVideoProgress.toFixed(0) }}%
                         </template>
@@ -77,9 +77,9 @@
         <canvas ref="canvasRef" class="hidden" width="1280" height="720" />
 
         <!-- MEDIA -->
-        <div class="flex flex-col py-8 gap-6">
+        <div class="flex flex-col gap-6 py-8">
             <!-- VIDEO -->
-            <div class="flex flex-col bg-white rounded-lg shadow-md p-4">
+            <div class="flex flex-col rounded-lg bg-white p-4 shadow-md">
                 <div class="flex items-center justify-between">
                     <h2 class="text-xl font-semibold">Record New Video</h2>
                     <video-controls
@@ -99,7 +99,7 @@
             <!-- NO CAMERA OR SCREEN YET -->
             <div
                 v-if="!displayCamera && !displayStream"
-                class="flex flex-col items-center justify-center min-h-[512px] bg-gray-200 rounded-lg"
+                class="flex min-h-[512px] flex-col items-center justify-center rounded-lg bg-gray-200"
             >
                 <Icon
                     icon="fluent:video-off-32-regular"
@@ -108,7 +108,7 @@
                     style="color: black"
                 />
                 <p class="text-xl font-semibold">Video stream unavailable</p>
-                <p class="text-sm mt-2">
+                <p class="mt-2 text-sm">
                     Please start your camera or screen share
                 </p>
             </div>
@@ -116,13 +116,13 @@
             <div
                 v-else
                 ref="containerEl"
-                class="bg-gray-200 rounded-lg mb-4 w-full relative overflow-hidden"
+                class="relative mb-4 w-full overflow-hidden rounded-lg bg-gray-200"
             >
                 <!-- SCREEN -->
                 <div class="min-w-[512px]">
                     <video
                         ref="screenRef"
-                        class="rounded-lg w-full h-full object-cover"
+                        class="h-full w-full rounded-lg object-cover"
                         autoplay
                         muted
                     />
@@ -133,8 +133,8 @@
                     ref="cameraRef"
                     :class="[
                         displayStream
-                            ? `select-none top-0 left-0`
-                            : 'inset-0 w-full h-full object-cover',
+                            ? `left-0 top-0 select-none`
+                            : 'inset-0 h-full w-full object-cover',
                         'absolute',
                     ]"
                     :width="displayStream ? cameraDimensions.width : 'auto'"
@@ -156,34 +156,26 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watchEffect, computed, onMounted } from "vue";
-
+import BaseDialog from "@components/shared/BaseDialog.vue";
+import { Button } from "@components/ui/button";
+import Input from "@components/ui/input/Input.vue";
+import Label from "@components/ui/label/Label.vue";
+import Switch from "@components/ui/switch/Switch.vue";
+import VideoControls from "@components/video/VideoControls.vue";
+import VideoList from "@components/video/VideoList.vue";
 import { FFmpeg } from "@ffmpeg/ffmpeg";
-
-import { useRoute } from "vue-router";
+import { fetchFile, toBlobURL } from "@ffmpeg/util";
+import { Icon } from "@iconify/vue";
 import { useGroupStore } from "@stores/group-store";
-import { storeToRefs } from "pinia";
-
 import {
     useUserMedia,
     useDevicesList,
     useDisplayMedia,
     useElementSize,
 } from "@vueuse/core";
-
-import { Icon } from "@iconify/vue";
-
-import VideoList from "@components/video/VideoList.vue";
-import VideoControls from "@components/video/VideoControls.vue";
-
-import { Button } from "@components/ui/button";
-import Input from "@components/ui/input/Input.vue";
-import Label from "@components/ui/label/Label.vue";
-import Switch from "@components/ui/switch/Switch.vue";
-
-import BaseDialog from "@components/shared/BaseDialog.vue";
-
-import { fetchFile, toBlobURL } from "@ffmpeg/util";
+import { storeToRefs } from "pinia";
+import { ref, watchEffect, computed, onMounted } from "vue";
+import { useRoute } from "vue-router";
 
 const route = useRoute();
 const groupStore = useGroupStore();
@@ -257,10 +249,10 @@ const recordingPhaseText = computed(() => {
 const cameraDimensions = computed(() => ({
     width: displayStream.value
         ? screenWidth.value * 0.25
-        : canvasRef.value?.width ?? 0,
+        : (canvasRef.value?.width ?? 0),
     height: displayStream.value
         ? screenHeight.value * 0.25
-        : canvasRef.value?.height ?? 0,
+        : (canvasRef.value?.height ?? 0),
 }));
 
 function toggleConfirmationModal() {

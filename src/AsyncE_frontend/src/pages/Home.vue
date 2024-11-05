@@ -10,7 +10,7 @@
                         Welcome to AsyncE
                     </h1>
                     <p
-                        class="mx-auto max-w-[700px] text-gray-500 md:text-xl dark:text-gray-400"
+                        class="mx-auto max-w-[700px] text-gray-500 dark:text-gray-400 md:text-xl"
                     >
                         Connect, collaborate, and celebrate at your own pace.
                         Join our asynchronous gatherings and be part of a global
@@ -27,20 +27,20 @@
 
     <!-- TWO -->
     <section
-        class="flex flex-col items-center w-full py-12 md:py-24 lg:py-32 bg-gray-100 dark:bg-gray-200"
+        class="flex w-full flex-col items-center bg-gray-100 py-12 dark:bg-gray-200 md:py-24 lg:py-32"
     >
         <div class="px-4 md:px-6">
             <h2
-                class="text-3xl font-bold tracking-tighter sm:text-5xl text-center mb-12"
+                class="mb-12 text-center text-3xl font-bold tracking-tighter sm:text-5xl"
             >
                 Key Features
             </h2>
-            <div class="inline-grid grid-cols-1 md:grid-cols-2 gap-4 mx-auto">
+            <div class="mx-auto inline-grid grid-cols-1 gap-4 md:grid-cols-2">
                 <!-- CARD 1 -->
                 <div
-                    class="max-w-sm p-6 bg-white border border-gray-200 rounded-lg shadow-md"
+                    class="max-w-sm rounded-lg border border-gray-200 bg-white p-6 shadow-md"
                 >
-                    <div class="flex items-center mb-4 text-gray-700">
+                    <div class="mb-4 flex items-center text-gray-700">
                         <span class="text-xl font-bold">Flexible Timing</span>
                     </div>
                     <span class="text-gray-600">
@@ -51,9 +51,9 @@
 
                 <!-- CARD 2 -->
                 <div
-                    class="max-w-sm p-6 bg-white border border-gray-200 rounded-lg shadow-md"
+                    class="max-w-sm rounded-lg border border-gray-200 bg-white p-6 shadow-md"
                 >
-                    <div class="flex items-center mb-4 text-gray-700">
+                    <div class="mb-4 flex items-center text-gray-700">
                         <span class="text-xl font-bold">Rich Discussions</span>
                     </div>
                     <span class="text-gray-600">
@@ -64,9 +64,9 @@
 
                 <!-- CARD 3 -->
                 <div
-                    class="max-w-sm p-6 bg-white border border-gray-200 rounded-lg shadow-md"
+                    class="max-w-sm rounded-lg border border-gray-200 bg-white p-6 shadow-md"
                 >
-                    <div class="flex items-center mb-4 text-gray-700">
+                    <div class="mb-4 flex items-center text-gray-700">
                         <span class="text-xl font-bold">Global Networking</span>
                     </div>
                     <span class="text-gray-600">
@@ -77,9 +77,9 @@
 
                 <!-- CARD 4 -->
                 <div
-                    class="max-w-sm p-6 bg-white border border-gray-200 rounded-lg shadow-md"
+                    class="max-w-sm rounded-lg border border-gray-200 bg-white p-6 shadow-md"
                 >
-                    <div class="flex items-center mb-4 text-gray-700">
+                    <div class="mb-4 flex items-center text-gray-700">
                         <span class="text-xl font-bold">
                             Knowledge Repository
                         </span>
