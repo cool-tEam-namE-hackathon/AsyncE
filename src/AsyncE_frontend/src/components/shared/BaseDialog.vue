@@ -7,15 +7,15 @@
             @interact-outside="handleClickOutside"
         >
             <DialogHeader>
-                <DialogTitle>
+                <DialogTitle v-if="$slots['title']">
                     <slot name="title" />
                 </DialogTitle>
-                <DialogDescription>
+                <DialogDescription v-if="$slots['description']">
                     <slot name="description" />
                 </DialogDescription>
             </DialogHeader>
             <slot name="content" />
-            <DialogFooter>
+            <DialogFooter v-if="$slots['footer']">
                 <slot name="footer" />
             </DialogFooter>
         </DialogContent>
@@ -24,7 +24,6 @@
 
 <script setup lang="ts">
 import { computed, useAttrs } from "vue";
-import { BaseDialogProps } from "@/types/api/model";
 
 import {
     Dialog,
@@ -35,6 +34,8 @@ import {
     DialogTitle,
 } from "@ui/dialog";
 import { FocusOutsideEvent } from "radix-vue/dist/DismissableLayer";
+
+import { BaseDialogProps } from "@/types/api/model";
 
 const props = defineProps<BaseDialogProps>();
 const emits = defineEmits(["on-close-dialog"]);
