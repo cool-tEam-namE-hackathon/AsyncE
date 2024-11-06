@@ -20,9 +20,9 @@
                 <Icon
                     v-else
                     icon="prime:spinner"
-                    width="16"
-                    height="16"
-                    class="mr-1 animate-spin text-black"
+                    width="63"
+                    height="64"
+                    class="m-auto animate-spin text-black"
                 />
             </template>
         </base-dialog>
@@ -68,6 +68,13 @@
                     </p>
                 </div> -->
             </div>
+            <video
+                :src="meetingVideo"
+                class="h-full w-full rounded-md"
+                autoplay
+                controls
+                muted
+            />
             <ScrollBar orientation="horizontal" />
         </ScrollArea>
     </div>
