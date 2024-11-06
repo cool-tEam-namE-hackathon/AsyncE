@@ -371,11 +371,11 @@ pub fn get_video_frame_chunk_blob(
 }
 
 #[ic_cdk::query]
-pub fn get_meeting_thumbnaiL_size(group_id: u128, meeting_id: u128) -> Result<u128, String> {
+pub fn get_meeting_thumbnail_size(group_id: u128, meeting_id: u128) -> Result<u128, String> {
     user::assert_user_logged_in()?;
     assert_check_group(group_id)?;
 
-    let meetings = MEETINGS.lock().unwrap();
+    let meetings = MEETINGS.lock().map_err(|err| format!("Failed to lock meeting: {}", err))?;
     let meetings = meetings
         .get(&group_id)
         .ok_or(String::from("No meetings found on this group!"))?;

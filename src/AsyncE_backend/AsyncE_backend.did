@@ -191,7 +191,7 @@ service : {
         Err: text;
     });
 
-    get_meeting_thumbnail_chunk_blob: (nat, nat) -> (variant {
+    get_meeting_thumbnail_chunk_blob: (nat, nat, nat) -> (variant {
         Ok: blob;
         Err: text;
     });

@@ -272,6 +272,7 @@ export const useGroupStore = defineStore("group", () => {
                         ?.get_meeting_thumbnail_chunk_blob(
                             BigInt(groupId),
                             meetingId,
+                            BigInt(j)
                         )
                         .then((chunk) => {
                             const okChunk = validateResponse(chunk);
