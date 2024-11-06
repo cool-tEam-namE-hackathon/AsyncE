@@ -31,14 +31,47 @@ export default [
                 "error",
                 {
                     groups: [
-                        "external",
                         "builtin",
+                        "external",
                         "internal",
-                        "sibling",
                         "parent",
+                        "sibling",
                         "index",
                     ],
-                    "newlines-between": "never",
+                    pathGroups: [
+                        {
+                            pattern: "vue",
+                            group: "builtin",
+                            position: "before",
+                        },
+                        {
+                            pattern: "pinia",
+                            group: "builtin",
+                            position: "before",
+                        },
+                        {
+                            pattern: "vue-router",
+                            group: "builtin",
+                            position: "before",
+                        },
+                        {
+                            pattern: "@stores/**",
+                            group: "internal",
+                            position: "before",
+                        },
+                        {
+                            pattern: "@components/**",
+                            group: "internal",
+                            position: "before",
+                        },
+                        {
+                            pattern: "@vueuse/**",
+                            group: "external",
+                            position: "before",
+                        },
+                    ],
+                    pathGroupsExcludedImportTypes: ["builtin"],
+                    "newlines-between": "always",
                     alphabetize: { order: "asc", caseInsensitive: true },
                 },
             ],

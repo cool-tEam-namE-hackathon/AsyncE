@@ -1,11 +1,15 @@
+import { ref } from "vue";
+
+import { defineStore } from "pinia";
+import { storeToRefs } from "pinia";
+
 import {
     GroupQueryResponse,
     MeetingHeader,
 } from "@declarations/AsyncE_backend/AsyncE_backend.did";
+
 import { useUserStore } from "@stores/user-store";
-import { defineStore } from "pinia";
-import { storeToRefs } from "pinia";
-import { ref } from "vue";
+
 import { MB } from "@/data/user-constants";
 import { Group } from "@/types/api/model";
 import { blobToURL, validateResponse } from "@/utils/helpers";
@@ -277,6 +281,8 @@ export const useGroupStore = defineStore("group", () => {
             }
 
             await Promise.all(chunkPromises);
+
+            console.log(okThumbnailData);
 
             videoThumbnail.value.push(okThumbnailData);
         }

@@ -54,16 +54,21 @@
 </template>
 
 <script setup lang="ts">
-import { Button } from "@components/ui/button";
-import { Input } from "@components/ui/input";
+import { nextTick, ref } from "vue";
+
+import { storeToRefs } from "pinia";
+
+import { useRoute } from "vue-router";
+
 import { Chat } from "@declarations/AsyncE_backend/AsyncE_backend.did";
 import { Icon } from "@iconify/vue";
+
 import { useGroupStore } from "@stores/group-store";
 import { useUserStore } from "@stores/user-store";
 import { useWebsocketStore } from "@stores/websocket-store";
-import { storeToRefs } from "pinia";
-import { nextTick, ref } from "vue";
-import { useRoute } from "vue-router";
+
+import { Button } from "@components/ui/button";
+import { Input } from "@components/ui/input";
 
 const route = useRoute();
 const websocketStore = useWebsocketStore();

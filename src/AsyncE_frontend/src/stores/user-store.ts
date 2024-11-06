@@ -1,9 +1,15 @@
-import { _SERVICE } from "@declarations/AsyncE_backend/AsyncE_backend.did";
+import { ref, toRaw } from "vue";
+
+import { defineStore } from "pinia";
+
+import {
+    _SERVICE,
+    UserCredentialsResponse,
+} from "@declarations/AsyncE_backend/AsyncE_backend.did";
 import { createActor } from "@declarations/AsyncE_backend/index";
 import { ActorSubclass, Identity } from "@dfinity/agent";
 import { AuthClient } from "@dfinity/auth-client";
-import { defineStore } from "pinia";
-import { ref, toRaw } from "vue";
+
 import { MB } from "@/data/user-constants";
 import { blobToURL, validateResponse } from "@/utils/helpers";
 
@@ -12,7 +18,7 @@ const isAuthenticated = ref<boolean>(false);
 const identity = ref<Identity | null>(null);
 const actor = ref<ActorSubclass<_SERVICE> | null>();
 
-const username = ref<string>("");
+const userCredentials = ref<UserCredentialsResponse>();
 const profilePicture = ref<string>("");
 
 export const getIdentityProvider = () => {
@@ -124,7 +130,7 @@ export const useUserStore = defineStore("user", () => {
 
         if (!okResponse[0]) return;
 
-        username.value = okResponse[0];
+        userCredentials.value = okResponse[0];
 
         const profilePictureSize =
             await actor.value?.get_profile_picture_size();
@@ -161,7 +167,7 @@ export const useUserStore = defineStore("user", () => {
         isAuthenticated,
         identity,
         actor,
-        username,
+        userCredentials,
         profilePicture,
 
         init,

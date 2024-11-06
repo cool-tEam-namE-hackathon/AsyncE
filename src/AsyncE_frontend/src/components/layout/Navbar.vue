@@ -7,7 +7,7 @@
         <nav class="ml-auto flex gap-4 sm:gap-6">
             <!-- NOT AUTHENTICATED -->
             <button
-                v-if="!isAuthenticated || !username"
+                v-if="!isAuthenticated || !userCredentials?.username"
                 class="text-sm font-medium underline-offset-4 hover:underline"
                 @click="login"
             >
@@ -30,13 +30,15 @@
                 >
                     <template #trigger>
                         <div class="flex items-center gap-3">
-                            <span>{{ username }}</span>
+                            <span>{{ userCredentials.username }}</span>
                             <Avatar>
                                 <AvatarImage
                                     :src="profilePicture"
-                                    :alt="username"
+                                    :alt="userCredentials.username"
                                 />
-                                <AvatarFallback>{{ username }}</AvatarFallback>
+                                <AvatarFallback>
+                                    {{ userCredentials.username }}
+                                </AvatarFallback>
                             </Avatar>
                         </div>
                     </template>
@@ -46,17 +48,26 @@
     </header>
 </template>
 <script setup lang="ts">
-import NavbarNotification from "@components/navbar/NavbarNotification.vue";
-import { Avatar, AvatarFallback, AvatarImage } from "@components/ui/avatar";
+import { ref } from "vue";
+
+import { storeToRefs } from "pinia";
+
+import { useRouter } from "vue-router";
+
 import { USER_DROPDOWN_OPTIONS } from "@data/user-constants";
 import { Icon } from "@iconify/vue";
 import BaseDropdown from "@shared/BaseDropdown.vue";
-import { useUserStore } from "@stores/user-store";
-import { storeToRefs } from "pinia";
 
+import { useUserStore } from "@stores/user-store";
+
+import NavbarNotification from "@components/navbar/NavbarNotification.vue";
+import { Avatar, AvatarFallback, AvatarImage } from "@components/ui/avatar";
+
+const router = useRouter();
 const userStore = useUserStore();
 
-const { isAuthenticated, username, profilePicture } = storeToRefs(userStore);
+const { isAuthenticated, userCredentials, profilePicture } =
+    storeToRefs(userStore);
 
 async function login() {
     await userStore.login();
@@ -69,5 +80,11 @@ async function logout() {
 
 function handleOptionClick(option: string) {
     if (option === "Logout") logout();
+
+    if (option === "Profile") {
+        router.push({
+            name: "ProfilePage",
+        });
+    }
 }
 </script>

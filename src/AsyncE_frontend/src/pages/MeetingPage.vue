@@ -142,11 +142,12 @@
                     muted
                     autoplay
                 />
-                <!-- <div class="flex-1">
-                    <video-list ref="videoList" />
-                </div> -->
             </div>
         </div>
+    </div>
+
+    <div class="flex-1">
+        <video-list ref="videoList" />
     </div>
 
     <video v-if="url" autoplay muted controls>
@@ -156,6 +157,25 @@
 </template>
 
 <script setup lang="ts">
+import { ref, watchEffect, computed, onMounted } from "vue";
+
+import { storeToRefs } from "pinia";
+
+import { useRoute } from "vue-router";
+
+import {
+    useUserMedia,
+    useDevicesList,
+    useDisplayMedia,
+    useElementSize,
+} from "@vueuse/core";
+
+import { FFmpeg } from "@ffmpeg/ffmpeg";
+import { fetchFile, toBlobURL } from "@ffmpeg/util";
+import { Icon } from "@iconify/vue";
+
+import { useGroupStore } from "@stores/group-store";
+
 import BaseDialog from "@components/shared/BaseDialog.vue";
 import { Button } from "@components/ui/button";
 import Input from "@components/ui/input/Input.vue";
@@ -163,19 +183,6 @@ import Label from "@components/ui/label/Label.vue";
 import Switch from "@components/ui/switch/Switch.vue";
 import VideoControls from "@components/video/VideoControls.vue";
 import VideoList from "@components/video/VideoList.vue";
-import { FFmpeg } from "@ffmpeg/ffmpeg";
-import { fetchFile, toBlobURL } from "@ffmpeg/util";
-import { Icon } from "@iconify/vue";
-import { useGroupStore } from "@stores/group-store";
-import {
-    useUserMedia,
-    useDevicesList,
-    useDisplayMedia,
-    useElementSize,
-} from "@vueuse/core";
-import { storeToRefs } from "pinia";
-import { ref, watchEffect, computed, onMounted } from "vue";
-import { useRoute } from "vue-router";
 
 const route = useRoute();
 const groupStore = useGroupStore();
@@ -310,20 +317,20 @@ async function saveRecording() {
 
     url.value = URL.createObjectURL(blob);
 
-    // try {
-    //     await groupStore.uploadVideo(
-    //         data,
-    //         route.params.groupId as string,
-    //         route.params.meetingId as string,
-    //         videoTitle.value,
-    //         generateSubtitle.value,
-    //     );
-    // } catch (e) {
-    //     console.log((e as Error).message);
-    // } finally {
-    //     isUploading.value = false;
-    //     toggleConfirmationModal();
-    // }
+    try {
+        await groupStore.uploadVideo(
+            data,
+            route.params.groupId as string,
+            route.params.meetingId as string,
+            videoTitle.value,
+            generateSubtitle.value,
+        );
+    } catch (e) {
+        console.log((e as Error).message);
+    } finally {
+        isUploading.value = false;
+        toggleConfirmationModal();
+    }
 
     recordedChunks.value = [];
 }

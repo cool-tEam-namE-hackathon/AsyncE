@@ -1,3 +1,5 @@
+import { createRouter, createWebHistory } from "vue-router";
+
 import {
     Home,
     CreateGroup,
@@ -5,8 +7,8 @@ import {
     GroupList,
     MeetingPage,
     NotFoundPage,
+    ProfilePage,
 } from "@lazy-loading-routes";
-import { createRouter, createWebHistory } from "vue-router";
 
 const routes = [
     {
@@ -15,19 +17,24 @@ const routes = [
         component: Home,
     },
     {
+        path: "/profile",
+        name: "ProfilePage",
+        component: ProfilePage,
+    },
+    {
         path: "/create-group",
         name: "CreateGroup",
         component: CreateGroup,
     },
     {
-        path: "/group/:id",
-        name: "GroupPage",
-        component: GroupPage,
-    },
-    {
         path: "/group-list",
         name: "GroupList",
         component: GroupList,
+    },
+    {
+        path: "/group/:id",
+        name: "GroupPage",
+        component: GroupPage,
     },
     {
         path: "/group/:groupId/meeting/:meetingId",

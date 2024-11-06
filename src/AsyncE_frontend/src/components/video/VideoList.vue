@@ -1,5 +1,5 @@
 <template>
-    <div></div>
+    <div>video</div>
     <!-- <base-dialog
         :open="isPreviewOpen"
         class="md:min-w-[800px] md:min-h-[450px] sm:min-w-[90vw] sm:min-h-[50vh]"
@@ -103,10 +103,13 @@
 </template>
 
 <script setup lang="ts">
-import { useGroupStore } from "@stores/group-store";
-import { storeToRefs } from "pinia";
 import { ref } from "vue";
+
+import { storeToRefs } from "pinia";
+
 import { useRoute } from "vue-router";
+
+import { useGroupStore } from "@stores/group-store";
 
 // import { Icon } from "@iconify/vue";
 
@@ -157,6 +160,7 @@ async function getAllVideos() {
     // isFetchingVideos.value = true;
     try {
         await groupStore.getAllThumbnails(route.params.groupId as string);
+        console.log("here");
         console.log(videoThumbnail.value);
     } catch (e) {
         console.log((e as Error).message);
@@ -180,6 +184,8 @@ async function getMeetingVideo() {
 }
 
 function init() {
+    console.log("here 2");
+
     getAllVideos();
     getMeetingVideo();
 }

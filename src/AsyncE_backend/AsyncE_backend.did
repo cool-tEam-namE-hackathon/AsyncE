@@ -72,7 +72,7 @@ type WebsocketEventMessage = variant {
 
 service : {
     get_user_credentials: () -> (variant {
-        Ok: opt text;
+        Ok: opt UserCredentialsResponse;
         Err: text;
     }) query;
 

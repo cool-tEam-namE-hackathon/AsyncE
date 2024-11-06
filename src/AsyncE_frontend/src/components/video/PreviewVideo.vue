@@ -13,8 +13,9 @@
 x
 
 <script setup lang="ts">
-import BaseDialog from "@shared/BaseDialog.vue";
 import { computed } from "vue";
+
+import BaseDialog from "@shared/BaseDialog.vue";
 
 const props = defineProps<{
     isOpen: boolean;

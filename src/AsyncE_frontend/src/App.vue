@@ -80,6 +80,15 @@
 </template>
 
 <script setup lang="ts">
+import { ref, computed } from "vue";
+
+import { storeToRefs } from "pinia";
+
+import { Icon } from "@iconify/vue";
+
+import { useUserStore } from "@stores/user-store";
+import { useWebsocketStore } from "@stores/websocket-store";
+
 import Footer from "@components/layout/Footer.vue";
 import Navbar from "@components/layout/Navbar.vue";
 import BaseDialog from "@components/shared/BaseDialog.vue";
@@ -87,11 +96,7 @@ import BaseSpinner from "@components/shared/BaseSpinner.vue";
 import Button from "@components/ui/button/Button.vue";
 import Input from "@components/ui/input/Input.vue";
 import Label from "@components/ui/label/Label.vue";
-import { Icon } from "@iconify/vue";
-import { useUserStore } from "@stores/user-store";
-import { useWebsocketStore } from "@stores/websocket-store";
-import { storeToRefs } from "pinia";
-import { ref, computed } from "vue";
+
 import { User } from "./types/api/model";
 import { fileToBlob } from "./utils/helpers";
 

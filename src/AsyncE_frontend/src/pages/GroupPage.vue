@@ -157,7 +157,7 @@
                             <div
                                 class="rounded-md bg-gray-50 p-2 text-sm shadow-sm transition duration-200 ease-in-out hover:bg-gray-100"
                             >
-                                {{ user.username }} ({{ user.role }})
+                                {{ user.username }}
                             </div>
                         </div>
                     </div>
@@ -173,17 +173,23 @@
 </template>
 
 <script setup lang="ts">
+import { ref, computed } from "vue";
+
+import { storeToRefs } from "pinia";
+
+import { useRoute, useRouter } from "vue-router";
+
+import { useDebounceFn } from "@vueuse/core";
+
+import { Icon } from "@iconify/vue";
+
+import { useGroupStore } from "@stores/group-store";
+import { useUserStore } from "@stores/user-store";
+
 import MeetingChatWindow from "@components/Meeting/MeetingChatWindow.vue";
 import BaseDialog from "@components/shared/BaseDialog.vue";
 import { Button } from "@components/ui/button";
 import { Input } from "@components/ui/input";
-import { Icon } from "@iconify/vue";
-import { useGroupStore } from "@stores/group-store";
-import { useUserStore } from "@stores/user-store";
-import { useDebounceFn } from "@vueuse/core";
-import { storeToRefs } from "pinia";
-import { ref, computed } from "vue";
-import { useRoute, useRouter } from "vue-router";
 
 const route = useRoute();
 const router = useRouter();
