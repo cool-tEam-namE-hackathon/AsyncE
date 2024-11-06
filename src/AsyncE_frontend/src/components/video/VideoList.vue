@@ -100,6 +100,10 @@
         <source :src="meetingVideo" type="video/mp4" />
         Your browser does not support the video tag.
     </video> -->
+    <div v-for="thumbnail in videoThumbnail" :key="thumbnail">
+        <img :src="thumbnail" alt="asdads">
+
+    </div>
 </template>
 
 <script setup lang="ts">

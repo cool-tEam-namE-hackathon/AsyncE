@@ -24,7 +24,7 @@ export const useGroupStore = defineStore("group", () => {
 
     const meetingList = ref<MeetingHeader[]>([]);
     const meetingDetail = ref<MeetingHeader>();
-    const videoThumbnail = ref<Uint8Array[]>([]);
+    const videoThumbnail = ref<string[]>([]);
 
     const meetingVideo = ref<string>("");
 
@@ -285,7 +285,7 @@ export const useGroupStore = defineStore("group", () => {
 
             console.log(okThumbnailData);
 
-            videoThumbnail.value.push(okThumbnailData);
+            videoThumbnail.value.push(blobToURL(okThumbnailData));
         }
     }
 
