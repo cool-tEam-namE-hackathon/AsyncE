@@ -4,7 +4,7 @@
             class="w-[100px]"
             v-model="selectedCamera"
             placeholder="Select camera"
-            :options="cameraList"
+            :options="props.cameraList"
         />
         <Button
             :variant="enabledCamera ? 'default' : 'outline'"

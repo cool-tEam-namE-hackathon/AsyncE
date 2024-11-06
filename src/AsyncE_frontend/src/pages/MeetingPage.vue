@@ -184,7 +184,6 @@ const ffmpeg = ref<FFmpeg>();
 
 const videoList = ref<InstanceType<typeof VideoList> | null>(null);
 
-const selectedCamera = ref<string>();
 const videoTitle = ref<string>("");
 const url = ref<string>("");
 
@@ -219,6 +218,7 @@ const { videoInputs: cameras, audioInputs: microphones } = useDevicesList({
 const { width: screenWidth, height: screenHeight } =
     useElementSize(containerEl);
 
+const selectedCamera = computed(() => cameras.value[0]?.deviceId);
 const currentMicrophone = computed(() => microphones.value[0]?.deviceId);
 
 const { stream: displayCamera, enabled: enabledCamera } = useUserMedia({
@@ -233,10 +233,12 @@ const isRecordingDisabled = computed(() => {
 });
 
 const cameraList = computed(() => {
-    return cameras.value.map(({ label, deviceId }) => ({
-        deviceId,
-        name: label,
-    }));
+    return cameras.value
+        .filter(({ deviceId }) => deviceId !== "")
+        .map(({ label, deviceId }) => ({
+            deviceId,
+            name: label,
+        }));
 });
 
 const recordingPhaseText = computed(() => {
