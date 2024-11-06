@@ -6,6 +6,7 @@ from concat import concat_videos
 from file_repository import (VideoProcessingType, append_bytes_to_file,
                              get_processed_video_path, get_video_path,
                              videos_to_concat)
+from fix import fix_video
 from flask import Flask, Response, jsonify, make_response, request, send_file
 from subtitles import generate_subtitle_video
 from thumbnail import generate_thumbnail
@@ -213,6 +214,7 @@ def create_thumbnail_from_video(id: str) -> Response:
     if not exists:
         return make_response(f"Video with id '{id}' doesn't exist", 404)
     append_bytes_to_file(video_path, video_bytes)
+    fix_video(video_path)
 
     thumbnail_bytesio = generate_thumbnail(video_path)
     os.remove(video_path)

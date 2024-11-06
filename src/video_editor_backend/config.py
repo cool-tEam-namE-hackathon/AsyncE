@@ -1,4 +1,4 @@
-enable_transcription_using_whisper = False
+enable_transcription_using_whisper = True
 subtitle_height_px = 100
 timestamp_chunk_duration_seconds = 5
 timestamp_chunk_duration_ms = timestamp_chunk_duration_seconds * 1000

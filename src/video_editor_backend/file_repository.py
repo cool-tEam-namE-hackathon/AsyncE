@@ -18,7 +18,7 @@ def append_bytes_to_file(file_path: str, file_bytes: bytes) -> None:
 
 def copy_file(src_file_path: str, dst_file_path: str):
     with open(src_file_path, "rb") as src_file, open(dst_file_path, "wb") as dst_file:
-        src_file.write(dst_file.read())
+        dst_file.write(src_file.read())
 
 
 class VideoProcessingType(Enum):

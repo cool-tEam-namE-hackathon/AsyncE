@@ -1,3 +1,4 @@
+import json
 import os
 import tempfile
 from typing import List, Tuple
@@ -5,6 +6,7 @@ from typing import List, Tuple
 import config
 import speech_recognition as sr
 from file_repository import save_subtitle_video
+from fix import fix_video
 from moviepy.editor import (ColorClip, CompositeVideoClip, TextClip,
                             VideoFileClip)
 from pydub import AudioSegment
@@ -21,7 +23,7 @@ def sphinx_transcriber(audio_data: sr.AudioData) -> str:
 def vosk_transcriber(audio_data: sr.AudioData) -> str:
     if config.custom_log_prints:
         print("transcribing using vosk...")
-    return recognizer.recognize_vosk(audio_data)
+    return json.loads(recognizer.recognize_vosk(audio_data))["text"]
 
 
 def whisper_transcriber(audio_data: sr.AudioData) -> str:
@@ -82,6 +84,8 @@ def transcribe_video(video_path: str) -> List[Tuple[int, str]]:
 
 
 def generate_subtitle_video(input_video_path: str, output_video_id: str) -> None:
+    fix_video(input_video_path)
+
     transcription = transcribe_video(input_video_path)
     video = VideoFileClip(input_video_path)
     video_length = video.duration
