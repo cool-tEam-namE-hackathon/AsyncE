@@ -1,4 +1,4 @@
-Flask
+flask
 moviepy
 ffmpeg-python
 pillow
