@@ -87,6 +87,7 @@
                         :camera-list="cameraList"
                         :enabled-camera="enabledCamera"
                         :enabled-screen="enabledScreen"
+                        :is-control-disabled="isControlDisabled"
                         :is-recording-disabled="isRecordingDisabled"
                         :recording-phase-text="recordingPhaseText"
                         @on-toggle-camera="enabledCamera = !enabledCamera"
@@ -149,7 +150,7 @@
     <video-list ref="videoList" />
 
     <video v-if="url" autoplay muted controls>
-        <source :src="url" type="video/mp4" />
+        <source :src="url" type="video/webm" />
         Your browser does not support the video tag.
     </video>
 </template>
@@ -168,8 +169,6 @@ import {
     useElementSize,
 } from "@vueuse/core";
 
-import { FFmpeg } from "@ffmpeg/ffmpeg";
-import { fetchFile, toBlobURL } from "@ffmpeg/util";
 import { Icon } from "@iconify/vue";
 
 import { useGroupStore } from "@stores/group-store";
@@ -184,8 +183,6 @@ import VideoList from "@components/video/VideoList.vue";
 
 const route = useRoute();
 const groupStore = useGroupStore();
-
-const ffmpeg = ref<FFmpeg>();
 
 const videoList = ref<InstanceType<typeof VideoList> | null>(null);
 
@@ -235,9 +232,11 @@ const { stream: displayCamera, enabled: enabledCamera } = useUserMedia({
     },
 });
 
-const isRecordingDisabled = computed(() => {
-    return !enabledCamera.value;
-});
+const isControlDisabled = computed(() => recordingPhaseText.value === "Stop");
+
+const isRecordingDisabled = computed(
+    () => !displayCamera.value && !displayStream.value,
+);
 
 const cameraList = computed(() =>
     cameras.value
@@ -334,52 +333,6 @@ async function saveRecording() {
     recordedChunks.value = [];
 }
 
-async function loadFFmpeg(ffmpeg: FFmpeg) {
-    await ffmpeg.load({
-        coreURL: await toBlobURL(
-            "https://unpkg.com/@ffmpeg/core@0.12.3/dist/esm/ffmpeg-core.js",
-            "text/javascript",
-        ),
-        wasmURL: await toBlobURL(
-            "https://unpkg.com/@ffmpeg/core@0.12.3/dist/esm/ffmpeg-core.wasm",
-            "application/wasm",
-        ),
-        workerURL: await toBlobURL(
-            "https://unpkg.com/@ffmpeg/ffmpeg@0.12.3/dist/esm/worker.js",
-            "text/javascript",
-        ),
-    });
-}
-
-async function getFFmpegInstance() {
-    if (!ffmpeg.value) {
-        ffmpeg.value = new FFmpeg();
-        await loadFFmpeg(ffmpeg.value);
-    }
-    return ffmpeg.value;
-}
-
-async function convertToWebm(blob: Blob) {
-    const ffmpegInstance = await getFFmpegInstance();
-
-    await ffmpegInstance.writeFile("input.webm", await fetchFile(blob));
-    await ffmpegInstance.exec([
-        "-i",
-        "input.webm",
-        "-c",
-        "copy",
-        "output.webm",
-    ]);
-
-    const data = await ffmpegInstance.readFile("output.webm");
-
-    const mp4Blob = new Blob([(data as Uint8Array).buffer], {
-        type: "video/webm; codecs=vp9",
-    });
-
-    return mp4Blob;
-}
-
 function handleRecord() {
     if (recordingPhaseText.value === "Record") {
         startRecording();
@@ -413,50 +366,58 @@ function startDrawing() {
 
     const scaledWidth = screenWidth.value * window.devicePixelRatio;
     const scaledHeight = screenHeight.value * window.devicePixelRatio;
-
-    canvasRef.value.width = scaledWidth;
-    canvasRef.value.height = scaledHeight;
-
     const originalWidth = screenWidth.value;
     const originalHeight = screenHeight.value;
 
+    canvasRef.value.width = scaledWidth;
+    canvasRef.value.height = scaledHeight;
     ctx.value.scale(window.devicePixelRatio, window.devicePixelRatio);
 
     const draw = () => {
         if (!ctx.value || !canvasRef.value) return;
 
-        ctx.value.save();
-
         ctx.value.clearRect(0, 0, originalWidth, originalHeight);
 
-        if (enabledScreen.value && displayStream.value) {
-            const screenVideo = screenRef.value;
-            if (screenVideo) {
-                ctx.value.drawImage(
-                    screenVideo,
-                    0,
-                    0,
-                    originalWidth,
-                    originalHeight,
-                );
-            }
+        if (enabledScreen.value && displayStream.value && screenRef.value) {
+            ctx.value.drawImage(
+                screenRef.value,
+                0,
+                0,
+                originalWidth,
+                originalHeight,
+            );
         }
 
-        if (enabledCamera.value && displayCamera.value) {
-            const cameraVideo = cameraRef.value;
-            if (cameraVideo) {
-                const cameraWidth = Math.floor(screenWidth.value / 4);
-                const cameraHeight = Math.floor(screenHeight.value / 4);
+        if (enabledCamera.value && displayCamera.value && cameraRef.value) {
+            const camera = cameraRef.value;
+
+            if (enabledScreen.value) {
+                // Camera in corner when screen is on
+                const cornerSize = {
+                    width: Math.floor(originalWidth / 4),
+                    height: Math.floor(originalHeight / 4),
+                };
                 ctx.value.drawImage(
-                    cameraVideo,
+                    camera,
                     0,
                     0,
-                    enabledScreen.value ? cameraWidth : originalWidth,
-                    enabledScreen.value ? cameraHeight : originalHeight,
+                    cornerSize.width,
+                    cornerSize.height,
                 );
+            } else {
+                // Camera full screen if screen is off
+                const scale = Math.max(
+                    originalWidth / camera.videoWidth,
+                    originalHeight / camera.videoHeight,
+                );
+                const newWidth = camera.videoWidth * scale;
+                const newHeight = camera.videoHeight * scale;
+                const x = (originalWidth - newWidth) / 2;
+                const y = (originalHeight - newHeight) / 2;
+
+                ctx.value.drawImage(camera, x, y, newWidth, newHeight);
             }
         }
-        ctx.value.restore();
 
         animationFrameId.value = requestVideoFrame(draw);
     };

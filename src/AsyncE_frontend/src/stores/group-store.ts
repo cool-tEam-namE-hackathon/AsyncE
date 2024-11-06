@@ -195,6 +195,8 @@ export const useGroupStore = defineStore("group", () => {
     }
 
     async function getMeetingVideo(groupId: string, meetingId: string) {
+        meetingVideo.value = "";
+
         const response = await actor.value?.get_video_meeting_size(
             BigInt(groupId),
             BigInt(meetingId),
@@ -225,6 +227,8 @@ export const useGroupStore = defineStore("group", () => {
     }
 
     async function getVideo(groupId: string, meetingId: string, index: number) {
+        selectedVideo.value = "";
+
         const response = await actor.value?.get_video_frame_size(
             BigInt(groupId),
             BigInt(meetingId),
@@ -280,6 +284,8 @@ export const useGroupStore = defineStore("group", () => {
     }
 
     async function getAllThumbnails(groupId: string) {
+        videoThumbnail.value = [];
+
         const totalFrames = meetingDetail.value?.frames_count;
         const meetingId = meetingDetail.value?.id;
 

@@ -11,9 +11,10 @@
             <DropdownMenuItem
                 v-for="(option, index) in props.options"
                 :key="index"
+                @click="handleOptionClick(option.name)"
             >
-                <span @click="handleOptionClick(option.name)"
-                    >{{ option.name }}
+                <span>
+                    {{ option.name }}
                 </span>
             </DropdownMenuItem>
 
@@ -26,7 +27,6 @@
 </template>
 
 <script setup lang="ts">
-import { BaseDropdownProps } from "@/types/api/model";
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -35,6 +35,8 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from "@ui/dropdown-menu";
+
+import { BaseDropdownProps } from "@/types/api/model";
 
 const props = defineProps<BaseDropdownProps>();
 const emits = defineEmits<{

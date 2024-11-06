@@ -1,38 +1,87 @@
 <template>
     <div class="container">
+        <!-- SINGLE VIDEO -->
         <base-dialog
             :open="isPreviewOpen"
             :is-closable="true"
-            class="sm:min-h-[50vh] sm:min-w-[90vw] md:min-h-[80vh] md:min-w-[80vw]"
+            :class="
+                isSelectedVideoNotEmpty ? 'sm:min-h-fit' : 'sm:min-h-[50vh]'
+            "
+            class="sm:min-w-[90vw] md:min-w-[80vw]"
             @on-close-dialog="togglePreviewModal"
         >
             <template #content>
-                <div v-if="selectedVideo">
+                <div v-if="isSelectedVideoNotEmpty">
                     <video
                         ref="previewVideoRef"
                         :src="selectedVideo"
-                        class="h-full w-full rounded-md"
+                        class="mt-6 rounded-md"
                         autoplay
                         controls
                         muted
                     />
                 </div>
-                <Icon
-                    v-else
-                    icon="prime:spinner"
-                    width="63"
-                    height="64"
-                    class="m-auto animate-spin text-black"
-                />
+                <div v-else class="flex flex-col items-center justify-center">
+                    <Icon
+                        icon="prime:spinner"
+                        width="64"
+                        height="64"
+                        class="mb-4 animate-spin text-black"
+                    />
+                    <p class="text-lg text-gray-600">
+                        Please wait while the video is loading...
+                    </p>
+                </div>
             </template>
         </base-dialog>
 
-        <ScrollArea class="w-full rounded-md border">
-            <div class="flex w-max space-x-4 p-4">
+        <!-- COMBINED VIDEO -->
+        <base-dialog
+            :open="isCombinedVideoOpen"
+            :is-closable="true"
+            :class="isVideoNotEmpty ? 'sm:min-h-fit' : 'sm:min-h-[50vh]'"
+            class="sm:min-w-[90vw] md:min-w-[80vw]"
+            @on-close-dialog="toggleCombinedVideoModal"
+        >
+            <template #content>
+                <div v-if="isVideoNotEmpty">
+                    <video
+                        v-if="isVideoNotEmpty"
+                        :src="meetingVideo"
+                        class="mt-6 rounded-md"
+                        autoplay
+                        controls
+                        muted
+                    />
+                </div>
+                <div v-else class="flex flex-col items-center justify-center">
+                    <Icon
+                        icon="prime:spinner"
+                        width="64"
+                        height="64"
+                        class="mb-4 animate-spin text-black"
+                    />
+                    <p class="text-lg text-gray-600">
+                        Videos are being concatenated. You can close this modal
+                        and check back later.
+                    </p>
+                </div>
+            </template>
+        </base-dialog>
+
+        <div class="mb-4 flex items-center justify-between">
+            <span class="text-lg font-medium">Video Thumbnails</span>
+            <Button @click="toggleCombinedVideoModal">
+                View Combined Video
+            </Button>
+        </div>
+
+        <ScrollArea class="mb-8 w-full rounded-md border shadow-md">
+            <div class="flex w-full justify-center space-x-4 p-4">
                 <div
                     v-for="(thumbnail, index) in videoThumbnail"
                     :key="thumbnail"
-                    class="flex flex-col gap-3"
+                    class="flex gap-3"
                 >
                     <div
                         class="cursor-pointer"
@@ -44,38 +93,49 @@
                             class="h-36 w-64"
                         />
                     </div>
+
+                    <div
+                        v-if="index !== videoThumbnail.length - 1"
+                        class="h-full w-px bg-gray-300"
+                    ></div>
                 </div>
-                <!--
-                <div v-if="isFetchingVideos" class="w-full">
-                    <div class="flex flex-wrap gap-4">
-                        <div v-for="i in 5" :key="i" class="flex flex-col gap-3">
-                            <div
-                                class="h-5 w-32 animate-pulse rounded bg-gray-200"
-                            ></div>
-                            <div
-                                class="h-36 w-64 animate-pulse rounded bg-gray-200"
-                            ></div>
-                        </div>
+
+                <!-- SKELETON PLACEHOLDER -->
+                <div v-if="isFetchingThumbnails" class="flex gap-3">
+                    <div
+                        v-for="index in 5"
+                        :key="index"
+                        class="flex items-center gap-3"
+                    >
+                        <div
+                            class="h-36 w-64 animate-pulse rounded-md bg-gray-200"
+                        ></div>
+
+                        <div
+                            v-if="index !== 5"
+                            class="h-full w-px bg-gray-300"
+                        ></div>
                     </div>
-                </div> -->
-                <!-- <div
-                    v-if="!videosList.length && !isFetchingVideos"
-                    class="flex h-36 w-full items-center justify-center"
+                </div>
+
+                <div
+                    v-if="!videoThumbnail.length && !isFetchingThumbnails"
+                    class="flex w-full flex-col items-center justify-center rounded-lg border bg-gray-100 p-6"
                 >
-                    <p class="flex-grow text-center text-gray-400">
-                        It looks like there are no videos in your group yet. Start
-                        making some to see them appear here!
+                    <Icon
+                        icon="heroicons-outline:exclamation-circle"
+                        class="mb-4 text-gray-400"
+                        width="48"
+                        height="48"
+                    />
+                    <p class="text-lg font-medium text-gray-700">
+                        No video thumbnails found
                     </p>
-                </div> -->
+                    <p class="text-sm text-gray-500">
+                        Please upload a video or check back later.
+                    </p>
+                </div>
             </div>
-            <video
-                v-if="isVideoNotEmpty"
-                :src="meetingVideo"
-                class="h-full w-full rounded-md"
-                autoplay
-                controls
-                muted
-            />
             <ScrollBar orientation="horizontal" />
         </ScrollArea>
     </div>
@@ -88,46 +148,34 @@ import { storeToRefs } from "pinia";
 
 import { useRoute } from "vue-router";
 
+import { Icon } from "@iconify/vue";
 import BaseDialog from "@shared/BaseDialog.vue";
+import { Button } from "@ui/button";
 import { ScrollArea, ScrollBar } from "@ui/scroll-area";
 
 import { useGroupStore } from "@stores/group-store";
-
-// import { Icon } from "@iconify/vue";
 
 const route = useRoute();
 const groupStore = useGroupStore();
 
 const { videoThumbnail, selectedVideo, meetingVideo } = storeToRefs(groupStore);
 
-// const previewVideoRef = ref<HTMLVideoElement | null>(null);
-// const videoUrl = ref<string>("");
 const isPreviewOpen = ref<boolean>(false);
-// const isVideoPlaying = ref<boolean>(false);
-const isFetchingVideos = ref<boolean>(false);
+const isCombinedVideoOpen = ref<boolean>(false);
+
+const isFetchingThumbnails = ref<boolean>(false);
 
 const isVideoNotEmpty = computed(() => meetingVideo.value.length > 0);
-
-// defineExpose({
-//     getAllVideos,
-// });
-
-// function toggleVideo() {
-//     if (!previewVideoRef.value) return;
-
-//     if (!isVideoPlaying.value) {
-//         previewVideoRef.value.play();
-//         isVideoPlaying.value = !isVideoPlaying.value;
-//     } else {
-//         previewVideoRef.value.pause();
-//         isVideoPlaying.value = !isVideoPlaying.value;
-//     }
-// }
+const isSelectedVideoNotEmpty = computed(() => selectedVideo.value.length > 0);
 
 function togglePreviewModal(index: number = -1) {
     isPreviewOpen.value = !isPreviewOpen.value;
 
     if (isPreviewOpen.value) getVideo(index);
+}
+
+function toggleCombinedVideoModal() {
+    isCombinedVideoOpen.value = !isCombinedVideoOpen.value;
 }
 
 async function getVideo(index: number) {
@@ -143,13 +191,13 @@ async function getVideo(index: number) {
 }
 
 async function getAllThumbnails() {
-    // isFetchingVideos.value = true;
+    isFetchingThumbnails.value = true;
     try {
         await groupStore.getAllThumbnails(route.params.groupId as string);
     } catch (e) {
         console.log((e as Error).message);
     } finally {
-        // isFetchingVideos.value = false;
+        isFetchingThumbnails.value = false;
     }
 }
 

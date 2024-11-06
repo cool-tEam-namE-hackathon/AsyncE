@@ -58,6 +58,7 @@ interface VideoControlProps {
     enabledCamera: boolean;
     enabledScreen?: boolean;
     isRecordingDisabled: boolean;
+    isControlDisabled: boolean;
     recordingPhaseText: string;
 }
 

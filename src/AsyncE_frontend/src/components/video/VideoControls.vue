@@ -8,7 +8,7 @@
         />
         <Button
             :variant="enabledCamera ? 'default' : 'outline'"
-            :disabled="!selectedCamera"
+            :disabled="!selectedCamera || isControlDisabled"
             @click="emits('on-toggle-camera', enabledCamera)"
         >
             <template #default>
@@ -26,7 +26,7 @@
 
         <Button
             :variant="enabledScreen ? 'default' : 'outline'"
-            :disabled="!selectedCamera"
+            :disabled="isControlDisabled"
             @click="emits('on-toggle-screen', enabledScreen)"
         >
             <template #default>

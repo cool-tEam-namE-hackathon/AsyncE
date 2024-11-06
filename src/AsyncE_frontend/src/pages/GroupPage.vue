@@ -93,7 +93,7 @@
                             icon="prime:spinner"
                             width="16"
                             height="16"
-                            class="mr-1 animate-spin text-black"
+                            class="mr-1 animate-spin text-white"
                         />
                         Creating...
                     </template>

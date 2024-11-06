@@ -6,7 +6,7 @@
             class="sm:max-w-md"
             @interact-outside="handleClickOutside"
         >
-            <DialogHeader>
+            <DialogHeader v-if="$slots['title'] || $slots['description']">
                 <DialogTitle v-if="$slots['title']">
                     <slot name="title" />
                 </DialogTitle>
