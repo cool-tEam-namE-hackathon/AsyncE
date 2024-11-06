@@ -47,6 +47,7 @@ pub struct VideoFrame {
     pub data: Vec<u8>,
     pub title: String,
     pub created_by: String,
+    pub thumbnail_data: Vec<u8>,
     pub created_time_unix: u128,
 }
 
@@ -56,6 +57,7 @@ impl VideoFrame {
             data: Vec::new(),
             title,
             created_by: username,
+            thumbnail_data: Vec::new(),
             created_time_unix: ic_cdk::api::time() as u128,
         }
     }
@@ -413,3 +415,57 @@ pub fn get_meeting_thumbnail_chunk_blob(
         .cloned()
         .collect())
 }
+
+
+#[ic_cdk::query]
+pub fn get_meeting_video_frame_thumbnail_size(group_id: u128, meeting_id: u128, frame_index: u128) -> Result<u128, String> {
+    user::assert_user_logged_in()?;
+    assert_check_group(group_id)?;
+
+    let meetings = MEETINGS.lock().map_err(|err| format!("Failed to lock meeting: {}", err))?;
+    let meetings = meetings
+        .get(&group_id)
+        .ok_or(String::from("No meetings found on this group!"))?;
+
+    let meeting = meetings
+        .get(&meeting_id)
+        .ok_or(String::from("No meeting found on this meeting ID!"))?;
+
+    Ok(meeting
+        .frames
+        .get(frame_index as usize)
+        .ok_or(String::from("Cannot find this meeting with the provided index!"))?
+        .thumbnail_data.len() as u128)
+}
+
+#[ic_cdk::query]
+pub fn get_meeting_video_frame_thumbnail_chunk_blob(
+    group_id: u128,
+    meeting_id: u128,
+    frame_index: u128,
+    index: u128,
+) -> Result<Vec<u8>, String> {
+    user::assert_user_logged_in()?;
+    assert_check_group(group_id)?;
+
+    let meetings = MEETINGS.lock().unwrap();
+    let meetings = meetings
+        .get(&group_id)
+        .ok_or(String::from("No meetings found on this group!"))?;
+
+    let meeting = meetings
+        .get(&meeting_id)
+        .ok_or(String::from("No meeting found on this meeting ID!"))?;
+
+    Ok(meeting
+        .frames
+        .get(frame_index as usize)
+        .ok_or(String::from("Cannot find this meeting with the provided index!"))?
+        .thumbnail_data
+        .iter()
+        .skip(index as usize * chunk::MB)
+        .take(chunk::MB)
+        .cloned()
+        .collect())
+}
+

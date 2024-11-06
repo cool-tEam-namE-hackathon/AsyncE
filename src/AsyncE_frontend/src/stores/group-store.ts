@@ -255,9 +255,10 @@ export const useGroupStore = defineStore("group", () => {
         if (!meetingId) return;
 
         for (let i = 0; i < Number(totalFrames); ++i) {
-            const thumbnailSize = await actor.value?.get_meeting_thumbnail_size(
+            const thumbnailSize = await actor.value?.get_meeting_video_frame_thumbnail_size(
                 BigInt(groupId),
                 meetingId,
+                BigInt(i)
             );
 
             const okThumbnailSize = validateResponse(thumbnailSize);
@@ -269,9 +270,10 @@ export const useGroupStore = defineStore("group", () => {
             for (let j = 0; j < Math.ceil(okThumbnailBlobSize / MB); ++j) {
                 chunkPromises.push(
                     actor.value
-                        ?.get_meeting_thumbnail_chunk_blob(
+                        ?.get_meeting_video_frame_thumbnail_chunk_blob(
                             BigInt(groupId),
                             meetingId,
+                            BigInt(i),
                             BigInt(j)
                         )
                         .then((chunk) => {
