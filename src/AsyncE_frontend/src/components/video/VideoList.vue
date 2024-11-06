@@ -69,6 +69,7 @@
                 </div> -->
             </div>
             <video
+                v-if="isVideoNotEmpty"
                 :src="meetingVideo"
                 class="h-full w-full rounded-md"
                 autoplay
@@ -81,7 +82,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from "vue";
+import { ref, computed } from "vue";
 
 import { storeToRefs } from "pinia";
 
@@ -104,6 +105,8 @@ const { videoThumbnail, selectedVideo, meetingVideo } = storeToRefs(groupStore);
 const isPreviewOpen = ref<boolean>(false);
 // const isVideoPlaying = ref<boolean>(false);
 const isFetchingVideos = ref<boolean>(false);
+
+const isVideoNotEmpty = computed(() => meetingVideo.value.length > 0);
 
 // defineExpose({
 //     getAllVideos,
@@ -143,7 +146,6 @@ async function getAllThumbnails() {
     // isFetchingVideos.value = true;
     try {
         await groupStore.getAllThumbnails(route.params.groupId as string);
-        console.log(videoThumbnail.value);
     } catch (e) {
         console.log((e as Error).message);
     } finally {
@@ -152,13 +154,12 @@ async function getAllThumbnails() {
 }
 
 async function getMeetingVideo() {
-    isFetchingVideos.value = true;
+    // isFetchingVideos.value = true;
     try {
         await groupStore.getMeetingVideo(
             route.params.groupId as string,
             route.params.meetingId as string,
         );
-        console.log(meetingVideo.value);
     } catch (e) {
         console.log((e as Error).message);
     } finally {
