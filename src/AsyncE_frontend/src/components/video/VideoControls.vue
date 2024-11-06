@@ -4,7 +4,7 @@
             class="w-[100px]"
             v-model="selectedCamera"
             placeholder="Select camera"
-            :options="props.cameraList"
+            :options="cameraList"
         />
         <Button
             :variant="enabledCamera ? 'default' : 'outline'"
@@ -61,22 +61,21 @@
 </template>
 
 <script setup lang="ts">
+import { ref } from "vue";
+
 import { Icon } from "@iconify/vue";
 import BaseSelect from "@shared/BaseSelect.vue";
 import { Button } from "@ui/button";
-import { computed } from "vue";
+
 import { VideoControlProps } from "@/types/api/model";
 
 const props = defineProps<VideoControlProps>();
 const emits = defineEmits<{
-    (e: "update:selectedCamera", payload: string): void;
+    (e: "update:modelValue", payload: string): void;
     (e: "on-toggle-camera", payload: boolean): void;
     (e: "on-toggle-screen", payload: boolean): void;
     (e: "on-record"): void;
 }>();
 
-const selectedCamera = computed({
-    get: () => props.selectedCamera,
-    set: (newVal) => emits("update:selectedCamera", newVal!),
-});
+const selectedCamera = ref<string>(props.modelValue);
 </script>

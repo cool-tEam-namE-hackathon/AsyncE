@@ -27,6 +27,7 @@ export const useGroupStore = defineStore("group", () => {
     const videoThumbnail = ref<string[]>([]);
 
     const meetingVideo = ref<string>("");
+    const selectedVideo = ref<string>("");
 
     function convertGroupFromResponse(groupResponse: GroupQueryResponse) {
         return {
@@ -223,12 +224,42 @@ export const useGroupStore = defineStore("group", () => {
         meetingVideo.value = blobToURL(videoMeetingData);
     }
 
+    async function getVideo(groupId: string, meetingId: string, index: number) {
+        const response = await actor.value?.get_video_frame_size(
+            BigInt(groupId),
+            BigInt(meetingId),
+            BigInt(index),
+        );
+
+        const videoSize = Number(validateResponse(response));
+
+        const videoData = new Uint8Array(videoSize);
+
+        const videoPromises = [];
+
+        for (let i = 0; i < Math.ceil(videoSize / MB); ++i) {
+            const videoPromise = actor.value
+                ?.get_video_frame_chunk_blob(
+                    BigInt(groupId),
+                    BigInt(meetingId),
+                    BigInt(index),
+                    BigInt(i),
+                )
+                .then((chunk) => {
+                    const okChunk = validateResponse(chunk);
+                    videoData.set(okChunk, i * MB);
+                });
+            videoPromises.push(videoPromise);
+        }
+
+        await Promise.all(videoPromises);
+        selectedVideo.value = blobToURL(videoData);
+    }
+
     async function inviteUser(id: bigint, name: string) {
         const response = await actor.value?.invite_user(id, name);
 
-        const okResponse = validateResponse(response);
-
-        console.log(okResponse);
+        validateResponse(response);
     }
 
     async function getInvites() {
@@ -255,11 +286,12 @@ export const useGroupStore = defineStore("group", () => {
         if (!meetingId) return;
 
         for (let i = 0; i < Number(totalFrames); ++i) {
-            const thumbnailSize = await actor.value?.get_meeting_video_frame_thumbnail_size(
-                BigInt(groupId),
-                meetingId,
-                BigInt(i)
-            );
+            const thumbnailSize =
+                await actor.value?.get_meeting_video_frame_thumbnail_size(
+                    BigInt(groupId),
+                    meetingId,
+                    BigInt(i),
+                );
 
             const okThumbnailSize = validateResponse(thumbnailSize);
 
@@ -274,7 +306,7 @@ export const useGroupStore = defineStore("group", () => {
                             BigInt(groupId),
                             meetingId,
                             BigInt(i),
-                            BigInt(j)
+                            BigInt(j),
                         )
                         .then((chunk) => {
                             const okChunk = validateResponse(chunk);
@@ -284,8 +316,6 @@ export const useGroupStore = defineStore("group", () => {
             }
 
             await Promise.all(chunkPromises);
-
-            console.log(okThumbnailData);
 
             videoThumbnail.value.push(blobToURL(okThumbnailData));
         }
@@ -342,10 +372,12 @@ export const useGroupStore = defineStore("group", () => {
         meetingDetail,
         videoThumbnail,
         meetingVideo,
+        selectedVideo,
 
         uploadVideo,
         getAllGroups,
         getAllMeetings,
+        getVideo,
         createMeeting,
         getMeetingDetail,
         getAllThumbnails,

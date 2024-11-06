@@ -5,7 +5,7 @@
                 <div class="flex items-center">
                     <img
                         :src="profilePicture"
-                        :alt="userCredentials.username"
+                        :alt="userCredentials?.username"
                         width="100"
                         height="100"
                         class="rounded-full"
@@ -13,7 +13,7 @@
                 </div>
                 <div>
                     <h2 class="mb-1 text-2xl font-bold">
-                        {{ userCredentials.username }}
+                        {{ userCredentials?.username }}
                     </h2>
                     <div class="flex items-center gap-1 text-sm">
                         <Icon
@@ -22,7 +22,11 @@
                             height="16"
                             class="text-black"
                         />
-                        Member since: May 15, 2023
+                        {{
+                            convertDateToReadableFormat(
+                                userCredentials?.created_time_unix,
+                            )
+                        }}
                     </div>
                 </div>
             </div>
@@ -35,25 +39,36 @@
                         height="16"
                         class="text-black"
                     />
-                    <span class="text-2xl font-bold">{{
-                        userCredentials.balance
-                    }}</span>
+                    <span class="text-2xl font-bold">
+                        {{ userCredentials?.balance }}
+                    </span>
                 </div>
             </div>
-            <Button class="w-full">
-                <Icon
-                    icon="subway:coin"
-                    width="16"
-                    height="16"
-                    class="text-black"
-                />
-                Deduct 5
+            <Button
+                class="w-full"
+                :disabled="isLoading || userCredentials?.balance === 0n"
+                :is-loading="isLoading"
+                @click="buySubscription"
+            >
+                <template #default> Buy Subscription </template>
+
+                <template #loading>
+                    <Icon
+                        icon="prime:spinner"
+                        width="16"
+                        height="16"
+                        class="mr-1 animate-spin text-white"
+                    />
+                    Buying Subscription...
+                </template>
             </Button>
         </section>
     </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
+import { ref } from "vue";
+
 import { storeToRefs } from "pinia";
 
 import { Icon } from "@iconify/vue";
@@ -61,6 +76,28 @@ import { Icon } from "@iconify/vue";
 import { useUserStore } from "@stores/user-store";
 
 import Button from "@components/ui/button/Button.vue";
+import { useToast } from "@components/ui/toast/use-toast";
+
+import { convertDateToReadableFormat } from "@/utils/helpers";
 
 const { userCredentials, profilePicture } = storeToRefs(useUserStore());
+
+const userStore = useUserStore();
+const { toast } = useToast();
+
+const isLoading = ref<boolean>(false);
+
+async function buySubscription() {
+    isLoading.value = true;
+    try {
+        await userStore.buySubscription();
+        toast({
+            title: "Subscription purchased successfully!",
+        });
+    } catch (e) {
+        console.log((e as Error).message);
+    } finally {
+        isLoading.value = false;
+    }
+}
 </script>

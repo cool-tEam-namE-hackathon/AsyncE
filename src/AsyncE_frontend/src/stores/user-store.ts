@@ -163,6 +163,14 @@ export const useUserStore = defineStore("user", () => {
         return okResponse;
     }
 
+    async function buySubscription() {
+        const response = await actor.value?.buy_subscription();
+
+        const okResponse = validateResponse(response);
+
+        return okResponse;
+    }
+
     return {
         isAuthenticated,
         identity,
@@ -170,6 +178,7 @@ export const useUserStore = defineStore("user", () => {
         userCredentials,
         profilePicture,
 
+        buySubscription,
         init,
         login,
         logout,

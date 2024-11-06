@@ -1,5 +1,5 @@
 <template>
-    <div class="container flex h-full flex-col">
+    <div class="container mb-2 flex flex-col">
         <!-- INPUT GROUP TITLE -->
         <base-dialog
             :open="isConfirmationModalOpen"
@@ -74,7 +74,7 @@
         <!-- GROUP NAME -->
         <span> {{ meetingDetail?.title }}</span>
 
-        <canvas ref="canvasRef" class="hidden" width="1280" height="720" />
+        <canvas ref="canvasRef" class="hidden" />
 
         <!-- MEDIA -->
         <div class="flex flex-col gap-6 py-8">
@@ -83,7 +83,7 @@
                 <div class="flex items-center justify-between">
                     <h2 class="text-xl font-semibold">Record New Video</h2>
                     <video-controls
-                        v-model:selectedCamera="selectedCamera"
+                        v-model="selectedCamera"
                         :camera-list="cameraList"
                         :enabled-camera="enabledCamera"
                         :enabled-screen="enabledScreen"
@@ -146,9 +146,7 @@
         </div>
     </div>
 
-    <div class="flex-1">
-        <video-list ref="videoList" />
-    </div>
+    <video-list ref="videoList" />
 
     <video v-if="url" autoplay muted controls>
         <source :src="url" type="video/mp4" />
@@ -225,7 +223,7 @@ const { videoInputs: cameras, audioInputs: microphones } = useDevicesList({
 const { width: screenWidth, height: screenHeight } =
     useElementSize(containerEl);
 
-const selectedCamera = computed(() => cameras.value[0]?.deviceId);
+const selectedCamera = computed(() => cameraList.value[0].deviceId);
 const currentMicrophone = computed(() => microphones.value[0]?.deviceId);
 
 const { stream: displayCamera, enabled: enabledCamera } = useUserMedia({
@@ -241,14 +239,14 @@ const isRecordingDisabled = computed(() => {
     return !enabledCamera.value;
 });
 
-const cameraList = computed(() => {
-    return cameras.value
+const cameraList = computed(() =>
+    cameras.value
         .filter(({ deviceId }) => deviceId !== "")
         .map(({ label, deviceId }) => ({
             deviceId,
             name: label,
-        }));
-});
+        })),
+);
 
 const recordingPhaseText = computed(() => {
     if (isRecording.value) {
@@ -325,6 +323,7 @@ async function saveRecording() {
             videoTitle.value,
             generateSubtitle.value,
         );
+        videoList.value?.getAllThumbnails();
     } catch (e) {
         console.log((e as Error).message);
     } finally {
@@ -428,7 +427,7 @@ function startDrawing() {
 
         ctx.value.save();
 
-        ctx.value.clearRect(0, 0, screenWidth.value, screenHeight.value);
+        ctx.value.clearRect(0, 0, originalWidth, originalHeight);
 
         if (enabledScreen.value && displayStream.value) {
             const screenVideo = screenRef.value;

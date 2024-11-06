@@ -20,7 +20,6 @@
 <script setup lang="ts">
 import { computed } from "vue";
 
-import { BaseSelectProps } from "@/types/api/model";
 import {
     Select,
     SelectContent,
@@ -29,6 +28,8 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@components/ui/select";
+
+import { BaseSelectProps } from "@/types/api/model";
 
 const props = defineProps<BaseSelectProps>();
 const emits = defineEmits<{

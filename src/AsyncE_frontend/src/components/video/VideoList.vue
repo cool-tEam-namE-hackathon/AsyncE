@@ -1,108 +1,75 @@
 <template>
-    <div>video</div>
-    <!-- <base-dialog
-        :open="isPreviewOpen"
-        class="md:min-w-[800px] md:min-h-[450px] sm:min-w-[90vw] sm:min-h-[50vh]"
-        @on-close-dialog="closePreviewDialog"
-    >
-        <template #title>
-            <span>{{ selectedVideo?.title }}</span>
-        </template>
-
-        <template #content>
-            <div class="relative group" @click="toggleVideo">
-                <div
-                    class="absolute rounded-md w-full h-full inset-0 flex justify-center items-center bg-black bg-opacity-50 opacity-0 group-hover:opacity-100 transition-opacity duration-300 cursor-pointer"
-                >
-                    <Icon
-                        v-if="!isVideoPlaying"
-                        icon="line-md:play-filled"
-                        width="48"
-                        height="48"
-                        class="text-white cursor-pointer"
-                    />
-                    <Icon
-                        v-else
-                        icon="ic:round-pause"
-                        width="48"
-                        height="48"
-                        class="text-white cursor-pointer"
+    <div class="container">
+        <base-dialog
+            :open="isPreviewOpen"
+            :is-closable="true"
+            class="sm:min-h-[50vh] sm:min-w-[90vw] md:min-h-[80vh] md:min-w-[80vw]"
+            @on-close-dialog="togglePreviewModal"
+        >
+            <template #content>
+                <div v-if="selectedVideo">
+                    <video
+                        ref="previewVideoRef"
+                        :src="selectedVideo"
+                        class="h-full w-full rounded-md"
+                        autoplay
+                        controls
+                        muted
                     />
                 </div>
-                <video
-                    ref="previewVideoRef"
-                    :src="videoUrl"
-                    class="rounded-md w-full h-full"
-                    muted
+                <Icon
+                    v-else
+                    icon="prime:spinner"
+                    width="16"
+                    height="16"
+                    class="mr-1 animate-spin text-black"
                 />
-            </div>
-        </template>
-    </base-dialog>
+            </template>
+        </base-dialog>
 
-    <ScrollArea class="border rounded-md w-full">
-        <div class="flex p-4 space-x-4 w-max">
-            <div
-                v-for="video in videosList"
-                :key="video.url"
-                class="flex flex-col gap-3"
-            >
-                <span>{{ video.video.title }}</span>
+        <ScrollArea class="w-full rounded-md border">
+            <div class="flex w-max space-x-4 p-4">
                 <div
-                    class="relative group cursor-pointer"
-                    @click="previewVideo(video.video, video.url)"
+                    v-for="(thumbnail, index) in videoThumbnail"
+                    :key="thumbnail"
+                    class="flex flex-col gap-3"
                 >
-                    <video
-                        :src="video.url"
-                        class="w-64 h-36 object-cover rounded-md"
-                    >
-                        Your browser does not support the video tag.
-                    </video>
                     <div
-                        class="absolute z-50 inset-0 flex justify-center items-center bg-black bg-opacity-50 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+                        class="cursor-pointer"
+                        @click="togglePreviewModal(index)"
                     >
-                        <Icon
-                            icon="line-md:play-filled"
-                            width="48"
-                            height="48"
-                            class="text-white"
+                        <img
+                            :src="thumbnail"
+                            alt="thumbnail"
+                            class="h-36 w-64"
                         />
                     </div>
                 </div>
-            </div>
-
-            <div v-if="isFetchingVideos" class="w-full">
-                <div class="flex flex-wrap gap-4">
-                    <div v-for="i in 5" :key="i" class="flex flex-col gap-3">
-                        <div
-                            class="w-32 h-5 bg-gray-200 rounded animate-pulse"
-                        ></div>
-                        <div
-                            class="w-64 h-36 bg-gray-200 rounded animate-pulse"
-                        ></div>
+                <!--
+                <div v-if="isFetchingVideos" class="w-full">
+                    <div class="flex flex-wrap gap-4">
+                        <div v-for="i in 5" :key="i" class="flex flex-col gap-3">
+                            <div
+                                class="h-5 w-32 animate-pulse rounded bg-gray-200"
+                            ></div>
+                            <div
+                                class="h-36 w-64 animate-pulse rounded bg-gray-200"
+                            ></div>
+                        </div>
                     </div>
-                </div>
+                </div> -->
+                <!-- <div
+                    v-if="!videosList.length && !isFetchingVideos"
+                    class="flex h-36 w-full items-center justify-center"
+                >
+                    <p class="flex-grow text-center text-gray-400">
+                        It looks like there are no videos in your group yet. Start
+                        making some to see them appear here!
+                    </p>
+                </div> -->
             </div>
-
-            <div
-                v-if="!videosList.length && !isFetchingVideos"
-                class="flex justify-center items-center w-full h-36"
-            >
-                <p class="text-gray-400 text-center flex-grow">
-                    It looks like there are no videos in your group yet. Start
-                    making some to see them appear here!
-                </p>
-            </div>
-        </div>
-        <ScrollBar orientation="horizontal" />
-    </ScrollArea> -->
-
-    <!-- <video v-if="meetingVideo" autoplay muted controls>
-        <source :src="meetingVideo" type="video/mp4" />
-        Your browser does not support the video tag.
-    </video> -->
-    <div v-for="thumbnail in videoThumbnail" :key="thumbnail">
-        <img :src="thumbnail" alt="asdads">
-
+            <ScrollBar orientation="horizontal" />
+        </ScrollArea>
     </div>
 </template>
 
@@ -113,22 +80,21 @@ import { storeToRefs } from "pinia";
 
 import { useRoute } from "vue-router";
 
+import BaseDialog from "@shared/BaseDialog.vue";
+import { ScrollArea, ScrollBar } from "@ui/scroll-area";
+
 import { useGroupStore } from "@stores/group-store";
 
 // import { Icon } from "@iconify/vue";
 
-// import BaseDialog from "@shared/BaseDialog.vue";
-
-// import { ScrollArea, ScrollBar } from "@ui/scroll-area";
-
 const route = useRoute();
 const groupStore = useGroupStore();
 
-const { videosList, videoThumbnail, meetingVideo } = storeToRefs(groupStore);
+const { videoThumbnail, selectedVideo } = storeToRefs(groupStore);
 
 // const previewVideoRef = ref<HTMLVideoElement | null>(null);
 // const videoUrl = ref<string>("");
-// const isPreviewOpen = ref<boolean>(false);
+const isPreviewOpen = ref<boolean>(false);
 // const isVideoPlaying = ref<boolean>(false);
 const isFetchingVideos = ref<boolean>(false);
 
@@ -148,23 +114,28 @@ const isFetchingVideos = ref<boolean>(false);
 //     }
 // }
 
-// function previewVideo(video: VideoHeader, url: string) {
-//     selectedVideo.value = video;
-//     videoUrl.value = url;
+function togglePreviewModal(index: number = -1) {
+    isPreviewOpen.value = !isPreviewOpen.value;
 
-//     isPreviewOpen.value = true;
-// }
+    if (isPreviewOpen.value) getVideo(index);
+}
 
-// function closePreviewDialog() {
-//     isVideoPlaying.value = false;
-//     isPreviewOpen.value = !isPreviewOpen.value;
-// }
+async function getVideo(index: number) {
+    try {
+        await groupStore.getVideo(
+            route.params.groupId as string,
+            route.params.meetingId as string,
+            index,
+        );
+    } catch (e) {
+        console.log((e as Error).message);
+    }
+}
 
-async function getAllVideos() {
+async function getAllThumbnails() {
     // isFetchingVideos.value = true;
     try {
         await groupStore.getAllThumbnails(route.params.groupId as string);
-        console.log("here");
         console.log(videoThumbnail.value);
     } catch (e) {
         console.log((e as Error).message);
@@ -188,10 +159,12 @@ async function getMeetingVideo() {
 }
 
 function init() {
-    console.log("here 2");
-
-    getAllVideos();
+    getAllThumbnails();
     getMeetingVideo();
 }
 init();
+
+defineExpose({
+    getAllThumbnails,
+});
 </script>

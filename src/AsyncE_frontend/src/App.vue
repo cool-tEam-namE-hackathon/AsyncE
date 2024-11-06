@@ -69,7 +69,7 @@
                             icon="prime:spinner"
                             width="16"
                             height="16"
-                            class="mr-1 animate-spin text-black"
+                            class="mr-1 animate-spin text-white"
                         />
                         Registering...
                     </template>
@@ -77,6 +77,7 @@
             </template>
         </base-dialog>
     </div>
+    <Toaster />
 </template>
 
 <script setup lang="ts">
@@ -96,6 +97,7 @@ import BaseSpinner from "@components/shared/BaseSpinner.vue";
 import Button from "@components/ui/button/Button.vue";
 import Input from "@components/ui/input/Input.vue";
 import Label from "@components/ui/label/Label.vue";
+import Toaster from "@components/ui/toast/Toaster.vue";
 
 import { User } from "./types/api/model";
 import { fileToBlob } from "./utils/helpers";

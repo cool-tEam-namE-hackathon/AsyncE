@@ -53,7 +53,7 @@ interface VideoRefs {
 }
 
 interface VideoControlProps {
-    selectedCamera?: string;
+    modelValue: string;
     cameraList: Option[];
     enabledCamera: boolean;
     enabledScreen?: boolean;
