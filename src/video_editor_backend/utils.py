@@ -8,7 +8,7 @@ import config
 from file_repository import VideoProcessingType, get_video_path
 
 
-def generate_uuid():
+def generate_uuid() -> str:
     return str(uuid.uuid4())
 
 

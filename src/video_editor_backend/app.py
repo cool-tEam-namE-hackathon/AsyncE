@@ -3,7 +3,7 @@ import os
 
 import config
 from concat import concat_videos
-from file_repository import (VideoProcessingType, append_video_file,
+from file_repository import (VideoProcessingType, append_bytes_to_file,
                              get_processed_video_path, get_video_path,
                              videos_to_concat)
 from flask import Flask, Response, jsonify, make_response, request, send_file
@@ -13,7 +13,9 @@ from utils import (extract_video_chunk, generate_new_video_path, generate_uuid,
                    get_chunk_count_and_file_size)
 
 
-def get_processed_video_info_response(id: str, video_type: VideoProcessingType):
+def get_processed_video_info_response(
+    id: str, video_type: VideoProcessingType
+) -> Response:
     video_path = get_processed_video_path(id, video_type)
     if video_path == None:
         return make_response(
@@ -29,7 +31,7 @@ def get_processed_video_info_response(id: str, video_type: VideoProcessingType):
 
 def get_processed_video_chunk_response(
     id: str, number: int, video_type: VideoProcessingType
-):
+) -> Response:
     if number < 1:
         return make_response("Invalid given number is not possible", 400)
 
@@ -82,7 +84,7 @@ def start_chunk_for_concat_video() -> Response:
 
     id = generate_uuid()
     video_path = generate_new_video_path(id, VideoProcessingType.CONCAT)
-    append_video_file(video_path, video_bytes)
+    append_bytes_to_file(video_path, video_bytes)
     videos_to_concat[id].append(video_path)
 
     return make_response(id, 200)
@@ -95,7 +97,7 @@ def append_chunk_for_concat_video(id: str) -> Response:
     if id not in videos_to_concat:
         return make_response(f"Video with id '{id}' doesn't exist", 404)
 
-    append_video_file(videos_to_concat[id][-1], video_bytes)
+    append_bytes_to_file(videos_to_concat[id][-1], video_bytes)
 
     return make_response(id, 200)
 
@@ -108,7 +110,7 @@ def append_chunk_for_concat_video_and_mark_next_video(id: str) -> Response:
         return make_response(f"Video with id '{id}' doesn't exist", 404)
 
     video_path = generate_new_video_path(generate_uuid(), VideoProcessingType.CONCAT)
-    append_video_file(video_path, video_bytes)
+    append_bytes_to_file(video_path, video_bytes)
     videos_to_concat[id].append(video_path)
 
     return make_response(id, 200)
@@ -121,7 +123,7 @@ def process_concat_video(id: str) -> Response:
     if id not in videos_to_concat:
         return make_response(f"Video with id '{id}' doesn't exist", 404)
 
-    append_video_file(videos_to_concat[id][-1], video_bytes)
+    append_bytes_to_file(videos_to_concat[id][-1], video_bytes)
     future_processed_concat_video = generate_uuid()
     concat_video_worker_pool_executor.submit(
         concat_videos, id, future_processed_concat_video
@@ -146,7 +148,7 @@ def start_chunk_for_subtitle_video() -> Response:
 
     id = generate_uuid()
     video_path = generate_new_video_path(id, VideoProcessingType.SUBTITLE)
-    append_video_file(video_path, video_bytes)
+    append_bytes_to_file(video_path, video_bytes)
 
     return make_response(id, 200)
 
@@ -158,7 +160,7 @@ def append_chunk_for_subtitle_video(id: str) -> Response:
     video_path, exists = get_video_path(id, VideoProcessingType.SUBTITLE)
     if not exists:
         return make_response(f"Video with id '{id}' doesn't exist", 404)
-    append_video_file(video_path, video_bytes)
+    append_bytes_to_file(video_path, video_bytes)
 
     return make_response(id, 200)
 
@@ -170,7 +172,7 @@ def process_subtitle_video(id: str) -> Response:
     video_path, exists = get_video_path(id, VideoProcessingType.SUBTITLE)
     if not exists:
         return make_response(f"Video with id '{id}' doesn't exist", 404)
-    append_video_file(video_path, video_bytes)
+    append_bytes_to_file(video_path, video_bytes)
 
     future_processed_subtitle_video_id = generate_uuid()
     subtitle_video_worker_pool.submit(
@@ -186,7 +188,7 @@ def start_chunk_for_video_thumbnail() -> Response:
 
     id = generate_uuid()
     video_path = generate_new_video_path(id, VideoProcessingType.THUMBNAIL)
-    append_video_file(video_path, video_bytes)
+    append_bytes_to_file(video_path, video_bytes)
 
     return make_response(id, 200)
 
@@ -198,7 +200,7 @@ def append_chunk_for_video_thumbnail(id: str) -> Response:
     video_path, exists = get_video_path(id, VideoProcessingType.THUMBNAIL)
     if not exists:
         return make_response(f"Video with id '{id}' doesn't exist", 404)
-    append_video_file(video_path, video_bytes)
+    append_bytes_to_file(video_path, video_bytes)
 
     return make_response(id, 200)
 
@@ -210,7 +212,7 @@ def create_thumbnail_from_video(id: str) -> Response:
     video_path, exists = get_video_path(id, VideoProcessingType.THUMBNAIL)
     if not exists:
         return make_response(f"Video with id '{id}' doesn't exist", 404)
-    append_video_file(video_path, video_bytes)
+    append_bytes_to_file(video_path, video_bytes)
 
     thumbnail_bytesio = generate_thumbnail(video_path)
     os.remove(video_path)
@@ -219,4 +221,4 @@ def create_thumbnail_from_video(id: str) -> Response:
 
 
 if __name__ == "__main__":
-    app.run(port=17191,debug=True)
+    app.run(port=17191, debug=True)

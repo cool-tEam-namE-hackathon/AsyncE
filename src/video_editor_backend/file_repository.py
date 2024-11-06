@@ -11,6 +11,16 @@ processed_subtitle_video_ids = []
 processed_concat_video_ids = []
 
 
+def append_bytes_to_file(file_path: str, file_bytes: bytes) -> None:
+    with open(file_path, "ab") as file:
+        file.write(file_bytes)
+
+
+def copy_file(src_file_path: str, dst_file_path: str):
+    with open(src_file_path, "rb") as src_file, open(dst_file_path, "wb") as dst_file:
+        src_file.write(dst_file.read())
+
+
 class VideoProcessingType(Enum):
     CONCAT = "cat"
     SUBTITLE = "sub"
@@ -24,11 +34,6 @@ def get_video_path(
     if check_file_exists and os.path.isfile(video_path):
         return video_path, True
     return video_path, False
-
-
-def append_video_file(video_path: str, video_bytes: bytes):
-    with open(video_path, "ab") as video_file:
-        video_file.write(video_bytes)
 
 
 def get_processed_video_path(
@@ -50,41 +55,33 @@ def get_processed_video_path(
     return video_path
 
 
-def save_concat_video(video, output_video_id: str):
+def write_video(video, output_video_path: str):
+    if config.custom_log_prints:
+        print(f"saving video to {output_video_path}")
+    video.write_videofile(
+        output_video_path,
+        codec="libvpx",
+        audio_codec="libvorbis",
+        remove_temp=True,
+        # bitrate="1000k",
+        # fps=30,
+        # preset="ultrafast", # will make the processing time much faster, but bigger output size
+        verbose=config.verbose_debug_prints,
+        logger=None,
+    )
+
+
+def save_concat_video(video, output_video_id: str) -> None:
     output_video_path, _ = get_video_path(
         output_video_id, VideoProcessingType.CONCAT, check_file_exists=False
     )
-    if config.custom_log_prints:
-        print(f"saving video to {output_video_path}")
-    video.write_videofile(
-        output_video_path,
-        codec="libvpx",
-        audio_codec="libvorbis",
-        remove_temp=True,
-        # bitrate="1000k",
-        # fps=30,
-        # preset="ultrafast", # will make the processing time much faster, but bigger output size
-        verbose=config.verbose_debug_prints,
-        logger=None,
-    )
+    write_video(video, output_video_path)
     processed_concat_video_ids.append(output_video_id)
 
 
-def save_subtitle_video(video, output_video_id: str):
+def save_subtitle_video(video, output_video_id: str) -> None:
     output_video_path, _ = get_video_path(
         output_video_id, VideoProcessingType.SUBTITLE, check_file_exists=False
     )
-    if config.custom_log_prints:
-        print(f"saving video to {output_video_path}")
-    video.write_videofile(
-        output_video_path,
-        codec="libvpx",
-        audio_codec="libvorbis",
-        remove_temp=True,
-        # bitrate="1000k",
-        # fps=30,
-        # preset="ultrafast", # will make the processing time much faster, but bigger output size
-        verbose=config.verbose_debug_prints,
-        logger=None,
-    )
+    write_video(video, output_video_path)
     processed_subtitle_video_ids.append(output_video_id)

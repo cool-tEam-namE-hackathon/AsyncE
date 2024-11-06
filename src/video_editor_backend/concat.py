@@ -4,7 +4,7 @@ from file_repository import save_concat_video, videos_to_concat
 from moviepy.editor import VideoFileClip, concatenate_videoclips
 
 
-def concat_videos(concat_video_list_id, output_video_id):
+def concat_videos(concat_video_list_id, output_video_id) -> None:
     video_paths = videos_to_concat[concat_video_list_id]
     save_concat_video(
         concatenate_videoclips(
