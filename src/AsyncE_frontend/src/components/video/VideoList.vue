@@ -71,13 +71,16 @@
 
         <div class="mb-4 flex items-center justify-between">
             <span class="text-lg font-medium">Video Thumbnails</span>
-            <Button @click="toggleCombinedVideoModal">
+            <Button
+                :disabled="!videoThumbnail.length"
+                @click="toggleCombinedVideoModal"
+            >
                 View Combined Video
             </Button>
         </div>
 
         <ScrollArea class="mb-8 w-full rounded-md border shadow-md">
-            <div class="flex w-full justify-center space-x-4 p-4">
+            <div class="flex w-full space-x-4 p-4">
                 <div
                     v-for="(thumbnail, index) in videoThumbnail"
                     :key="thumbnail"
