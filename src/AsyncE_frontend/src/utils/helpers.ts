@@ -34,7 +34,7 @@ function validateResponse<T>(
     return response.Ok;
 }
 
-function convertDateToReadableFormat(timestamp: bigint) {
+function convertDateToReadableFormat(timestamp: bigint | undefined) {
     const dateInMilliseconds = Number(timestamp) / 1e6;
     return new Date(dateInMilliseconds).toLocaleDateString("en-US", {
         day: "numeric",

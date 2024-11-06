@@ -90,7 +90,7 @@ import { useGroupStore } from "@stores/group-store";
 const route = useRoute();
 const groupStore = useGroupStore();
 
-const { videoThumbnail, selectedVideo } = storeToRefs(groupStore);
+const { videoThumbnail, selectedVideo, meetingVideo } = storeToRefs(groupStore);
 
 // const previewVideoRef = ref<HTMLVideoElement | null>(null);
 // const videoUrl = ref<string>("");
@@ -151,6 +151,7 @@ async function getMeetingVideo() {
             route.params.groupId as string,
             route.params.meetingId as string,
         );
+        console.log(meetingVideo.value);
     } catch (e) {
         console.log((e as Error).message);
     } finally {

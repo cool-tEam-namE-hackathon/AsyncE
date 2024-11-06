@@ -22,6 +22,7 @@
                             height="16"
                             class="text-black"
                         />
+                        Created at:
                         {{
                             convertDateToReadableFormat(
                                 userCredentials?.created_time_unix,
