@@ -7,8 +7,8 @@ use crate::{chunk, globals::USERS};
 
 #[derive(Clone, Debug, Default, CandidType, Deserialize)]
 pub struct UserSubscription {
-    pub time_started: u64,
-    pub duration_in_days: u64,
+    pub time_started: u128,
+    pub duration_in_days: u128,
 }
 
 #[derive(Clone, Debug, Default, CandidType, Deserialize)]
@@ -18,6 +18,25 @@ pub struct User {
     pub subscription: Option<UserSubscription>,
     pub created_time_unix: u128,
     pub profile_picture_blob: Vec<u8>,
+}
+
+#[derive(Clone, Debug, Default, CandidType, Deserialize)]
+pub struct UserCredentialsResponse {
+    pub balance: u128,
+    pub username: String,
+    pub subscription: Option<UserSubscription>,
+    pub created_time_unix: u128,
+}
+
+impl From<&User> for UserCredentialsResponse {
+    fn from(value: &User) -> Self {
+        Self {
+            balance: value.balance,
+            username: value.username.clone(),
+            subscription: value.subscription.clone(),
+            created_time_unix: value.created_time_unix,
+        }
+    }
 }
 
 pub fn assert_user_logged_in() -> Result<(), String> {
@@ -40,14 +59,14 @@ pub fn assert_user_logged_in_from(principal: Principal) -> Result<(), String> {
 }
 
 #[ic_cdk::query]
-pub fn get_user_credentials() -> Result<Option<String>, String> {
+pub fn get_user_credentials() -> Result<Option<UserCredentialsResponse>, String> {
     let principal = ic_cdk::caller();
     if principal == Principal::anonymous() {
         return Err(String::from("User needs to sign in to proceed!"));
     }
 
     let principal = ic_cdk::caller();
-    Ok(USERS.with_borrow(|users| users.get(&principal).map(|x| x.username.clone())))
+    Ok(USERS.with_borrow(|users| users.get(&principal).map(UserCredentialsResponse::from)))
 }
 
 fn validate_user_register(name: &str, principal: Principal) -> Result<(), String> {
@@ -205,7 +224,7 @@ pub fn buy_subscription() -> Result<(), String> {
             subscription.duration_in_days += 30;
         } else {
             user.subscription = Some(UserSubscription {
-                time_started: ic_cdk::api::time(),
+                time_started: ic_cdk::api::time() as u128,
                 duration_in_days: 30,
             });
         }
@@ -221,9 +240,12 @@ pub fn poll_user_subscriptions() {
             users.values_mut().for_each(|user| {
                 if let Some(subscription) = user.subscription.as_mut() {
                     let duration =
-                        Duration::from_secs(subscription.duration_in_days * 60 * 60 * 24);
-                    let time_passed =
-                        Duration::from_nanos(ic_cdk::api::time() - subscription.time_started);
+                        Duration::from_secs(subscription.duration_in_days as u64 * 60 * 60 * 24);
+
+                    let time_passed = Duration::from_nanos(
+                        ic_cdk::api::time() - subscription.time_started as u64,
+                    );
+
                     if time_passed > duration {
                         user.subscription = None;
                     }

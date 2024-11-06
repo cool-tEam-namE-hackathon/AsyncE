@@ -1,5 +1,17 @@
 import "./ws_types.did";
 
+type UserSubscription = record {
+    time_started: nat;
+    duration_in_days: nat;
+};
+
+type UserCredentialsResponse = record {
+    balance: nat;
+    username: text;
+    subscription: opt UserSubscription;
+    created_time_unix: nat;
+};
+
 type GroupQueryResponse = record {
     id: nat;
     name: text;

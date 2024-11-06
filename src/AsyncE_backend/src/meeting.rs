@@ -218,14 +218,23 @@ pub fn upload_video(
             }
 
             let mut video_frame = VideoFrame::new(selfname.clone(), title);
-            video_frame.data = data;
+            video_frame.data = data.clone();
             meeting.frames.push(video_frame);
 
+            send_process_subtitles_request(data);
             websocket::broadcast_new_video_part(group_id, meeting_id, selfname);
         }
 
         Ok(())
     })
+}
+
+fn send_process_subtitles_request(data: Vec<u8>) {
+    ic_cdk::spawn(async move {
+        if let Err(err) = http::send_process_subtitles_request(data).await {
+            ic_cdk::eprintln!("Failed to send process subtitles request: {}", err)
+        }
+    });
 }
 
 fn send_concat_video_request(group_id: u128, meeting_id: u128, video1: Vec<u8>, video2: Vec<u8>) {

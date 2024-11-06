@@ -16,6 +16,7 @@ use crate::{
     group::{GroupMemberRole, GroupQueryResponse},
     invite::GroupInviteResponse,
     meeting::MeetingHeader,
+    user::UserCredentialsResponse,
     websocket::WebsocketEventMessage,
 };
 use globals::{CHATS, GROUPS, GROUP_INVITES, MEETINGS, PRIMARY_KEY_CONTAINERS, USERS};
