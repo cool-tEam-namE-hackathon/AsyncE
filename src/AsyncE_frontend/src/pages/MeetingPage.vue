@@ -223,7 +223,9 @@ const currentMicrophone = computed(() => microphones.value[0]?.deviceId);
 
 const { stream: displayCamera, enabled: enabledCamera } = useUserMedia({
     constraints: {
+        // @ts-expect-error passing .value will cause problems when selecting a different camera
         video: { deviceId: selectedCamera },
+        // @ts-expect-error passing .value will cause problems when selecting a different camera
         audio: { deviceId: currentMicrophone },
     },
 });
