@@ -59,6 +59,10 @@ def get_processed_video_chunk_response(
     )
 
 
+def video_does_not_exist_response(id) -> Response:
+    return make_response(f"Video with id '{id}' doesn't exist", 404)
+
+
 concat_video_worker_pool_executor = concurrent.futures.ThreadPoolExecutor(
     max_workers=config.concat_video_processor_workers
 )
@@ -96,7 +100,7 @@ def append_chunk_for_concat_video(id: str) -> Response:
     video_bytes = request.data
 
     if id not in videos_to_concat:
-        return make_response(f"Video with id '{id}' doesn't exist", 404)
+        return video_does_not_exist_response(id)
 
     append_bytes_to_file(videos_to_concat[id][-1], video_bytes)
 
@@ -108,7 +112,7 @@ def append_chunk_for_concat_video_and_mark_next_video(id: str) -> Response:
     video_bytes = request.data
 
     if id not in videos_to_concat:
-        return make_response(f"Video with id '{id}' doesn't exist", 404)
+        return video_does_not_exist_response(id)
 
     video_path = generate_new_video_path(generate_uuid(), VideoProcessingType.CONCAT)
     append_bytes_to_file(video_path, video_bytes)
@@ -122,7 +126,7 @@ def process_concat_video(id: str) -> Response:
     video_bytes = request.data
 
     if id not in videos_to_concat:
-        return make_response(f"Video with id '{id}' doesn't exist", 404)
+        return video_does_not_exist_response(id)
 
     append_bytes_to_file(videos_to_concat[id][-1], video_bytes)
     future_processed_concat_video = generate_uuid()
@@ -160,7 +164,7 @@ def append_chunk_for_subtitle_video(id: str) -> Response:
 
     video_path, exists = get_video_path(id, VideoProcessingType.SUBTITLE)
     if not exists:
-        return make_response(f"Video with id '{id}' doesn't exist", 404)
+        return video_does_not_exist_response(id)
     append_bytes_to_file(video_path, video_bytes)
 
     return make_response(id, 200)
@@ -172,7 +176,7 @@ def process_subtitle_video(id: str) -> Response:
 
     video_path, exists = get_video_path(id, VideoProcessingType.SUBTITLE)
     if not exists:
-        return make_response(f"Video with id '{id}' doesn't exist", 404)
+        return video_does_not_exist_response(id)
     append_bytes_to_file(video_path, video_bytes)
 
     future_processed_subtitle_video_id = generate_uuid()
@@ -200,7 +204,7 @@ def append_chunk_for_video_thumbnail(id: str) -> Response:
 
     video_path, exists = get_video_path(id, VideoProcessingType.THUMBNAIL)
     if not exists:
-        return make_response(f"Video with id '{id}' doesn't exist", 404)
+        return video_does_not_exist_response(id)
     append_bytes_to_file(video_path, video_bytes)
 
     return make_response(id, 200)
@@ -212,7 +216,7 @@ def create_thumbnail_from_video(id: str) -> Response:
 
     video_path, exists = get_video_path(id, VideoProcessingType.THUMBNAIL)
     if not exists:
-        return make_response(f"Video with id '{id}' doesn't exist", 404)
+        return video_does_not_exist_response(id)
     append_bytes_to_file(video_path, video_bytes)
     fix_video(video_path)
 
