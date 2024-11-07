@@ -157,22 +157,16 @@
 
 <script setup lang="ts">
 import { ref, watchEffect, computed, onMounted } from "vue";
-
 import { storeToRefs } from "pinia";
-
 import { useRoute } from "vue-router";
-
 import {
     useUserMedia,
     useDevicesList,
     useDisplayMedia,
     useElementSize,
 } from "@vueuse/core";
-
 import { Icon } from "@iconify/vue";
-
 import { useGroupStore } from "@stores/group-store";
-
 import BaseDialog from "@components/shared/BaseDialog.vue";
 import { Button } from "@components/ui/button";
 import Input from "@components/ui/input/Input.vue";

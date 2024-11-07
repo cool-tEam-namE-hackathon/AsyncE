@@ -1,11 +1,11 @@
 /// <reference types="vitest" />
+import { fileURLToPath, URL } from "url";
 import vue from "@vitejs/plugin-vue";
 import autoprefixer from "autoprefixer";
 import dotenv from "dotenv";
 import tailwind from "tailwindcss";
 import { defineConfig } from "vite";
 import environment from "vite-plugin-environment";
-import { fileURLToPath, URL } from "url";
 
 dotenv.config({ path: "../../.env" });
 function resolve(dir) {

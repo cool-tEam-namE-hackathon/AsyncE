@@ -1,16 +1,12 @@
 import { ref } from "vue";
-
 import { defineStore } from "pinia";
 import { storeToRefs } from "pinia";
-
 import { MB } from "@data/data-constants";
 import {
     GroupQueryResponse,
     MeetingHeader,
 } from "@declarations/AsyncE_backend/AsyncE_backend.did";
-
 import { useUserStore } from "@stores/user-store";
-
 import { Group } from "@/types/api/model";
 import { blobToURL, validateResponse } from "@/utils/helpers";
 

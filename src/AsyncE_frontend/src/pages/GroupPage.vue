@@ -198,19 +198,14 @@
 
 <script setup lang="ts">
 import { ref, computed } from "vue";
-
 import { storeToRefs } from "pinia";
-
 import { useRoute, useRouter } from "vue-router";
-
 import { useDebounceFn } from "@vueuse/core";
-
 import { Icon } from "@iconify/vue";
 import BaseDropdown from "@shared/BaseDropdown.vue";
 
 import { useGroupStore } from "@stores/group-store";
 import { useUserStore } from "@stores/user-store";
-
 import MeetingChatWindow from "@components/Meeting/MeetingChatWindow.vue";
 import BaseDialog from "@components/shared/BaseDialog.vue";
 import { Button } from "@components/ui/button";

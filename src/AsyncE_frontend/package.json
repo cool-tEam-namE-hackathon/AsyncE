@@ -3,6 +3,7 @@
         "@dfinity/agent": "^2.1.2",
         "@dfinity/auth-client": "^2.1.2",
         "@vueuse/core": "^11.1.0",
+        "@vueuse/motion": "^2.2.6",
         "pinia": "^2.1.6",
         "vue": "^3.3.4",
         "vue-router": "^4.4.5"

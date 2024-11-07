@@ -34,9 +34,7 @@
 
 <script setup lang="ts">
 import { useRouter } from "vue-router";
-
 import { Icon } from "@iconify/vue";
-
 import { Button } from "@components/ui/button";
 
 const router = useRouter();

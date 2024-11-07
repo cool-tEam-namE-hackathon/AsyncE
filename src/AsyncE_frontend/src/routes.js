@@ -1,7 +1,6 @@
 import { storeToRefs } from "pinia";
 
 import { createRouter, createWebHistory } from "vue-router";
-
 import {
     Home,
     CreateGroup,

@@ -1,3 +1,5 @@
+import { ref } from "vue";
+import { defineStore, storeToRefs } from "pinia";
 import {
     _SERVICE,
     Chat,
@@ -7,8 +9,6 @@ import {
 import { canisterId as backendCanisterId } from "@declarations/AsyncE_backend/index";
 import { SignIdentity } from "@dfinity/agent";
 import IcWebSocket, { createWsConfig } from "ic-websocket-js";
-import { defineStore, storeToRefs } from "pinia";
-import { ref } from "vue";
 import { useUserStore } from "@/stores/user-store";
 
 export const useWebsocketStore = defineStore("websocket", () => {
