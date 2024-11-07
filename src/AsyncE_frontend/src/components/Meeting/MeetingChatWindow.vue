@@ -60,10 +60,12 @@
                             ref="editInputRef"
                             type="text"
                             v-model="editableContent"
-                            :size="Math.max(editableContent.length, 1)"
+                            :style="{
+                                width: `${editableContent.length}ch`,
+                            }"
                             @blur="editingMessage = undefined"
                             @keyup.enter="saveEdit(message.id)"
-                            class="w-fit max-w-[90%] break-words rounded-lg border bg-white p-2 text-sm text-gray-800 shadow-md focus:outline-none focus:ring-1 focus:ring-blue-200"
+                            class="w-fit min-w-8 max-w-[90%] break-words rounded-lg border bg-white p-2 text-sm text-gray-800 shadow-md focus:outline-none focus:ring-1 focus:ring-blue-200"
                         />
                     </template>
                 </base-context-menu>
@@ -185,6 +187,13 @@ async function saveEdit(id: bigint) {
     }
 }
 
+function findInsertIndex(timestamp: bigint): number {
+    return (
+        messages.value.findIndex((msg) => msg.created_time_unix > timestamp) ||
+        messages.value.length
+    );
+}
+
 async function handleChatSend() {
     if (
         !message.value ||
@@ -199,12 +208,14 @@ async function handleChatSend() {
         uuid: crypto.randomUUID(),
         content: message.value,
         group_id: BigInt(route.params.id as string),
-        created_time_unix: BigInt(0),
+        created_time_unix: BigInt(Date.now()),
         username: userCredentials.value.username,
     };
     websocketStore.sendMessage(payload);
 
-    messages.value.push(payload);
+    const insertIndex = findInsertIndex(payload.created_time_unix);
+
+    messages.value.splice(insertIndex, 0, payload);
 
     message.value = "";
 
@@ -212,17 +223,19 @@ async function handleChatSend() {
 }
 
 function handleIncomingChat(chat: Chat) {
-    if (chat.username !== userCredentials.value?.username) {
-        const index = messages.value.findIndex((x) => x.uuid === chat.uuid);
+    const index = messages.value.findIndex((x) => x.uuid === chat.uuid);
 
-        if (index !== -1) {
-            messages.value[index] = chat;
-        } else {
-            messages.value.push(chat);
-        }
-
-        scrollToBottom();
+    if (index !== -1) {
+        messages.value[index] = {
+            ...messages.value[index],
+            ...chat,
+        };
+    } else {
+        const insertIndex = findInsertIndex(chat.created_time_unix);
+        messages.value.splice(insertIndex, 0, chat);
     }
+
+    scrollToBottom();
 }
 
 websocketStore.setOnChatReceive(handleIncomingChat);
@@ -231,6 +244,8 @@ async function init() {
     const messageHistory = await groupStore.getChats(route.params.id as string);
 
     messages.value = [...messageHistory, ...messages.value];
+
+    console.log(messages.value);
 
     scrollToBottom();
 }

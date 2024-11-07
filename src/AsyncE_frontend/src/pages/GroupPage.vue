@@ -16,23 +16,23 @@
                 <div class="space-y-2">
                     <div class="flex flex-col items-center gap-3 sm:flex-row">
                         <Label>Username</Label>
-                        <div class="relative w-full sm:w-auto">
+                        <div class="relative w-full flex-1 sm:w-auto">
                             <Input
                                 v-model="invitedUsername"
+                                class="w-full"
                                 :class="{
                                     'border-red-400':
                                         isFieldError && invitedUsername,
                                     'border-green-700':
                                         !isFieldError && invitedUsername,
                                     'focus-visible:ring-0': true,
-                                    'w-full': true,
                                 }"
                                 @update:model-value="validateUsername"
                             />
                             <Icon
                                 icon="ep:success-filled"
-                                width="32"
-                                height="32"
+                                width="24"
+                                height="24"
                                 class="absolute right-2 top-1/2 -translate-y-1/2 transform"
                                 :class="{
                                     'text-red-700':
