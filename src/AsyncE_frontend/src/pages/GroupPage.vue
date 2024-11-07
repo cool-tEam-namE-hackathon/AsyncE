@@ -165,10 +165,10 @@
                                         height="16"
                                         class="text-black"
                                     />
-                                    <span>{{ user. }}</span>
+                                    <span>{{ user }}</span>
                                 </div>
 
-                                <base-dropdown
+                                <!-- <base-dropdown
                                     class="ml-auto"
                                     :options="EDIT_USER_DROPDOWN_OPTIONS"
                                     @on-option-click="handleOptionClick"
@@ -181,7 +181,7 @@
                                             class="ml-auto text-black"
                                         />
                                     </template>
-                                </base-dropdown>
+                                </base-dropdown> -->
                             </div>
                         </div>
                     </div>
@@ -203,7 +203,6 @@ import { useRoute, useRouter } from "vue-router";
 import { useDebounceFn } from "@vueuse/core";
 import { Icon } from "@iconify/vue";
 import BaseDropdown from "@shared/BaseDropdown.vue";
-
 import { useGroupStore } from "@stores/group-store";
 import { useUserStore } from "@stores/user-store";
 import MeetingChatWindow from "@components/Meeting/MeetingChatWindow.vue";
@@ -236,23 +235,9 @@ const inputtedUsername = ref<string>("");
 const inviteError = ref<string>("");
 const isError = ref<boolean>(false);
 
-const EDIT_USER_DROPDOWN_OPTIONS = [
-    {
-        name: "Make admin",
-        condition: (currentUser, selectedUser) => 
-    },
-    {
-        name: "Remove",
-    },
-];
-
 const isFieldError = computed(() => {
     return !isError.value && inputtedUsername.value;
 });
-
-const editUserDropdownOptions = computed(() =>
-    
-);
 
 function toggleInviteModal() {
     isInviteUserDialogOpen.value = !isInviteUserDialogOpen.value;
