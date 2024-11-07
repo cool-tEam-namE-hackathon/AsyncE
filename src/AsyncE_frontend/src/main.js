@@ -1,6 +1,6 @@
-import { MotionPlugin } from "@vueuse/motion";
-import { createPinia } from "pinia";
 import { createApp } from "vue";
+import { createPinia } from "pinia";
+import { MotionPlugin } from "@vueuse/motion";
 import "@/index.css";
 import router from "./routes";
 import App from "@/App.vue";

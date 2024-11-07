@@ -86,15 +86,10 @@
 
 <script setup lang="ts">
 import { storeToRefs } from "pinia";
-
 import { useRouter } from "vue-router";
-
 import { Icon } from "@iconify/vue";
-
 import { useGroupStore } from "@stores/group-store";
-
 import { Button } from "@components/ui/button";
-
 import { blobToURL } from "@/utils/helpers";
 
 const router = useRouter();

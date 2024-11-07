@@ -50,13 +50,13 @@
 </template>
 
 <script setup lang="ts">
+import { ref, computed } from "vue";
+import { useRouter } from "vue-router";
+import { Icon } from "@iconify/vue";
+import { useGroupStore } from "@stores/group-store";
 import Button from "@components/ui/button/Button.vue";
 import Input from "@components/ui/input/Input.vue";
 import Label from "@components/ui/label/Label.vue";
-import { Icon } from "@iconify/vue";
-import { useGroupStore } from "@stores/group-store";
-import { ref, computed } from "vue";
-import { useRouter } from "vue-router";
 import { fileToBlob } from "@/utils/helpers";
 
 const router = useRouter();

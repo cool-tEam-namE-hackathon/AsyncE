@@ -61,11 +61,9 @@
 
 <script setup lang="ts">
 import { ref } from "vue";
-
 import { Icon } from "@iconify/vue";
 import BaseSelect from "@shared/BaseSelect.vue";
 import { Button } from "@ui/button";
-
 import { VideoControlProps } from "@/types/api/model";
 
 const props = defineProps<VideoControlProps>();

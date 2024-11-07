@@ -146,16 +146,12 @@
 
 <script setup lang="ts">
 import { ref, computed } from "vue";
-
 import { storeToRefs } from "pinia";
-
 import { useRoute } from "vue-router";
-
 import { Icon } from "@iconify/vue";
 import BaseDialog from "@shared/BaseDialog.vue";
 import { Button } from "@ui/button";
 import { ScrollArea, ScrollBar } from "@ui/scroll-area";
-
 import { useGroupStore } from "@stores/group-store";
 
 const route = useRoute();

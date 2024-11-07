@@ -94,17 +94,12 @@
 
 <script setup lang="ts">
 import { ref } from "vue";
-
 import { storeToRefs } from "pinia";
-
 import { Icon } from "@iconify/vue";
-
 import { useUserStore } from "@stores/user-store";
-
 import BaseTooltip from "@components/shared/BaseTooltip.vue";
 import Button from "@components/ui/button/Button.vue";
 import { useToast } from "@components/ui/toast/use-toast";
-
 import { convertDateToReadableFormat } from "@/utils/helpers";
 
 const { userCredentials, profilePicture } = storeToRefs(useUserStore());
