@@ -56,7 +56,7 @@ impl Group {
             id: primary_key::get_primary_key(PrimaryKeyType::Group),
             name: name.clone(),
             owner: owner.clone(),
-            members: Vec::from([GroupMember::new(name, GroupMemberRole::Admin)]),
+            members: Vec::from([GroupMember::new(owner, GroupMemberRole::Admin)]),
             created_time_unix: ic_cdk::api::time() as u128,
             profile_picture_blob: Vec::new(),
         })

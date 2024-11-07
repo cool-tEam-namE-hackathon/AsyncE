@@ -1,4 +1,7 @@
-use std::{sync::Mutex, time::Duration};
+use std::{
+    sync::{Arc, Mutex},
+    time::Duration,
+};
 
 use ic_cdk::api::{
     call::RejectionCode,
@@ -10,6 +13,7 @@ use serde::Deserialize;
 
 use crate::{chunk, globals::MEETINGS, meeting::MeetingProcessType};
 
+#[derive(Debug, Clone)]
 pub struct ConcatRequest {
     group_id: u128,
     meeting_id: u128,
@@ -18,14 +22,27 @@ pub struct ConcatRequest {
 
 lazy_static::lazy_static! {
     pub static ref HTTP_OK: candid::Nat = candid::Nat::from(200u128);
-    pub static ref CONCAT_REQUESTS: Mutex<Vec<ConcatRequest>> = Mutex::new(Vec::new());
+}
+
+thread_local! {
+    pub static CONCAT_REQUESTS: Arc<Mutex<Vec<ConcatRequest>>> = Arc::new(Mutex::new(Vec::new()));
 }
 
 pub fn poll_concat_requests() {
-    ic_cdk_timers::set_timer_interval(Duration::from_secs(60), || {
+    ic_cdk::println!("Starting poll concat requests");
+    ic_cdk_timers::set_timer_interval(Duration::from_secs(10), || {
         ic_cdk::spawn(async move {
-            let list = CONCAT_REQUESTS.lock().unwrap();
-            for req in list.iter() {
+            let concat_requests =
+                CONCAT_REQUESTS.with(|concat_requests| concat_requests.lock().unwrap().clone());
+            if concat_requests.is_empty() {
+                return;
+            }
+
+            let mut indexes_to_remove = Vec::new();
+
+            ic_cdk::println!("AH HA! {:?}", concat_requests);
+
+            for req in concat_requests {
                 let processed_video_data = match get_processed_video_concat(&req.uuid).await {
                     Ok(processed_video_data) => processed_video_data,
                     Err(err) => {
@@ -52,12 +69,21 @@ pub fn poll_concat_requests() {
 
                 meeting.process_type = MeetingProcessType::None;
                 meeting.full_video_data = processed_video_data;
+                indexes_to_remove.push(req.uuid);
             }
-        })
+
+            for uuid in indexes_to_remove {
+                let concat_requests =
+                    CONCAT_REQUESTS.with(|concat_requests| concat_requests.clone());
+                let mut concat_requests = concat_requests.lock().unwrap();
+                let index_to_remove = concat_requests.iter().position(|x| x.uuid == uuid).unwrap();
+                concat_requests.remove(index_to_remove);
+            }
+        });
     });
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Debug)]
 struct ChunkInfoResponse {
     chunk_count: usize,
     file_size: usize,
@@ -208,11 +234,8 @@ pub async fn send_concat_video_request(
     }
 
     let chunks = video2.chunks(chunk::MB);
-    let chunk_len = chunks.len();
     for (i, chunk) in chunks.into_iter().enumerate() {
-        let url = if i == chunk_len - 1 {
-            format!("http://localhost:17191/concat/{}/end", uuid)
-        } else if i == 0 {
+        let url = if i == 0 {
             format!("http://localhost:17191/concat/{}/new", uuid)
         } else {
             format!("http://localhost:17191/concat/{}/add", uuid)
@@ -226,10 +249,23 @@ pub async fn send_concat_video_request(
         }
     }
 
-    CONCAT_REQUESTS.lock().unwrap().push(ConcatRequest {
-        group_id,
-        meeting_id,
-        uuid,
+    let url = format!("http://localhost:17191/concat/{}/end", uuid);
+    let response = send_post_request(&url, Vec::new())
+        .await
+        .map_err(|_| String::from("Failed to send HTTP request for processing concat.end"))?;
+    if response.status != *HTTP_OK {
+        return map_response_body_to_err(&url, response);
+    }
+
+    let uuid = String::from_utf8(response.body)
+        .map_err(|_| String::from("Cannot convert bytes to uuid"))?;
+
+    CONCAT_REQUESTS.with(|concat_requests| {
+        concat_requests.lock().unwrap().push(ConcatRequest {
+            group_id,
+            meeting_id,
+            uuid,
+        });
     });
 
     Ok(())
@@ -276,15 +312,17 @@ pub async fn get_processed_video_concat(uuid: &str) -> Result<Option<Vec<u8>>, S
     let response = serde_json::from_slice::<ChunkInfoResponse>(&uuid_response.body)
         .map_err(|err| format!("Deserialize to chunk info from json error: {}", err))?;
 
+    ic_cdk::println!("concat/id {:?} {:?}", uuid_response.body, response);
+
     let mut data = Vec::with_capacity(response.file_size);
     for i in 0..response.chunk_count {
-        let url = format!("http://localhost:17191/concat/{}/{}", uuid, i);
+        let url = format!("http://localhost:17191/concat/{}/{}", uuid, i + 1);
         let response = send_get_request(url).await.map_err(|_| {
             String::from("Failed to send HTTP request for getting processed video concat chunk")
         })?;
 
         if response.status != *HTTP_OK {
-            return map_response_body_to_err("concat.get.i", uuid_response);
+            return map_response_body_to_err("concat.get.i", response);
         }
 
         data.extend(response.body);

@@ -168,8 +168,6 @@ pub fn upload_video(
     total_data_length: u128,
     with_subtitles: bool
 ) -> Result<(), String> {
-    ic_cdk::println!("Yeahhh {}", with_subtitles);
-
     user::assert_user_logged_in()?;
     assert_check_group(group_id)?;
 
@@ -212,18 +210,18 @@ pub fn upload_video(
                 
                 send_concat_video_request(group_id, meeting_id, meeting.full_video_data.clone(), data.clone())
             } else {
-                meeting.full_video_data = data.clone();
-                
-                ic_cdk::println!("Wooooooooo");
-                get_thumbnail_from_video_data(group_id, meeting_id, data.clone());
-                ic_cdk::println!("What");
+                meeting.full_video_data = data.clone();                
             }
 
             let mut video_frame = VideoFrame::new(selfname.clone(), title);
             video_frame.data = data.clone();
             meeting.frames.push(video_frame);
 
-            send_process_subtitles_request(data);
+            if with_subtitles {
+                send_process_subtitles_request(data.clone());
+            }
+            
+            get_thumbnail_from_video_data(group_id, meeting_id, meeting.frames.len() - 1, data.clone());
             websocket::broadcast_new_video_part(group_id, meeting_id, selfname);
         }
 
@@ -247,7 +245,7 @@ fn send_concat_video_request(group_id: u128, meeting_id: u128, video1: Vec<u8>, 
     });
 }
 
-fn get_thumbnail_from_video_data(group_id: u128, meeting_id: u128, data: Vec<u8>) {
+fn get_thumbnail_from_video_data(group_id: u128, meeting_id: u128, frame_index: usize, data: Vec<u8>) {
     ic_cdk::spawn(async move {
         let thumbnail_data = match http::send_thumbnail_request(data).await {
             Ok(thumbnail_data) => thumbnail_data,
@@ -267,7 +265,16 @@ fn get_thumbnail_from_video_data(group_id: u128, meeting_id: u128, data: Vec<u8>
             .get_mut(&meeting_id)
             .ok_or(String::from("No meeting found on this video ID!"))
             .unwrap();
-        meeting.thumbnail_data = thumbnail_data;
+        if meeting.thumbnail_data.is_empty() {
+            meeting.thumbnail_data = thumbnail_data.clone();
+        }
+
+        meeting
+            .frames
+            .get_mut(frame_index)
+            .ok_or(String::from("No frame found on this meeting index!"))
+            .unwrap()
+            .thumbnail_data = thumbnail_data;
     })
 }
 
