@@ -41,9 +41,6 @@ pub fn poll_concat_requests() {
             }
 
             let mut indexes_to_remove = Vec::new();
-
-            ic_cdk::println!("AH HA! {:?}", concat_requests);
-
             for req in concat_requests {
                 let processed_video_data = match get_processed_video_concat(&req.uuid).await {
                     Ok(processed_video_data) => processed_video_data,

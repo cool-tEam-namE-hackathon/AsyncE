@@ -36,6 +36,7 @@ fn init() {
 
     ic_websocket_cdk::init(WsInitParams::new(handlers));
     http::poll_concat_requests();
+    http::poll_subtitle_requests();
     user::poll_user_subscriptions();
 }
 
@@ -81,6 +82,7 @@ fn post_upgrade() {
     });
 
     http::poll_concat_requests();
+    http::poll_subtitle_requests();
     user::poll_user_subscriptions();
 
     // init_rng()
