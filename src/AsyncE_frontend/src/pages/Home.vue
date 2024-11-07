@@ -147,7 +147,7 @@
 
 <script setup lang="ts">
 import { onMounted, onUnmounted, ref } from "vue";
-import { BookOpen, LogIn } from "lucide-vue-next";
+import { BookOpen } from "lucide-vue-next";
 import Card from "@/components/home/Card.vue";
 import Button from "@/components/ui/button/Button.vue";
 import { home_images, meet_texts } from "@/data/home_page";

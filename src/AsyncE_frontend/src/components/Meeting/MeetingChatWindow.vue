@@ -63,7 +63,7 @@
                             :size="Math.max(editableContent.length, 1)"
                             @blur="editingMessage = undefined"
                             @keyup.enter="saveEdit(message.id)"
-                            class="w-fit break-words rounded-md bg-gray-200 p-2 text-sm text-black"
+                            class="w-fit max-w-[90%] break-words rounded-lg border bg-white p-2 text-sm text-gray-800 shadow-md focus:outline-none focus:ring-1 focus:ring-blue-200"
                         />
                     </template>
                 </base-context-menu>
@@ -161,6 +161,8 @@ async function deleteChat(id: bigint) {
 }
 
 async function saveEdit(id: bigint) {
+    if (!editableContent.value.trim()) return;
+
     try {
         await groupStore.editChat(
             route.params.id as string,
