@@ -26,6 +26,15 @@ pub enum WebsocketEventMessage {
         meeting_id: u128,
         created_by: String,
     },
+    EditChat {
+        chat_id: u128,
+        group_id: u128,
+        new_content: String,
+    },
+    DeleteChat {
+        chat_id: u128,
+        group_id: u128,
+    },
 }
 
 impl WebsocketEventMessage {
@@ -82,8 +91,10 @@ pub fn on_message(args: OnMessageCallbackArgs) {
     match app_msg {
         WebsocketEventMessage::Ping => {}
 
-        WebsocketEventMessage::GroupInvited { .. } | WebsocketEventMessage::NewVideoPart { .. } => {
-        }
+        WebsocketEventMessage::GroupInvited { .. }
+        | WebsocketEventMessage::NewVideoPart { .. }
+        | WebsocketEventMessage::DeleteChat { .. }
+        | WebsocketEventMessage::EditChat { .. } => {}
 
         WebsocketEventMessage::AddChat(mut chat) => {
             let name = USERS
@@ -183,4 +194,16 @@ pub fn broadcast_new_video_part(group_id: u128, meeting_id: u128, created_by: St
         meeting_id,
         created_by,
     })
+}
+
+pub fn broadcast_edit_chat(group_id: u128, chat_id: u128, new_content: String) {
+    broadcast_websocket_message(WebsocketEventMessage::EditChat {
+        chat_id,
+        group_id,
+        new_content,
+    });
+}
+
+pub fn broadcast_delete_chat(group_id: u128, chat_id: u128) {
+    broadcast_websocket_message(WebsocketEventMessage::DeleteChat { chat_id, group_id });
 }

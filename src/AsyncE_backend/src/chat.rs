@@ -3,7 +3,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::{
     globals::{CHATS, GROUPS},
-    user,
+    user, websocket,
 };
 
 #[derive(Clone, Debug, CandidType, Serialize, Deserialize)]
@@ -68,6 +68,8 @@ pub fn edit_chat(group_id: u128, chat_id: u128, new_content: String) -> Result<(
                 .ok_or(String::from("Cannot get chat with this ID!"))?;
             chat.content = new_content;
 
+            websocket::broadcast_edit_chat(group_id, chat_id, chat.content.clone());
+
             Ok(())
         })
     })
@@ -96,6 +98,7 @@ pub fn delete_chat(group_id: u128, chat_id: u128) -> Result<(), String> {
             chats
                 .remove(&chat_id)
                 .ok_or(String::from("Cannot get chat with this ID!"))?;
+            websocket::broadcast_delete_chat(group_id, chat_id);
 
             Ok(())
         })

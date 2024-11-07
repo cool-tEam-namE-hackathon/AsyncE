@@ -68,6 +68,15 @@ type WebsocketEventMessage = variant {
         meeting_id: nat;
         created_by: text;
     };
+    EditChat: record {
+        chat_id: nat;
+        group_id: nat;
+        new_content: text;
+    };
+    DeleteChat: record {
+        chat_id: nat;
+        group_id: nat;
+    };
 };
 
 service : {
