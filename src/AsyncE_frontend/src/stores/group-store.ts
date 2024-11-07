@@ -366,6 +366,24 @@ export const useGroupStore = defineStore("group", () => {
         return okResponse;
     }
 
+    async function editChat(groupId: string, chatId: bigint, message: string) {
+        const response = await actor.value?.edit_chat(
+            BigInt(groupId),
+            chatId,
+            message,
+        );
+
+        validateResponse(response);
+    }
+
+    async function deleteChat(groupId: string, chatId: bigint) {
+        const response = await actor.value?.delete_chat(
+            BigInt(groupId),
+            chatId,
+        );
+        validateResponse(response);
+    }
+
     return {
         currentGroup,
         groupList,
@@ -378,7 +396,9 @@ export const useGroupStore = defineStore("group", () => {
         selectedVideo,
 
         uploadVideo,
+        editChat,
         getAllGroups,
+        deleteChat,
         getAllMeetings,
         getVideo,
         createMeeting,

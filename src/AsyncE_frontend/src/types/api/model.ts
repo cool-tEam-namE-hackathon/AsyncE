@@ -104,8 +104,18 @@ interface GroupInvite {
     group_name: string;
 }
 
+interface Message {
+    id: bigint;
+    content: string;
+    username: string;
+    created_time_unix: bigint;
+    uuid: string;
+    group_id: bigint;
+}
+
 export type {
     User,
+    Message,
     Group,
     Video,
     BaseDialogProps,
@@ -113,6 +123,7 @@ export type {
     BaseSelectProps,
     VideoList,
     VideoControlProps,
+    DropdownOptions,
     BaseProgress,
     RecordedChunks,
     MediaRecorders,

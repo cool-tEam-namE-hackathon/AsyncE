@@ -27,19 +27,21 @@
                             placeholder="Enter video title"
                         />
                     </div>
-                    <div class="flex items-center justify-between">
-                        <Label class="text-sm font-medium">
-                            Generate Subtitles
-                        </Label>
-                        <Switch v-model:checked="generateSubtitle" />
-                    </div>
-                    <div
-                        v-show="generateSubtitle"
-                        class="text-sm text-gray-500"
-                    >
-                        Generating subtitles will take some time depending on
-                        the video size.
-                    </div>
+                    <template v-if="userCredentials?.subscription.length">
+                        <div class="flex items-center justify-between">
+                            <Label class="text-sm font-medium">
+                                Generate Subtitles
+                            </Label>
+                            <Switch v-model:checked="generateSubtitle" />
+                        </div>
+                        <div
+                            v-show="generateSubtitle"
+                            class="text-sm text-gray-500"
+                        >
+                            Generating subtitles will take some time depending
+                            on the video size.
+                        </div>
+                    </template>
                 </div>
             </template>
 
@@ -167,6 +169,7 @@ import {
 } from "@vueuse/core";
 import { Icon } from "@iconify/vue";
 import { useGroupStore } from "@stores/group-store";
+import { useUserStore } from "@stores/user-store";
 import BaseDialog from "@components/shared/BaseDialog.vue";
 import { Button } from "@components/ui/button";
 import Input from "@components/ui/input/Input.vue";
@@ -203,6 +206,7 @@ const cameraRef = ref<HTMLVideoElement | null>(null);
 
 const mediaRecorder = ref<MediaRecorder | null>(null);
 
+const { userCredentials } = storeToRefs(useUserStore());
 const { uploadVideoProgress, meetingDetail } = storeToRefs(groupStore);
 
 const { stream: displayStream, enabled: enabledScreen } = useDisplayMedia();

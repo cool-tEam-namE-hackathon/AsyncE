@@ -15,7 +15,7 @@
 
                 <span
                     v-show="invites.length"
-                    class="absolute right-0 top-0 flex h-5 w-5 animate-ping items-center justify-center rounded-full bg-red-500 text-xs font-bold text-white"
+                    class="absolute right-0 top-0 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-xs font-bold text-white"
                 >
                     {{ invites.length }}
                 </span>

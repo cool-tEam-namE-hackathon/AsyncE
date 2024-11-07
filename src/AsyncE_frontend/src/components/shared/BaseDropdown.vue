@@ -28,7 +28,6 @@
 
 <script setup lang="ts">
 import { useAttrs } from "vue";
-
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -37,7 +36,6 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from "@ui/dropdown-menu";
-
 import { BaseDropdownProps } from "@/types/api/model";
 
 const attrs = useAttrs();
