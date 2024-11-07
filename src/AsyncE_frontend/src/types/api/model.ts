@@ -75,6 +75,8 @@ interface BaseDialogProps {
 
 interface DropdownOptions {
     name: string;
+    class?: string;
+    hasSeparator?: boolean;
 }
 
 interface BaseDropdownProps {
@@ -113,11 +115,26 @@ interface Message {
     group_id: bigint;
 }
 
+interface EditChat {
+    group_id: bigint;
+    new_content: string;
+    chat_id: bigint;
+}
+
+interface DeleteChat {
+    chat_id: bigint;
+    group_id: bigint;
+}
+
+type RoleKeys = "Admin" | "Member";
+
 export type {
+    RoleKeys,
     User,
     Message,
     Group,
     Video,
+    DeleteChat,
     BaseDialogProps,
     BaseDropdownProps,
     BaseSelectProps,
@@ -129,6 +146,7 @@ export type {
     MediaRecorders,
     RecordingStatus,
     Elements,
+    EditChat,
     VideoRefs,
     GroupInvite,
 };

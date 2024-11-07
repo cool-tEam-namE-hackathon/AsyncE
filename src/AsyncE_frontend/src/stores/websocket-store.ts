@@ -10,6 +10,7 @@ import { canisterId as backendCanisterId } from "@declarations/AsyncE_backend/in
 import { SignIdentity } from "@dfinity/agent";
 import IcWebSocket, { createWsConfig } from "ic-websocket-js";
 import { useUserStore } from "@/stores/user-store";
+import { DeleteChat, EditChat } from "@/types/api/model";
 
 export const useWebsocketStore = defineStore("websocket", () => {
     const { actor, identity } = storeToRefs(useUserStore());
@@ -18,6 +19,8 @@ export const useWebsocketStore = defineStore("websocket", () => {
 
     let onGroupInvited = (group: GroupInviteResponse) => {};
     let onChatReceive = (chat: Chat) => {};
+    let onChatEdit = (chat: EditChat) => {};
+    let onChatDelete = (chat: DeleteChat) => {};
 
     function sendMessage(chat: Chat) {
         if (ws.value) {
@@ -52,15 +55,22 @@ export const useWebsocketStore = defineStore("websocket", () => {
                     console.log(message.AddChat);
                     break;
 
+                case "EditChat" in message:
+                    onChatEdit(message.EditChat);
+                    console.log(message.EditChat);
+                    break;
+
+                case "DeleteChat" in message:
+                    onChatDelete(message.DeleteChat);
+                    console.log(message.DeleteChat);
+                    break;
+
                 case "Ping" in message:
                     console.log("Received a Ping");
                     break;
 
                 case "GroupInvited" in message:
-                    console.log(message.GroupInvited);
                     onGroupInvited(message.GroupInvited);
-                    console.log(`Group invited: ${message.GroupInvited}`);
-
                     break;
 
                 default:
@@ -93,6 +103,10 @@ export const useWebsocketStore = defineStore("websocket", () => {
 
         setOnChatReceive: (callback: (chat: Chat) => void) =>
             (onChatReceive = callback),
+        setOnChatEdit: (callback: (chat: EditChat) => void) =>
+            (onChatEdit = callback),
+        setOnChatDelete: (callback: (chat: DeleteChat) => void) =>
+            (onChatDelete = callback),
         setOnGroupInvited: (callback: (group: GroupInviteResponse) => void) =>
             (onGroupInvited = callback),
     };

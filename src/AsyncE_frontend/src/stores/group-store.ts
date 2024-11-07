@@ -3,6 +3,7 @@ import { defineStore } from "pinia";
 import { storeToRefs } from "pinia";
 import { MB } from "@data/data-constants";
 import {
+    GroupMemberRole,
     GroupQueryResponse,
     MeetingHeader,
 } from "@declarations/AsyncE_backend/AsyncE_backend.did";
@@ -384,6 +385,27 @@ export const useGroupStore = defineStore("group", () => {
         validateResponse(response);
     }
 
+    async function editRole(
+        groupId: string,
+        username: string,
+        role: GroupMemberRole,
+    ) {
+        const response = await actor.value?.edit_member_role(
+            BigInt(groupId),
+            username,
+            role,
+        );
+        validateResponse(response);
+    }
+
+    async function kickMember(groupId: string, username: string) {
+        const response = await actor.value?.kick_member(
+            BigInt(groupId),
+            username,
+        );
+        validateResponse(response);
+    }
+
     return {
         currentGroup,
         groupList,
@@ -396,6 +418,8 @@ export const useGroupStore = defineStore("group", () => {
         selectedVideo,
 
         uploadVideo,
+        kickMember,
+        editRole,
         editChat,
         getAllGroups,
         deleteChat,

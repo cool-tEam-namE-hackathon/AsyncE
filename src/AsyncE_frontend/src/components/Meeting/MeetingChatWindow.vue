@@ -65,7 +65,7 @@
                             }"
                             @blur="editingMessage = undefined"
                             @keyup.enter="saveEdit(message.id)"
-                            class="w-fit min-w-8 max-w-[90%] break-words rounded-lg border bg-white p-2 text-sm text-gray-800 shadow-md focus:outline-none focus:ring-1 focus:ring-blue-200"
+                            class="w-fit min-w-16 max-w-[90%] break-words rounded-lg border bg-white p-2 text-sm text-gray-800 shadow-md focus:outline-none focus:ring-1 focus:ring-blue-200"
                         />
                     </template>
                 </base-context-menu>
@@ -111,7 +111,7 @@ import { useWebsocketStore } from "@stores/websocket-store";
 import BaseContextMenu from "@components/shared/BaseContextMenu.vue";
 import { Button } from "@components/ui/button";
 import { Input } from "@components/ui/input";
-import { Message } from "@/types/api/model";
+import { DeleteChat, EditChat, Message } from "@/types/api/model";
 
 const route = useRoute();
 const websocketStore = useWebsocketStore();
@@ -155,8 +155,6 @@ async function scrollToBottom() {
 async function deleteChat(id: bigint) {
     try {
         await groupStore.deleteChat(route.params.id as string, id);
-
-        messages.value = messages.value.filter((msg) => msg.id !== id);
     } catch (e) {
         console.log((e as Error).message);
     }
@@ -187,13 +185,6 @@ async function saveEdit(id: bigint) {
     }
 }
 
-function findInsertIndex(timestamp: bigint): number {
-    return (
-        messages.value.findIndex((msg) => msg.created_time_unix > timestamp) ||
-        messages.value.length
-    );
-}
-
 async function handleChatSend() {
     if (
         !message.value ||
@@ -208,14 +199,12 @@ async function handleChatSend() {
         uuid: crypto.randomUUID(),
         content: message.value,
         group_id: BigInt(route.params.id as string),
-        created_time_unix: BigInt(Date.now()),
+        created_time_unix: BigInt(Date.now() * 1e6),
         username: userCredentials.value.username,
     };
     websocketStore.sendMessage(payload);
 
-    const insertIndex = findInsertIndex(payload.created_time_unix);
-
-    messages.value.splice(insertIndex, 0, payload);
+    messages.value.push(payload);
 
     message.value = "";
 
@@ -231,24 +220,65 @@ function handleIncomingChat(chat: Chat) {
             ...chat,
         };
     } else {
-        const insertIndex = findInsertIndex(chat.created_time_unix);
-        messages.value.splice(insertIndex, 0, chat);
+        const insertIndex = messages.value.findIndex((msg) => {
+            if (msg.created_time_unix > chat.created_time_unix) {
+                return true;
+            }
+            if (
+                msg.created_time_unix === chat.created_time_unix &&
+                msg.uuid > chat.uuid
+            ) {
+                return true;
+            }
+            return false;
+        });
+
+        messages.value.splice(
+            insertIndex !== -1 ? insertIndex : messages.value.length,
+            0,
+            chat,
+        );
     }
+
+    console.log(messages.value);
 
     scrollToBottom();
 }
 
-websocketStore.setOnChatReceive(handleIncomingChat);
+function handleEditChat(chat: EditChat) {
+    const index = messages.value.findIndex((x) => x.id === chat.chat_id);
+
+    messages.value[index] = {
+        ...messages.value[index],
+        content: chat.new_content,
+    };
+}
+
+function handleDeleteChat(chat: DeleteChat) {
+    console.log(chat.chat_id);
+    console.log(messages.value);
+    const index = messages.value.findIndex((x) => {
+        console.log("Comparing:", x.id, "with", chat.chat_id);
+
+        return x.id === chat.chat_id;
+    });
+
+    console.log(index);
+
+    messages.value.splice(index, 1);
+}
 
 async function init() {
     const messageHistory = await groupStore.getChats(route.params.id as string);
 
     messages.value = [...messageHistory, ...messages.value];
 
-    console.log(messages.value);
-
     scrollToBottom();
 }
+
+websocketStore.setOnChatReceive(handleIncomingChat);
+websocketStore.setOnChatEdit(handleEditChat);
+websocketStore.setOnChatDelete(handleDeleteChat);
 
 init();
 </script>

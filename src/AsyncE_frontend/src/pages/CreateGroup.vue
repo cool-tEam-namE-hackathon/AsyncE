@@ -1,5 +1,5 @@
 <template>
-    <div class="container m-auto px-4">
+    <div class="container m-auto my-8 px-4">
         <div class="mx-auto w-full max-w-2xl rounded-lg bg-white p-6 shadow-md">
             <div class="mb-6">
                 <h1 class="text-2xl font-bold text-gray-900">
@@ -24,6 +24,22 @@
                         />
                     </div>
                 </div>
+
+                <template v-if="!imageUrl">
+                    <img
+                        src="/images/placeholder.webp"
+                        class="rounded-md"
+                        alt="placeholder"
+                    />
+                </template>
+
+                <template v-else>
+                    <img
+                        :src="imageUrl"
+                        class="h-full w-full rounded-md object-contain"
+                        alt="placeholder"
+                    />
+                </template>
             </div>
             <div class="mt-6">
                 <Button
@@ -65,6 +81,7 @@ const groupStore = useGroupStore();
 const isLoading = ref<boolean>(false);
 
 const groupName = ref<string>("");
+const imageUrl = ref<string>("");
 const groupPicture = ref<Blob | null>();
 
 const isFormValid = computed(() => {
@@ -75,6 +92,7 @@ function onFileInput(e: Event) {
     const file = (e.target as HTMLInputElement)?.files?.[0];
 
     if (file) {
+        imageUrl.value = URL.createObjectURL(file);
         groupPicture.value = fileToBlob(file);
     }
 }

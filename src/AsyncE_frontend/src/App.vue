@@ -45,6 +45,7 @@
                             {{ error }}
                         </div>
                     </div>
+
                     <div class="space-y-2">
                         <Label>Profile picture</Label>
                         <Input
@@ -53,12 +54,28 @@
                             @on-file-change="onFileInput"
                         />
                     </div>
+
+                    <template v-if="!imageUrl">
+                        <img
+                            src="/images/placeholder.webp"
+                            class="rounded-md"
+                            alt="placeholder"
+                        />
+                    </template>
+
+                    <template v-else>
+                        <img
+                            :src="imageUrl"
+                            class="w-full rounded-md object-contain"
+                            alt="placeholder"
+                        />
+                    </template>
                 </div>
             </template>
 
             <template #footer>
                 <Button
-                    :disabled="isLoading"
+                    :disabled="isLoading || isFormValid"
                     :is-loading="isLoading"
                     @click="register"
                 >
@@ -105,6 +122,7 @@ const isOpen = ref<boolean>(false);
 const isInitialized = ref<boolean>(false);
 const isLoading = ref<boolean>(false);
 const error = ref<string>("");
+const imageUrl = ref<string>("");
 
 const username = ref<string>("");
 const imageBlob = ref<Blob | null>(null);
@@ -143,6 +161,7 @@ function onFileInput(e: Event) {
     const file = (e.target as HTMLInputElement)?.files?.[0];
 
     if (file) {
+        imageUrl.value = URL.createObjectURL(file);
         imageBlob.value = fileToBlob(file);
     }
 }

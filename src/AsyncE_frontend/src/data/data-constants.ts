@@ -5,6 +5,7 @@ const USER_DROPDOWN_OPTIONS = [
     },
     {
         name: "Logout",
+        class: "text-red-500",
     },
 ];
 
@@ -14,7 +15,17 @@ const CHAT_OPTIONS = [
     },
     {
         name: "Delete chat",
+        class: "text-red-500",
     },
 ];
 
-export { USER_DROPDOWN_OPTIONS, CHAT_OPTIONS, MB };
+const ADMIN_OPTIONS = [
+    {
+        name: "Make admin",
+    },
+    {
+        name: "Remove user",
+    },
+];
+
+export { USER_DROPDOWN_OPTIONS, CHAT_OPTIONS, MB, ADMIN_OPTIONS };

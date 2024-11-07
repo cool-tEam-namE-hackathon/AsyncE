@@ -9,7 +9,7 @@
           :key="option.name" 
           @click="emit('on-option-click', option.name)"
       >
-        {{ option.name }}
+        <span :class="option.class">{{ option.name }}</span>
       </ContextMenuItem>
     </ContextMenuContent>
   </ContextMenu>

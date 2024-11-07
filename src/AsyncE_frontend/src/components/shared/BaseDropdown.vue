@@ -8,15 +8,20 @@
                 <span v-if="props.label">{{ props.label }}</span>
             </DropdownMenuLabel>
             <DropdownMenuSeparator v-if="$slots['label']" />
-            <DropdownMenuItem
-                v-for="(option, index) in props.options"
-                :key="index"
-                @click="handleOptionClick(option.name)"
-            >
-                <span>
-                    {{ option.name }}
-                </span>
-            </DropdownMenuItem>
+
+            <template v-for="(option, index) in props.options" :key="`option-${index}`">
+                <DropdownMenuSeparator
+                    v-if="option.hasSeparator" 
+                    :key="`separator-${index}`"
+                />
+                <DropdownMenuItem
+                    @click="handleOptionClick(option.name)"
+                >
+                    <span :class="option.class">
+                        {{ option.name }}
+                    </span>
+                </DropdownMenuItem>
+            </template>
 
             <!-- NO DATA FOUND -->
             <DropdownMenuItem v-if="props.options.length === 0" disabled>

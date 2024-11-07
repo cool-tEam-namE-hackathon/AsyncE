@@ -65,7 +65,7 @@
                             icon="prime:spinner"
                             width="16"
                             height="16"
-                            class="mr-1 animate-spin text-black"
+                            class="mr-1 animate-spin text-white"
                         />
                         Inviting...
                     </template>
@@ -141,6 +141,26 @@
                         }}</span>
                     </div>
                 </div>
+
+                <!-- NO MEETINGS -->
+                <div
+                    v-if="!meetingList.length"
+                    class="flex h-full flex-col items-center justify-center text-center text-gray-500"
+                >
+                    <Icon
+                        icon="line-md:file-document-cancel-twotone"
+                        width="128"
+                        height="128"
+                        class="mb-4 text-black"
+                    />
+                    <h2 class="text-xl font-semibold text-gray-700">
+                        No Meetings Found
+                    </h2>
+                    <p class="mt-3 text-gray-500">
+                        You don't have any meetings scheduled yet. Start by
+                        creating a new meeting!
+                    </p>
+                </div>
             </div>
 
             <!-- USER LIST AND CHAT SECTION -->
@@ -169,14 +189,21 @@
                                 :key="index"
                                 class="flex items-center justify-between rounded-lg border border-gray-100 bg-gray-50 p-3 text-sm"
                             >
-                                <div
-                                    class="flex items-center gap-2"
-                                    @click="getSelectedUser(user)"
-                                >
+                                <div class="flex items-center gap-2">
                                     <Icon
-                                        v-if="'Admin' in user.role"
+                                        v-if="
+                                            'Admin' in user.role ||
+                                            currentGroup?.owner ===
+                                                user.username
+                                        "
                                         icon="mdi:crown"
-                                        class="text-yellow-500"
+                                        :class="{
+                                            'text-yellow-500':
+                                                currentGroup?.owner ===
+                                                user.username,
+                                            'text-blue-500':
+                                                'Admin' in user.role,
+                                        }"
                                         width="16"
                                         height="16"
                                     />
@@ -184,6 +211,24 @@
                                         user.username
                                     }}</span>
                                 </div>
+
+                                <base-dropdown
+                                    v-if="showDropdownFor(user)"
+                                    label="Your account"
+                                    :options="editUserOptions"
+                                    @on-option-click="handleOptionClick"
+                                >
+                                    <template #trigger>
+                                        <button @click="setSelectedUser(user)">
+                                            <Icon
+                                                icon="ph:dots-three-bold"
+                                                width="16"
+                                                height="16"
+                                                class="ml-auto mt-1 text-black"
+                                            />
+                                        </button>
+                                    </template>
+                                </base-dropdown>
                             </div>
                         </div>
                     </div>
@@ -204,13 +249,16 @@ import { storeToRefs } from "pinia";
 import { useRoute, useRouter } from "vue-router";
 import { useDebounceFn } from "@vueuse/core";
 import { GroupMember } from "@declarations/AsyncE_backend/AsyncE_backend.did";
+import { GroupMemberRole } from "@declarations/AsyncE_backend/AsyncE_backend.did";
 import { Icon } from "@iconify/vue";
 import { useGroupStore } from "@stores/group-store";
 import { useUserStore } from "@stores/user-store";
 import MeetingChatWindow from "@components/Meeting/MeetingChatWindow.vue";
 import BaseDialog from "@components/shared/BaseDialog.vue";
+import BaseDropdown from "@components/shared/BaseDropdown.vue";
 import { Button } from "@components/ui/button";
 import { Input } from "@components/ui/input";
+import { RoleKeys } from "@/types/api/model";
 
 const route = useRoute();
 const router = useRouter();
@@ -236,25 +284,65 @@ const invitedUsername = ref<string>("");
 const inputtedUsername = ref<string>("");
 const inviteError = ref<string>("");
 const isError = ref<boolean>(false);
-const selectedUser = ref<GroupMember>();
+const selectedUser = ref<GroupMember | null>(null);
 
-// const currentUser = computed(() => {
-//     return {
-//         username: userCredentials.value?.username,
-//         isAdmin:
-//             userCredentials.value?.username === selectedUser.value?.username,
-//     };
-// });
+const currentUser = computed(() => {
+    return currentGroup.value?.members.find(
+        (member) => member.username === userCredentials.value?.username,
+    );
+});
 
-// const options = [
-//     {
-//         name: "Remove user",
-//     },
-// ];
+const ADMIN_OPTIONS = [
+    {
+        name: "Make admin",
+        condition: (selectedUser: GroupMember) =>
+            "Admin" in currentUser.value!.role &&
+            !("Admin" in selectedUser.role),
+    },
+    {
+        name: "Make member",
+        condition: (selectedUser: GroupMember) =>
+            "Admin" in currentUser.value!.role &&
+            "Admin" in selectedUser.role &&
+            currentGroup.value?.owner !== selectedUser.username,
+    },
+    {
+        name: "Remove user",
+        class: "text-red-500",
+        condition: (selectedUser: GroupMember) =>
+            "Admin" in currentUser.value!.role &&
+            currentUser.value!.username !== selectedUser.username &&
+            currentGroup.value?.owner !== selectedUser.username,
+    },
+];
 
 const isFieldError = computed(() => {
     return !isError.value && inputtedUsername.value;
 });
+
+const editUserOptions = computed(() => {
+    if (!selectedUser.value) return [];
+
+    console.log(selectedUser.value);
+
+    return ADMIN_OPTIONS.filter((option) =>
+        option.condition(selectedUser.value!),
+    );
+});
+
+function showDropdownFor(user: GroupMember): boolean {
+    const currentUser = currentGroup.value?.members.find(
+        (member) => member.username === userCredentials.value?.username,
+    );
+
+    const isCurrentUserAdmin = "Admin" in currentUser!.role;
+
+    return (
+        isCurrentUserAdmin &&
+        user.username !== userCredentials.value?.username &&
+        currentGroup.value?.owner !== user.username
+    );
+}
 
 function toggleInviteModal() {
     isInviteUserDialogOpen.value = !isInviteUserDialogOpen.value;
@@ -269,9 +357,42 @@ const validateUsername = useDebounceFn(async (payload) => {
     }
 }, 500);
 
-function getSelectedUser(user: GroupMember) {
+async function editRole(newRole: RoleKeys) {
+    const role: GroupMemberRole = { [newRole]: null } as GroupMemberRole;
+    try {
+        await groupStore.editRole(
+            route.params.id as string,
+            selectedUser.value!.username,
+            role,
+        );
+        getGroup();
+    } catch (e) {
+        console.log((e as Error).message);
+    }
+}
+
+async function kickMember() {
+    try {
+        await groupStore.kickMember(
+            route.params.id as string,
+            selectedUser.value!.username,
+        );
+        getGroup();
+    } catch (e) {
+        console.log((e as Error).message);
+    }
+}
+
+function setSelectedUser(user: GroupMember) {
     selectedUser.value = user;
-    console.log(selectedUser.value);
+}
+
+function handleOptionClick(option: string) {
+    if (option === "Make admin") editRole("Admin");
+
+    if (option === "Make member") editRole("Member");
+
+    if (option === "Remove user") kickMember();
 }
 
 async function handleInvite() {
@@ -325,16 +446,15 @@ async function getAllMeetings() {
 async function getGroup() {
     try {
         await groupStore.getGroup(route.params.id as string);
-        console.log(currentGroup.value);
     } catch (e) {
         console.log((e as Error).message);
     }
 }
 
-function init() {
-    getAllMeetings();
+async function init() {
+    await getAllMeetings();
     getGroup();
 }
 
-init();
+await init();
 </script>

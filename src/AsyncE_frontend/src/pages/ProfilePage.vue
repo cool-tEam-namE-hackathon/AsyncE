@@ -11,14 +11,14 @@
                         class="absolute bottom-0 left-1/2 h-32 w-32 -translate-x-1/2 translate-y-1/2 transform rounded-full border-4 border-white object-cover shadow-md"
                     />
                 </div>
-                <div class="px-8 pb-8 pt-20">
+                <div class="flex flex-col items-center px-8 pb-8 pt-20">
                     <h2
                         class="mb-2 text-center text-3xl font-bold text-gray-800"
                     >
                         {{ userCredentials?.username }}
                     </h2>
                     <div
-                        class="mb-6 flex items-center justify-center text-gray-600"
+                        class="mb-3 flex items-center justify-center text-gray-600"
                     >
                         <Icon
                             icon="akar-icons:calendar"
@@ -35,7 +35,18 @@
                             }}</span
                         >
                     </div>
-                    <div class="mb-8 rounded-2xl bg-gray-100 p-6">
+
+                    <span class="mb-6 text-center text-gray-600"
+                        >Subscription ends in:
+                        <strong>
+                            {{
+                                userCredentials?.subscription[0]
+                                    ?.duration_in_days
+                            }}</strong
+                        >
+                        day(s)</span
+                    >
+                    <div class="mb-8 self-stretch rounded-2xl bg-gray-100 p-6">
                         <div class="flex items-center justify-between">
                             <div class="flex items-center gap-2">
                                 <span class="text-lg text-gray-600">
@@ -115,6 +126,8 @@ async function buySubscription() {
         await userStore.buySubscription();
         toast({
             title: "Subscription purchased successfully!",
+            description: "Your subscription is now active.",
+            class: "flex items-center border border-green-500 bg-green-50 text-green-700 p-4 rounded-md shadow-md",
         });
         userStore.getUserCredentials();
     } catch (e) {
