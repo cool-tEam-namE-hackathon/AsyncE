@@ -2,6 +2,7 @@ import { ref, toRaw } from "vue";
 
 import { defineStore } from "pinia";
 
+import { MB } from "@data/data-constants";
 import {
     _SERVICE,
     UserCredentialsResponse,
@@ -10,7 +11,6 @@ import { createActor } from "@declarations/AsyncE_backend/index";
 import { ActorSubclass, Identity } from "@dfinity/agent";
 import { AuthClient } from "@dfinity/auth-client";
 
-import { MB } from "@/data/user-constants";
 import { blobToURL, validateResponse } from "@/utils/helpers";
 
 const client = ref<AuthClient | null>(null);

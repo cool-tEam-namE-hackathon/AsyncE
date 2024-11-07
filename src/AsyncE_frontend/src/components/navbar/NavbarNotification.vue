@@ -15,7 +15,7 @@
 
                 <span
                     v-show="invites.length"
-                    class="absolute right-0 top-0 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-xs font-bold text-white"
+                    class="absolute right-0 top-0 flex h-5 w-5 animate-ping items-center justify-center rounded-full bg-red-500 text-xs font-bold text-white"
                 >
                     {{ invites.length }}
                 </span>
@@ -115,13 +115,17 @@
 </template>
 
 <script setup lang="ts">
-import Button from "@components/ui/button/Button.vue";
+import { ref } from "vue";
+
 import { GroupInviteResponse } from "@declarations/AsyncE_backend/AsyncE_backend.did";
 import { Icon } from "@iconify/vue";
 import BasePopover from "@shared/BasePopover.vue";
+
 import { useGroupStore } from "@stores/group-store";
 import { useWebsocketStore } from "@stores/websocket-store";
-import { ref } from "vue";
+
+import Button from "@components/ui/button/Button.vue";
+
 import { GroupInvite } from "@/types/api/model";
 
 const groupStore = useGroupStore();

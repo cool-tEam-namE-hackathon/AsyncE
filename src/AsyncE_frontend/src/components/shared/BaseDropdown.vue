@@ -1,13 +1,13 @@
 <template>
-    <DropdownMenu>
+    <DropdownMenu v-bind="attrs">
         <DropdownMenuTrigger>
             <slot name="trigger" />
         </DropdownMenuTrigger>
         <DropdownMenuContent>
-            <DropdownMenuLabel>
+            <DropdownMenuLabel v-if="$slots['label']">
                 <span v-if="props.label">{{ props.label }}</span>
             </DropdownMenuLabel>
-            <DropdownMenuSeparator />
+            <DropdownMenuSeparator v-if="$slots['label']" />
             <DropdownMenuItem
                 v-for="(option, index) in props.options"
                 :key="index"
@@ -27,6 +27,8 @@
 </template>
 
 <script setup lang="ts">
+import { useAttrs } from "vue";
+
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -37,6 +39,8 @@ import {
 } from "@ui/dropdown-menu";
 
 import { BaseDropdownProps } from "@/types/api/model";
+
+const attrs = useAttrs();
 
 const props = defineProps<BaseDropdownProps>();
 const emits = defineEmits<{

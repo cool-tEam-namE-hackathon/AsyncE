@@ -101,7 +101,7 @@
             </template>
         </base-dialog>
 
-        <!-- Main Content -->
+        <!-- MAIN CONTENT -->
         <div class="flex h-full flex-col gap-6 md:flex-row">
             <!-- MEETING LIST SECTION -->
             <div
@@ -155,9 +155,33 @@
                             :key="index"
                         >
                             <div
-                                class="rounded-md bg-gray-50 p-2 text-sm shadow-sm transition duration-200 ease-in-out hover:bg-gray-100"
+                                class="flex items-center justify-between rounded-md bg-gray-50 p-2 text-sm shadow-sm transition duration-200 ease-in-out hover:bg-gray-100"
                             >
-                                {{ user.username }}
+                                <div class="flex items-center gap-1">
+                                    <Icon
+                                        v-if="'Admin' in user.role"
+                                        icon="mdi:crown"
+                                        width="16"
+                                        height="16"
+                                        class="text-black"
+                                    />
+                                    <span>{{ user. }}</span>
+                                </div>
+
+                                <base-dropdown
+                                    class="ml-auto"
+                                    :options="EDIT_USER_DROPDOWN_OPTIONS"
+                                    @on-option-click="handleOptionClick"
+                                >
+                                    <template #trigger>
+                                        <Icon
+                                            icon="ph:dots-three-bold"
+                                            width="16"
+                                            height="16"
+                                            class="ml-auto text-black"
+                                        />
+                                    </template>
+                                </base-dropdown>
                             </div>
                         </div>
                     </div>
@@ -182,6 +206,7 @@ import { useRoute, useRouter } from "vue-router";
 import { useDebounceFn } from "@vueuse/core";
 
 import { Icon } from "@iconify/vue";
+import BaseDropdown from "@shared/BaseDropdown.vue";
 
 import { useGroupStore } from "@stores/group-store";
 import { useUserStore } from "@stores/user-store";
@@ -197,6 +222,7 @@ const router = useRouter();
 const userStore = useUserStore();
 const groupStore = useGroupStore();
 
+const { username } = storeToRefs(userStore);
 const { meetingList, currentGroup } = storeToRefs(groupStore);
 
 const isCreateMeetingDialogOpen = ref<boolean>(false);
@@ -215,9 +241,23 @@ const inputtedUsername = ref<string>("");
 const inviteError = ref<string>("");
 const isError = ref<boolean>(false);
 
+const EDIT_USER_DROPDOWN_OPTIONS = [
+    {
+        name: "Make admin",
+        condition: (currentUser, selectedUser) => 
+    },
+    {
+        name: "Remove",
+    },
+];
+
 const isFieldError = computed(() => {
     return !isError.value && inputtedUsername.value;
 });
+
+const editUserDropdownOptions = computed(() =>
+    
+);
 
 function toggleInviteModal() {
     isInviteUserDialogOpen.value = !isInviteUserDialogOpen.value;
@@ -283,6 +323,7 @@ async function getAllMeetings() {
 async function getGroup() {
     try {
         await groupStore.getGroup(route.params.id as string);
+        console.log(currentGroup.value);
     } catch (e) {
         console.log((e as Error).message);
     }

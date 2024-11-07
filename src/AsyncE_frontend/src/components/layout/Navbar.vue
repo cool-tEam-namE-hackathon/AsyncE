@@ -48,13 +48,10 @@
     </header>
 </template>
 <script setup lang="ts">
-import { ref } from "vue";
-
 import { storeToRefs } from "pinia";
 
 import { useRouter } from "vue-router";
 
-import { USER_DROPDOWN_OPTIONS } from "@data/user-constants";
 import { Icon } from "@iconify/vue";
 import BaseDropdown from "@shared/BaseDropdown.vue";
 
@@ -62,6 +59,8 @@ import { useUserStore } from "@stores/user-store";
 
 import NavbarNotification from "@components/navbar/NavbarNotification.vue";
 import { Avatar, AvatarFallback, AvatarImage } from "@components/ui/avatar";
+
+import { USER_DROPDOWN_OPTIONS } from "@/data/data-constants";
 
 const router = useRouter();
 const userStore = useUserStore();
