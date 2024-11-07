@@ -1,16 +1,23 @@
 <template>
     <div class="flex h-full flex-col rounded-lg border bg-white">
         <!-- Chat Header -->
-        <div class="flex items-center gap-1 border-b p-4">
-            <Icon icon="ci:chat" width="24" height="24" class="text-black" />
-            <h1>Chat</h1>
+        <div class="flex items-center justify-between gap-1 border-b p-4">
+            <div class="flex items-center gap-1">
+                <Icon
+                    icon="eos-icons:typing"
+                    width="24"
+                    height="24"
+                    class="text-black"
+                />
+                <h1>Chat</h1>
+            </div>
             <base-tooltip text="Right click to edit or delete a chat">
                 <template #trigger>
                     <Icon
                         icon="fe:info"
                         width="20"
                         height="20"
-                        class="text-black"
+                        class="ml-auto text-black"
                     />
                 </template>
             </base-tooltip>
