@@ -235,7 +235,8 @@ pub fn buy_subscription() -> Result<(), String> {
 }
 
 pub fn poll_user_subscriptions() {
-    ic_cdk_timers::set_timer_interval(Duration::from_secs(60 * 60), || {
+    ic_cdk::println!("Starting poll user subscriptions");
+    ic_cdk_timers::set_timer_interval(Duration::from_secs(1), || {
         USERS.with_borrow_mut(|users| {
             users.values_mut().for_each(|user| {
                 if let Some(subscription) = user.subscription.as_mut() {

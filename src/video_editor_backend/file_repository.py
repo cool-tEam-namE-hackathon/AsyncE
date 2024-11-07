@@ -65,7 +65,8 @@ def write_video(video, output_video_path: str):
         remove_temp=True,
         # bitrate="1000k",
         # fps=30,
-        # preset="ultrafast", # will make the processing time much faster, but bigger output size
+        threads = 8,
+        preset="ultrafast", # will make the processing time much faster, but bigger output size
         verbose=config.verbose_debug_prints,
         logger=None,
     )

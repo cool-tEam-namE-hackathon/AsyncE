@@ -80,6 +80,9 @@ fn post_upgrade() {
         *primary_key_containers = primary_key_containers_store
     });
 
+    http::poll_concat_requests();
+    user::poll_user_subscriptions();
+
     // init_rng()
 }
 
