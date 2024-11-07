@@ -22,8 +22,14 @@
                 </p>
             </div>
             <div class="space-x-4">
-                <button>Get Started</button>
-                <button>Learn More</button>
+                <a href="#learn-more">
+                    <Button>
+                        <div class="flex items-center gap-2">
+                            Learn More
+                            <BookOpen />
+                        </div>
+                    </Button>
+                </a>
             </div>
         </div>
 
@@ -81,6 +87,7 @@
 
     <div
         class="flex w-full flex-col items-center justify-center gap-16 bg-gradient-to-br from-gray-100 to-gray-200 px-8 py-24 md:px-12 lg:py-40"
+        id="learn-more"
     >
         <div class="flex flex-col">
             <h2
@@ -140,7 +147,9 @@
 
 <script setup lang="ts">
 import { onMounted, onUnmounted, ref } from "vue";
+import { BookOpen, LogIn } from "lucide-vue-next";
 import Card from "@/components/home/Card.vue";
+import Button from "@/components/ui/button/Button.vue";
 import { home_images, meet_texts } from "@/data/home_page";
 
 const currentVerticalCarouselIndex = ref(0);
