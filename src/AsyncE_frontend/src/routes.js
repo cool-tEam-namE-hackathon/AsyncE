@@ -1,3 +1,5 @@
+import { storeToRefs } from "pinia";
+
 import { createRouter, createWebHistory } from "vue-router";
 import {
     Home,
@@ -8,6 +10,10 @@ import {
     NotFoundPage,
     ProfilePage,
 } from "@lazy-loading-routes";
+
+import { useUserStore } from "@stores/user-store";
+
+import { useToast } from "@components/ui/toast";
 
 const routes = [
     {
@@ -50,6 +56,21 @@ const routes = [
 const router = createRouter({
     history: createWebHistory(),
     routes,
+});
+
+router.beforeEach((to, from) => {
+    const { isAuthenticated } = storeToRefs(useUserStore());
+    const { toast } = useToast();
+
+    if (!isAuthenticated.value && to.name !== "Home") {
+        toast({
+            title: "You are not logged in",
+            description: "Please log in to continue",
+            class: "flex flex-col items-start gap-2 p-4 bg-red-100 border-l-4 border-red-500 text-red-700 rounded-md shadow-md",
+        });
+
+        return { name: "Home" };
+    }
 });
 
 export default router;

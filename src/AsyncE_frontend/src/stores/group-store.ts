@@ -1,12 +1,12 @@
 import { ref } from "vue";
 import { defineStore } from "pinia";
 import { storeToRefs } from "pinia";
+import { MB } from "@data/data-constants";
 import {
     GroupQueryResponse,
     MeetingHeader,
 } from "@declarations/AsyncE_backend/AsyncE_backend.did";
 import { useUserStore } from "@stores/user-store";
-import { MB } from "@/data/user-constants";
 import { Group } from "@/types/api/model";
 import { blobToURL, validateResponse } from "@/utils/helpers";
 
@@ -15,7 +15,7 @@ export const useGroupStore = defineStore("group", () => {
 
     const groupPicture = ref<string>("");
     const groupList = ref<Group[]>([]);
-    const currentGroup = ref<Group>();
+    const currentGroup = ref<GroupQueryResponse>();
     const uploadVideoProgress = ref<number>(0);
 
     const meetingList = ref<MeetingHeader[]>([]);
@@ -29,8 +29,9 @@ export const useGroupStore = defineStore("group", () => {
         return {
             id: groupResponse.id,
             name: groupResponse.name,
-            owner: groupResponse.name,
+            owner: groupResponse.owner,
             members: groupResponse.members,
+            created_time_unix: groupResponse.created_time_unix,
             profile_picture_blob: new Uint8Array(),
         };
     }

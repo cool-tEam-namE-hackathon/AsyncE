@@ -38,9 +38,9 @@
                     <div class="mb-8 rounded-2xl bg-gray-100 p-6">
                         <div class="flex items-center justify-between">
                             <div class="flex items-center gap-2">
-                                <span class="text-lg text-gray-600"
-                                    >Balance</span
-                                >
+                                <span class="text-lg text-gray-600">
+                                    Balance
+                                </span>
                                 <base-tooltip text="Subscription costs 5 coins">
                                     <template #trigger>
                                         <Icon
