@@ -2,17 +2,24 @@
     <header class="container flex items-center py-4">
         <!-- NAVBAR -->
         <router-link to="/" class="flex items-center justify-center">
-            <Icon icon="mynaui:globe" width="24" height="24" />
+            <div class="flex items-center gap-2">
+                <Icon
+                    icon="fluent-emoji-high-contrast:japanese-symbol-for-beginner"
+                    width="24"
+                    height="24"
+                />
+                <p class="text-lg">AsyncE</p>
+            </div>
         </router-link>
         <nav class="ml-auto flex gap-4 sm:gap-6">
             <!-- NOT AUTHENTICATED -->
-            <button
+            <Button
                 v-if="!isAuthenticated || !userCredentials?.username"
-                class="text-sm font-medium underline-offset-4 hover:underline"
                 @click="login"
+                variant="ghost"
             >
                 Login
-            </button>
+            </Button>
 
             <!-- AUTHENTICATED -->
             <div v-else class="flex items-center gap-3">
@@ -55,6 +62,7 @@ import BaseDropdown from "@shared/BaseDropdown.vue";
 import { useUserStore } from "@stores/user-store";
 import NavbarNotification from "@components/navbar/NavbarNotification.vue";
 import { Avatar, AvatarFallback, AvatarImage } from "@components/ui/avatar";
+import Button from "@/components/ui/button/Button.vue";
 import { USER_DROPDOWN_OPTIONS } from "@/data/data-constants";
 
 const router = useRouter();

@@ -36,6 +36,7 @@ fn init() {
 
     ic_websocket_cdk::init(WsInitParams::new(handlers));
     http::poll_concat_requests();
+    http::poll_subtitle_requests();
     user::poll_user_subscriptions();
 }
 
@@ -79,6 +80,10 @@ fn post_upgrade() {
     PRIMARY_KEY_CONTAINERS.with_borrow_mut(|primary_key_containers| {
         *primary_key_containers = primary_key_containers_store
     });
+
+    http::poll_concat_requests();
+    http::poll_subtitle_requests();
+    user::poll_user_subscriptions();
 
     // init_rng()
 }

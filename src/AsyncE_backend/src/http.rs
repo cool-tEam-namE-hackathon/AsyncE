@@ -1,4 +1,7 @@
-use std::{sync::Mutex, time::Duration};
+use std::{
+    sync::{Arc, Mutex},
+    time::Duration,
+};
 
 use ic_cdk::api::{
     call::RejectionCode,
@@ -10,22 +13,35 @@ use serde::Deserialize;
 
 use crate::{chunk, globals::MEETINGS, meeting::MeetingProcessType};
 
-pub struct ConcatRequest {
+#[derive(Debug, Clone)]
+pub struct ProcessRequest {
     group_id: u128,
     meeting_id: u128,
     uuid: String,
+    index: usize,
 }
 
 lazy_static::lazy_static! {
     pub static ref HTTP_OK: candid::Nat = candid::Nat::from(200u128);
-    pub static ref CONCAT_REQUESTS: Mutex<Vec<ConcatRequest>> = Mutex::new(Vec::new());
+}
+
+thread_local! {
+    pub static CONCAT_REQUESTS: Arc<Mutex<Vec<ProcessRequest>>> = Arc::new(Mutex::new(Vec::new()));
+    pub static SUBTITLE_REQUESTS: Arc<Mutex<Vec<ProcessRequest>>> = Arc::new(Mutex::new(Vec::new()));
 }
 
 pub fn poll_concat_requests() {
-    ic_cdk_timers::set_timer_interval(Duration::from_secs(60), || {
+    ic_cdk::println!("Starting poll concat requests");
+    ic_cdk_timers::set_timer_interval(Duration::from_secs(10), || {
         ic_cdk::spawn(async move {
-            let list = CONCAT_REQUESTS.lock().unwrap();
-            for req in list.iter() {
+            let concat_requests =
+                CONCAT_REQUESTS.with(|concat_requests| concat_requests.lock().unwrap().clone());
+            if concat_requests.is_empty() {
+                return;
+            }
+
+            let mut indexes_to_remove = Vec::new();
+            for req in concat_requests {
                 let processed_video_data = match get_processed_video_concat(&req.uuid).await {
                     Ok(processed_video_data) => processed_video_data,
                     Err(err) => {
@@ -52,12 +68,106 @@ pub fn poll_concat_requests() {
 
                 meeting.process_type = MeetingProcessType::None;
                 meeting.full_video_data = processed_video_data;
+                indexes_to_remove.push(req.uuid);
             }
-        })
+
+            for uuid in indexes_to_remove {
+                let concat_requests =
+                    CONCAT_REQUESTS.with(|concat_requests| concat_requests.clone());
+                let mut concat_requests = concat_requests.lock().unwrap();
+                let index_to_remove = concat_requests.iter().position(|x| x.uuid == uuid).unwrap();
+                concat_requests.remove(index_to_remove);
+            }
+        });
     });
 }
 
-#[derive(Deserialize)]
+pub fn poll_subtitle_requests() {
+    ic_cdk::println!("Starting poll subtitles requests");
+    ic_cdk_timers::set_timer_interval(Duration::from_secs(10), || {
+        ic_cdk::spawn(async move {
+            let subtitle_requests = SUBTITLE_REQUESTS
+                .with(|subtitle_requests| subtitle_requests.lock().unwrap().clone());
+            if subtitle_requests.is_empty() {
+                return;
+            }
+
+            let mut indexes_to_remove = Vec::new();
+
+            ic_cdk::println!("AH HA! {:?}", subtitle_requests);
+
+            for req in subtitle_requests {
+                let processed_video_data = match get_processed_video_subtitles(&req.uuid).await {
+                    Ok(processed_video_data) => processed_video_data,
+                    Err(err) => {
+                        ic_cdk::eprintln!("Error while getting processed video concat: {}", err);
+                        continue;
+                    }
+                };
+
+                let processed_video_data = match processed_video_data {
+                    Some(processed_video_data) => processed_video_data,
+                    None => continue,
+                };
+
+                let mut meetings = MEETINGS.lock().unwrap();
+                let meetings = meetings
+                    .get_mut(&req.group_id)
+                    .ok_or(String::from("No meetings found on this group!"))
+                    .unwrap();
+
+                let meeting = meetings
+                    .get_mut(&req.meeting_id)
+                    .ok_or(String::from("No meeting found on this meeting ID!"))
+                    .unwrap();
+
+                meeting.process_type = MeetingProcessType::None;
+                meeting.frames.get_mut(req.index).unwrap().data = processed_video_data.clone();
+                indexes_to_remove.push(req.uuid);
+
+                if meeting.full_video_data.is_empty() {
+                    meeting.full_video_data = processed_video_data.clone();
+                } else {
+                    meeting.process_type = MeetingProcessType::Concat;
+                    send_concat_video_request(
+                        req.group_id,
+                        req.meeting_id,
+                        meeting.full_video_data.clone(),
+                        processed_video_data,
+                    );
+                }
+            }
+
+            for uuid in indexes_to_remove {
+                let subtitle_requests =
+                    SUBTITLE_REQUESTS.with(|subtitle_requests| subtitle_requests.clone());
+                let mut subtitle_requests = subtitle_requests.lock().unwrap();
+                let index_to_remove = subtitle_requests
+                    .iter()
+                    .position(|x| x.uuid == uuid)
+                    .unwrap();
+                subtitle_requests.remove(index_to_remove);
+            }
+        });
+    });
+}
+
+pub fn send_concat_video_request(
+    group_id: u128,
+    meeting_id: u128,
+    video1: Vec<u8>,
+    video2: Vec<u8>,
+) {
+    ic_cdk::spawn(async move {
+        if let Err(err) =
+            send_concat_video_request_internal(group_id, meeting_id, video1, video2).await
+        {
+            ic_cdk::eprintln!("Error while sending video concat request: {}", err);
+        }
+    });
+}
+
+#[derive(Deserialize, Debug)]
 struct ChunkInfoResponse {
     chunk_count: usize,
     file_size: usize,
@@ -102,7 +212,12 @@ pub async fn send_post_request(
     send_http_request(url, body, HttpMethod::POST).await
 }
 
-pub async fn send_process_subtitles_request(body: Vec<u8>) -> Result<String, String> {
+pub async fn send_process_subtitles_request(
+    group_id: u128,
+    meeting_id: u128,
+    index: usize,
+    body: Vec<u8>,
+) -> Result<(), String> {
     let uuid_response = send_post_request("http://localhost:17191/subtitles/start", Vec::new())
         .await
         .map_err(|(code, body)| {
@@ -121,14 +236,8 @@ pub async fn send_process_subtitles_request(body: Vec<u8>) -> Result<String, Str
     })?;
 
     let chunks = body.chunks(chunk::MB).collect::<Vec<_>>();
-    let chunk_len = chunks.len();
-    for (i, chunk) in chunks.into_iter().enumerate() {
-        let url = if i == chunk_len - 1 {
-            format!("http://localhost:17191/subtitles/{}/end", uuid)
-        } else {
-            format!("http://localhost:17191/subtitles/{}/add", uuid)
-        };
-
+    for chunk in chunks {
+        let url = format!("http://localhost:17191/subtitles/{}/add", uuid);
         let response = send_post_request(&url, chunk.to_vec())
             .await
             .map_err(|_| String::from("Failed to send HTTP request for processing subtitle.add"))?;
@@ -137,7 +246,27 @@ pub async fn send_process_subtitles_request(body: Vec<u8>) -> Result<String, Str
         }
     }
 
-    Ok(uuid)
+    let url = format!("http://localhost:17191/subtitles/{}/end", uuid);
+    let response = send_post_request(&url, Vec::new())
+        .await
+        .map_err(|_| String::from("Failed to send HTTP request for processing subtitle.add"))?;
+    if response.status != *HTTP_OK {
+        return map_response_body_to_err(&url, response);
+    }
+
+    let uuid = String::from_utf8(response.body)
+        .map_err(|_| String::from("Cannot convert bytes to uuid"))?;
+
+    SUBTITLE_REQUESTS.with(|subtitle_requests| {
+        subtitle_requests.lock().unwrap().push(ProcessRequest {
+            group_id,
+            meeting_id,
+            uuid,
+            index,
+        });
+    });
+
+    Ok(())
 }
 
 pub async fn send_thumbnail_request(body: Vec<u8>) -> Result<Vec<u8>, String> {
@@ -179,7 +308,7 @@ pub async fn send_thumbnail_request(body: Vec<u8>) -> Result<Vec<u8>, String> {
     Ok(response.body)
 }
 
-pub async fn send_concat_video_request(
+async fn send_concat_video_request_internal(
     group_id: u128,
     meeting_id: u128,
     video1: Vec<u8>,
@@ -208,11 +337,8 @@ pub async fn send_concat_video_request(
     }
 
     let chunks = video2.chunks(chunk::MB);
-    let chunk_len = chunks.len();
     for (i, chunk) in chunks.into_iter().enumerate() {
-        let url = if i == chunk_len - 1 {
-            format!("http://localhost:17191/concat/{}/end", uuid)
-        } else if i == 0 {
+        let url = if i == 0 {
             format!("http://localhost:17191/concat/{}/new", uuid)
         } else {
             format!("http://localhost:17191/concat/{}/add", uuid)
@@ -226,10 +352,24 @@ pub async fn send_concat_video_request(
         }
     }
 
-    CONCAT_REQUESTS.lock().unwrap().push(ConcatRequest {
-        group_id,
-        meeting_id,
-        uuid,
+    let url = format!("http://localhost:17191/concat/{}/end", uuid);
+    let response = send_post_request(&url, Vec::new())
+        .await
+        .map_err(|_| String::from("Failed to send HTTP request for processing concat.end"))?;
+    if response.status != *HTTP_OK {
+        return map_response_body_to_err(&url, response);
+    }
+
+    let uuid = String::from_utf8(response.body)
+        .map_err(|_| String::from("Cannot convert bytes to uuid"))?;
+
+    CONCAT_REQUESTS.with(|concat_requests| {
+        concat_requests.lock().unwrap().push(ProcessRequest {
+            group_id,
+            meeting_id,
+            uuid,
+            index: 0,
+        });
     });
 
     Ok(())
@@ -276,15 +416,17 @@ pub async fn get_processed_video_concat(uuid: &str) -> Result<Option<Vec<u8>>, S
     let response = serde_json::from_slice::<ChunkInfoResponse>(&uuid_response.body)
         .map_err(|err| format!("Deserialize to chunk info from json error: {}", err))?;
 
+    ic_cdk::println!("concat/id {:?} {:?}", uuid_response.body, response);
+
     let mut data = Vec::with_capacity(response.file_size);
     for i in 0..response.chunk_count {
-        let url = format!("http://localhost:17191/concat/{}/{}", uuid, i);
+        let url = format!("http://localhost:17191/concat/{}/{}", uuid, i + 1);
         let response = send_get_request(url).await.map_err(|_| {
             String::from("Failed to send HTTP request for getting processed video concat chunk")
         })?;
 
         if response.status != *HTTP_OK {
-            return map_response_body_to_err("concat.get.i", uuid_response);
+            return map_response_body_to_err("concat.get.i", response);
         }
 
         data.extend(response.body);
