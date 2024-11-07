@@ -205,12 +205,11 @@ pub fn upload_video(
                 "Cannot find existing upload process with given UUID (This should never happen though)",
             ))?;
 
-            if !meeting.full_video_data.is_empty() {
+            if meeting.full_video_data.is_empty() {                
+                meeting.full_video_data = data.clone();
+            } else if !with_subtitles {
                 meeting.process_type = MeetingProcessType::Concat;
-                
-                send_concat_video_request(group_id, meeting_id, meeting.full_video_data.clone(), data.clone())
-            } else {
-                meeting.full_video_data = data.clone();                
+                http::send_concat_video_request(group_id, meeting_id, meeting.full_video_data.clone(), data.clone())
             }
 
             let mut video_frame = VideoFrame::new(selfname.clone(), title);
@@ -218,7 +217,8 @@ pub fn upload_video(
             meeting.frames.push(video_frame);
 
             if with_subtitles {
-                send_process_subtitles_request(data.clone());
+                meeting.process_type = MeetingProcessType::Subtitle;
+                send_process_subtitles_request(group_id, meeting_id, meeting.frames.len() - 1, data.clone());
             }
             
             get_thumbnail_from_video_data(group_id, meeting_id, meeting.frames.len() - 1, data.clone());
@@ -229,18 +229,10 @@ pub fn upload_video(
     })
 }
 
-fn send_process_subtitles_request(data: Vec<u8>) {
+fn send_process_subtitles_request(group_id: u128, meeting_id: u128, index: usize, data: Vec<u8>) {
     ic_cdk::spawn(async move {
-        if let Err(err) = http::send_process_subtitles_request(data).await {
+        if let Err(err) = http::send_process_subtitles_request(group_id, meeting_id, index, data).await {
             ic_cdk::eprintln!("Failed to send process subtitles request: {}", err)
-        }
-    });
-}
-
-fn send_concat_video_request(group_id: u128, meeting_id: u128, video1: Vec<u8>, video2: Vec<u8>) {
-    ic_cdk::spawn(async move {
-        if let Err(err) = http::send_concat_video_request(group_id, meeting_id, video1, video2).await {
-            ic_cdk::eprintln!("Error while sending video concat request: {}", err);
         }
     });
 }
