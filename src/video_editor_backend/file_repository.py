@@ -69,6 +69,8 @@ def write_video(video, output_video_path: str):
         verbose=config.verbose_debug_prints,
         logger=None,
     )
+    if config.custom_log_prints:
+        print(f"video has been saved to {output_video_path}")
 
 
 def save_concat_video(video, output_video_id: str) -> None:
