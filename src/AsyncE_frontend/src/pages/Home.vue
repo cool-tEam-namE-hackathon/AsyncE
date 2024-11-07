@@ -80,7 +80,7 @@
     </div>
 
     <div
-        class="flex w-full flex-col items-center justify-center gap-16 bg-gradient-to-br from-slate-100 via-slate-200 to-slate-300 px-8 py-24 md:px-12 lg:py-40"
+        class="flex w-full flex-col items-center justify-center gap-16 bg-gradient-to-br from-gray-100 to-gray-200 px-8 py-24 md:px-12 lg:py-40"
     >
         <div class="flex flex-col">
             <h2
@@ -89,7 +89,7 @@
                 Meet each other at
             </h2>
             <h2
-                class="mt-12 rounded-xl bg-slate-100 px-4 py-3 text-center text-3xl font-light tracking-tighter duration-100 sm:text-4xl md:mt-16 md:text-5xl lg:text-5xl/none"
+                class="mt-12 rounded-xl bg-gray-50 px-4 py-3 text-center text-3xl font-light tracking-tighter duration-100 sm:text-4xl md:mt-16 md:text-5xl lg:text-5xl/none"
                 :class="color"
                 v-motion-slide-visible-left
                 v-for="({ text, color }, index) in meet_texts"
@@ -152,7 +152,6 @@ function parallaxWhenScrolling() {
         const r = Math.max(0, 155 - Math.floor(window.scrollY * 0.2));
         const g = Math.max(0, 155 - Math.floor(window.scrollY * 0.3));
         const b = Math.max(0, 155 - Math.floor(window.scrollY * 0.4));
-
         paperGrid.value.style.backgroundImage = `
             linear-gradient(to right, rgba(${r}, ${g}, ${b}, 0.2) 1px, transparent 1px),
             linear-gradient(to bottom, rgba(${r}, ${g}, ${b}, 0.2) 1px, transparent 1px)
