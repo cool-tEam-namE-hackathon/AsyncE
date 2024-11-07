@@ -89,7 +89,7 @@
                 Meet each other at
             </h2>
             <h2
-                class="mt-10 text-center text-3xl font-light tracking-tighter underline duration-100 sm:text-4xl md:mt-16 md:text-5xl lg:text-5xl/none"
+                class="mt-12 rounded-xl bg-slate-100 px-4 py-3 text-center text-3xl font-light tracking-tighter duration-100 sm:text-4xl md:mt-16 md:text-5xl lg:text-5xl/none"
                 :class="color"
                 v-motion-slide-visible-left
                 v-for="({ text, color }, index) in meet_texts"
