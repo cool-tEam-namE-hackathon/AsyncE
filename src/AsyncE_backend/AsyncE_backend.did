@@ -83,6 +83,11 @@ type WebsocketEventMessage = variant {
         chat_id: nat;
         group_id: nat;
     };
+    Thumbnail: record {
+        group_id: nat;
+        meeting_id: nat;
+        frame_index: nat;
+    };
 };
 
 service : {
