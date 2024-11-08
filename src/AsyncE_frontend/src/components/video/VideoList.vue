@@ -179,7 +179,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from "vue";
+import { ref, computed, onMounted, onUnmounted } from "vue";
 import { storeToRefs } from "pinia";
 import { useRoute } from "vue-router";
 import { Icon } from "@iconify/vue";
@@ -196,6 +196,8 @@ const groupStore = useGroupStore();
 const { videoThumbnail, selectedVideo, meetingVideo } = storeToRefs(groupStore);
 
 const currentVideo = ref<VideoFrameHeader>();
+
+const intervalId = ref<ReturnType<typeof setInterval>>();
 
 const isPreviewOpen = ref<boolean>(false);
 const isCombinedVideoOpen = ref<boolean>(false);
@@ -236,8 +238,8 @@ async function getVideo(index: number) {
 }
 
 async function getAllThumbnails() {
-    console.log("fetch thumbnail");
     isFetchingThumbnails.value = true;
+    console.log("calling getAllThumbnails");
     try {
         await groupStore.getAllThumbnails(route.params.groupId as string);
         console.log(videoThumbnail.value);
@@ -249,7 +251,6 @@ async function getAllThumbnails() {
 }
 
 async function getMeetingVideo() {
-    // isFetchingVideos.value = true;
     try {
         await groupStore.getMeetingVideo(
             route.params.groupId as string,
@@ -257,18 +258,25 @@ async function getMeetingVideo() {
         );
     } catch (e) {
         console.log((e as Error).message);
-    } finally {
-        // isFetchingVideos.value = false;
     }
 }
+
+onMounted(() => {
+    intervalId.value = setInterval(() => {
+        console.log("calling fetch");
+        getAllThumbnails();
+    }, 5000);
+});
+
+onUnmounted(() => {
+    if (intervalId.value) {
+        clearInterval(intervalId.value);
+    }
+});
 
 function init() {
     getAllThumbnails();
     getMeetingVideo();
 }
 init();
-
-defineExpose({
-    getAllThumbnails,
-});
 </script>

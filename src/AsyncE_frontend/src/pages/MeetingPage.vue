@@ -196,8 +196,6 @@ import VideoList from "@components/video/VideoList.vue";
 const route = useRoute();
 const groupStore = useGroupStore();
 
-const videoList = ref<InstanceType<typeof VideoList> | null>(null);
-
 const videoTitle = ref<string>("");
 const url = ref<string>("");
 
@@ -340,7 +338,6 @@ async function saveRecording() {
             videoTitle.value,
             generateSubtitle.value,
         );
-        videoList.value?.getAllThumbnails();
     } catch (e) {
         console.log((e as Error).message);
     } finally {
