@@ -25,6 +25,7 @@ export const useGroupStore = defineStore("group", () => {
 
     const meetingVideo = ref<string>("");
     const selectedVideo = ref(new Map<number, VideoFrameHeader>());
+    const processedFrames = ref<Set<number>>(new Set());
 
     function convertGroupFromResponse(groupResponse: GroupQueryResponse) {
         return {
@@ -297,14 +298,14 @@ export const useGroupStore = defineStore("group", () => {
         validateResponse(response);
     }
     async function getAllThumbnails(groupId: string) {
-        videoThumbnail.value = [];
-
         const totalFrames = meetingDetail.value?.frames_count;
         const meetingId = meetingDetail.value?.id;
 
         if (!meetingId) return;
 
         for (let i = 0; i < Number(totalFrames); ++i) {
+            if (processedFrames.value.has(i)) continue;
+
             const thumbnailSize =
                 await actor.value?.get_meeting_video_frame_thumbnail_size(
                     BigInt(groupId),
@@ -336,7 +337,9 @@ export const useGroupStore = defineStore("group", () => {
 
             await Promise.all(chunkPromises);
 
-            videoThumbnail.value.push(blobToURL(okThumbnailData));
+            const thumbnailUrl = blobToURL(okThumbnailData);
+            videoThumbnail.value.push(thumbnailUrl);
+            processedFrames.value.add(i);
         }
     }
 
@@ -376,7 +379,6 @@ export const useGroupStore = defineStore("group", () => {
         );
 
         await Promise.all(chunkPromises);
-        console.log(meetingThumnbnailData);
         return meetingThumnbnailData;
     }
 
@@ -461,6 +463,11 @@ export const useGroupStore = defineStore("group", () => {
         validateResponse(response);
     }
 
+    function clearFrames() {
+        processedFrames.value.clear();
+        videoThumbnail.value = [];
+    }
+
     return {
         currentGroup,
         groupList,
@@ -474,6 +481,7 @@ export const useGroupStore = defineStore("group", () => {
 
         uploadVideo,
         kickMember,
+        clearFrames,
         editRole,
         editChat,
         getAllGroups,

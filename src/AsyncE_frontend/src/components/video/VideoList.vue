@@ -115,6 +115,7 @@
             <div class="flex w-full space-x-4 p-4">
                 <div
                     v-for="(thumbnail, index) in videoThumbnail"
+                    ref="thumbnailsRef"
                     :key="thumbnail"
                     class="flex gap-3"
                 >
@@ -179,7 +180,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted } from "vue";
+import { ref, computed, onMounted, onUnmounted, nextTick } from "vue";
 import { storeToRefs } from "pinia";
 import { useRoute } from "vue-router";
 import { Icon } from "@iconify/vue";
@@ -195,12 +196,15 @@ const groupStore = useGroupStore();
 
 const { videoThumbnail, selectedVideo, meetingVideo } = storeToRefs(groupStore);
 
+const thumbnailsRef = ref<HTMLDivElement[]>([]);
+
 const currentVideo = ref<VideoFrameHeader>();
 
 const intervalId = ref<ReturnType<typeof setInterval>>();
 
 const isPreviewOpen = ref<boolean>(false);
 const isCombinedVideoOpen = ref<boolean>(false);
+const isFirstTime = ref<boolean>(true);
 
 const isFetchingThumbnails = ref<boolean>(false);
 
@@ -222,6 +226,16 @@ function toggleCombinedVideoModal() {
     isCombinedVideoOpen.value = !isCombinedVideoOpen.value;
 }
 
+async function scrollToView() {
+    if (!thumbnailsRef.value) return;
+
+    await nextTick();
+
+    thumbnailsRef.value[videoThumbnail.value.length - 1]?.scrollIntoView({
+        behavior: "smooth",
+    });
+}
+
 async function getVideo(index: number) {
     currentVideo.value = undefined;
     try {
@@ -238,11 +252,15 @@ async function getVideo(index: number) {
 }
 
 async function getAllThumbnails() {
-    isFetchingThumbnails.value = true;
-    console.log("calling getAllThumbnails");
+    if (isFirstTime.value) {
+        isFetchingThumbnails.value = true;
+    }
+
+    isFirstTime.value = false;
+
     try {
         await groupStore.getAllThumbnails(route.params.groupId as string);
-        console.log(videoThumbnail.value);
+        scrollToView();
     } catch (e) {
         console.log((e as Error).message);
     } finally {
@@ -261,14 +279,28 @@ async function getMeetingVideo() {
     }
 }
 
+async function fetchMeetingDetail() {
+    const { groupId, meetingId } = route.params;
+
+    try {
+        await groupStore.getMeetingDetail(
+            groupId as string,
+            meetingId as string,
+        );
+    } catch (e) {
+        console.log((e as Error).message);
+    }
+}
+
 onMounted(() => {
-    intervalId.value = setInterval(() => {
-        console.log("calling fetch");
+    intervalId.value = setInterval(async () => {
+        await fetchMeetingDetail();
         getAllThumbnails();
     }, 5000);
 });
 
 onUnmounted(() => {
+    groupStore.clearFrames();
     if (intervalId.value) {
         clearInterval(intervalId.value);
     }

@@ -19,13 +19,4 @@ const CHAT_OPTIONS = [
     },
 ];
 
-const ADMIN_OPTIONS = [
-    {
-        name: "Make admin",
-    },
-    {
-        name: "Remove user",
-    },
-];
-
-export { USER_DROPDOWN_OPTIONS, CHAT_OPTIONS, MB, ADMIN_OPTIONS };
+export { USER_DROPDOWN_OPTIONS, CHAT_OPTIONS, MB };
