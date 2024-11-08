@@ -8,7 +8,12 @@ import {
     MeetingHeader,
 } from "@declarations/AsyncE_backend/AsyncE_backend.did";
 import { useUserStore } from "@stores/user-store";
-import { Group, MeetingList, VideoFrameHeader } from "@/types/api/model";
+import {
+    Group,
+    MeetingList,
+    Thumbnail,
+    VideoFrameHeader,
+} from "@/types/api/model";
 import { blobToURL, validateResponse } from "@/utils/helpers";
 
 export const useGroupStore = defineStore("group", () => {
@@ -21,11 +26,9 @@ export const useGroupStore = defineStore("group", () => {
 
     const meetingList = ref<MeetingList[]>([]);
     const meetingDetail = ref<MeetingHeader>();
-    const videoThumbnail = ref<string[]>([]);
 
     const meetingVideo = ref<string>("");
     const selectedVideo = ref(new Map<number, VideoFrameHeader>());
-    const processedFrames = ref<Set<number>>(new Set());
 
     function convertGroupFromResponse(groupResponse: GroupQueryResponse) {
         return {
@@ -297,15 +300,58 @@ export const useGroupStore = defineStore("group", () => {
 
         validateResponse(response);
     }
-    async function getAllThumbnails(groupId: string) {
+
+    async function getSpecificThumbnail(
+        groupId: string,
+        meetingId: string,
+        frame: bigint,
+        onThumbnailAvailable: (thumbnail: string) => void,
+    ) {
+        const thumbnailSize =
+            await actor.value?.get_meeting_video_frame_thumbnail_size(
+                BigInt(groupId),
+                BigInt(meetingId),
+                frame,
+            );
+
+        const okThumbnailSize = validateResponse(thumbnailSize);
+
+        const okThumbnailBlobSize = Number(okThumbnailSize);
+        const okThumbnailData = new Uint8Array(okThumbnailBlobSize);
+
+        const chunkPromises = [];
+
+        for (let j = 0; j < Math.ceil(okThumbnailBlobSize / MB); ++j) {
+            chunkPromises.push(
+                actor.value
+                    ?.get_meeting_video_frame_thumbnail_chunk_blob(
+                        BigInt(groupId),
+                        BigInt(meetingId),
+                        frame,
+                        BigInt(j),
+                    )
+                    .then((chunk) => {
+                        const okChunk = validateResponse(chunk);
+                        okThumbnailData.set(okChunk, j * MB);
+                    }),
+            );
+        }
+
+        await Promise.all(chunkPromises);
+
+        const thumbnailUrl = blobToURL(okThumbnailData);
+        onThumbnailAvailable(thumbnailUrl);
+    }
+    async function getAllThumbnails(
+        groupId: string,
+        onThumbnailAvailable: (thumbnail: string) => void,
+    ) {
         const totalFrames = meetingDetail.value?.frames_count;
         const meetingId = meetingDetail.value?.id;
 
         if (!meetingId) return;
 
         for (let i = 0; i < Number(totalFrames); ++i) {
-            if (processedFrames.value.has(i)) continue;
-
             const thumbnailSize =
                 await actor.value?.get_meeting_video_frame_thumbnail_size(
                     BigInt(groupId),
@@ -338,8 +384,7 @@ export const useGroupStore = defineStore("group", () => {
             await Promise.all(chunkPromises);
 
             const thumbnailUrl = blobToURL(okThumbnailData);
-            videoThumbnail.value.push(thumbnailUrl);
-            processedFrames.value.add(i);
+            onThumbnailAvailable(thumbnailUrl);
         }
     }
 
@@ -463,11 +508,6 @@ export const useGroupStore = defineStore("group", () => {
         validateResponse(response);
     }
 
-    function clearFrames() {
-        processedFrames.value.clear();
-        videoThumbnail.value = [];
-    }
-
     return {
         currentGroup,
         groupList,
@@ -475,13 +515,11 @@ export const useGroupStore = defineStore("group", () => {
         uploadVideoProgress,
         meetingList,
         meetingDetail,
-        videoThumbnail,
         meetingVideo,
         selectedVideo,
 
         uploadVideo,
         kickMember,
-        clearFrames,
         editRole,
         editChat,
         getAllGroups,
@@ -491,6 +529,7 @@ export const useGroupStore = defineStore("group", () => {
         createMeeting,
         getMeetingDetail,
         getAllThumbnails,
+        getSpecificThumbnail,
         getChats,
         getMeetingVideo,
         getGroup,

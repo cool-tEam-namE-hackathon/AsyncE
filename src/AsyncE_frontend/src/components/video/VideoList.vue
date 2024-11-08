@@ -104,7 +104,7 @@
         >
             <h2 class="text-lg font-semibold">Video List</h2>
             <Button
-                :disabled="!videoThumbnail.length"
+                :disabled="!localVideoThumbnail.length"
                 @click="toggleCombinedVideoModal"
             >
                 View Combined Video
@@ -114,7 +114,7 @@
         <ScrollArea class="mb-8 w-full rounded-md border shadow-md">
             <div class="flex w-full space-x-4 p-4">
                 <div
-                    v-for="(thumbnail, index) in videoThumbnail"
+                    v-for="(thumbnail, index) in localVideoThumbnail"
                     ref="thumbnailsRef"
                     :key="thumbnail"
                     class="flex gap-3"
@@ -127,13 +127,13 @@
                             <img
                                 :src="thumbnail"
                                 alt="thumbnail"
-                                class="h-full w-full object-cover"
+                                class="h-full w-full rounded-md object-cover"
                             />
                         </div>
                     </div>
 
                     <div
-                        v-if="index !== videoThumbnail.length - 1"
+                        v-if="index !== localVideoThumbnail.length - 1"
                         class="h-full w-px bg-gray-300"
                     ></div>
                 </div>
@@ -141,7 +141,7 @@
                 <!-- SKELETON PLACEHOLDER -->
                 <div v-if="isFetchingThumbnails" class="flex gap-3">
                     <div
-                        v-for="index in 10"
+                        v-for="index in 5"
                         :key="index"
                         class="flex items-center gap-3"
                     >
@@ -157,7 +157,7 @@
                 </div>
 
                 <div
-                    v-if="!videoThumbnail.length && !isFetchingThumbnails"
+                    v-if="!localVideoThumbnail.length && !isFetchingThumbnails"
                     class="flex w-full flex-col items-center justify-center rounded-lg border bg-gray-100 p-6"
                 >
                     <Icon
@@ -180,7 +180,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted, nextTick } from "vue";
+import { ref, computed, onUnmounted, nextTick, onMounted } from "vue";
 import { storeToRefs } from "pinia";
 import { useRoute } from "vue-router";
 import { Icon } from "@iconify/vue";
@@ -188,11 +188,13 @@ import BaseDialog from "@shared/BaseDialog.vue";
 import { Button } from "@ui/button";
 import { ScrollArea, ScrollBar } from "@ui/scroll-area";
 import { useGroupStore } from "@stores/group-store";
-import { VideoFrameHeader } from "@/types/api/model";
+import { useWebsocketStore } from "@stores/websocket-store";
+import { Thumbnail, VideoFrameHeader } from "@/types/api/model";
 import { convertDateToReadableFormat } from "@/utils/helpers";
 
 const route = useRoute();
 const groupStore = useGroupStore();
+const websocketStore = useWebsocketStore();
 
 const { videoThumbnail, selectedVideo, meetingVideo } = storeToRefs(groupStore);
 
@@ -200,13 +202,11 @@ const thumbnailsRef = ref<HTMLDivElement[]>([]);
 
 const currentVideo = ref<VideoFrameHeader>();
 
-const intervalId = ref<ReturnType<typeof setInterval>>();
-
 const isPreviewOpen = ref<boolean>(false);
 const isCombinedVideoOpen = ref<boolean>(false);
-const isFirstTime = ref<boolean>(true);
-
 const isFetchingThumbnails = ref<boolean>(false);
+
+const localVideoThumbnail = ref<string[]>([]);
 
 const isVideoNotEmpty = computed(() => meetingVideo.value.length > 0);
 const isSelectedVideoNotEmpty = computed(() => {
@@ -231,7 +231,7 @@ async function scrollToView() {
 
     await nextTick();
 
-    thumbnailsRef.value[videoThumbnail.value.length - 1]?.scrollIntoView({
+    thumbnailsRef.value[localVideoThumbnail.value.length - 1]?.scrollIntoView({
         behavior: "smooth",
     });
 }
@@ -252,14 +252,15 @@ async function getVideo(index: number) {
 }
 
 async function getAllThumbnails() {
-    if (isFirstTime.value) {
-        isFetchingThumbnails.value = true;
-    }
-
-    isFirstTime.value = false;
+    isFetchingThumbnails.value = true;
 
     try {
-        await groupStore.getAllThumbnails(route.params.groupId as string);
+        await groupStore.getAllThumbnails(
+            route.params.groupId as string,
+            (thumbnail) => {
+                localVideoThumbnail.value.push(thumbnail);
+            },
+        );
         scrollToView();
     } catch (e) {
         console.log((e as Error).message);
@@ -279,32 +280,22 @@ async function getMeetingVideo() {
     }
 }
 
-async function fetchMeetingDetail() {
-    const { groupId, meetingId } = route.params;
-
+async function handleThumbnailAvailable(thumbnail: Thumbnail) {
     try {
-        await groupStore.getMeetingDetail(
-            groupId as string,
-            meetingId as string,
+        await groupStore.getSpecificThumbnail(
+            route.params.groupId as string,
+            route.params.meetingId as string,
+            thumbnail.frame_index,
+            (t) => {
+                localVideoThumbnail.value.push(t);
+            },
         );
     } catch (e) {
         console.log((e as Error).message);
     }
 }
 
-onMounted(() => {
-    intervalId.value = setInterval(async () => {
-        await fetchMeetingDetail();
-        getAllThumbnails();
-    }, 5000);
-});
-
-onUnmounted(() => {
-    groupStore.clearFrames();
-    if (intervalId.value) {
-        clearInterval(intervalId.value);
-    }
-});
+websocketStore.setOnThumbnailAvailable(handleThumbnailAvailable);
 
 function init() {
     getAllThumbnails();

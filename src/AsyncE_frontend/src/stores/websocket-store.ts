@@ -10,7 +10,7 @@ import { canisterId as backendCanisterId } from "@declarations/AsyncE_backend/in
 import { SignIdentity } from "@dfinity/agent";
 import IcWebSocket, { createWsConfig } from "ic-websocket-js";
 import { useUserStore } from "@/stores/user-store";
-import { DeleteChat, EditChat } from "@/types/api/model";
+import { DeleteChat, EditChat, Thumbnail } from "@/types/api/model";
 
 export const useWebsocketStore = defineStore("websocket", () => {
     const { actor, identity } = storeToRefs(useUserStore());
@@ -21,6 +21,7 @@ export const useWebsocketStore = defineStore("websocket", () => {
     let onChatReceive = (chat: Chat) => {};
     let onChatEdit = (chat: EditChat) => {};
     let onChatDelete = (chat: DeleteChat) => {};
+    let onThumbnailAvailable = (thumbnail: Thumbnail) => {};
 
     function sendMessage(chat: Chat) {
         if (ws.value) {
@@ -73,6 +74,15 @@ export const useWebsocketStore = defineStore("websocket", () => {
                     onGroupInvited(message.GroupInvited);
                     break;
 
+                case "NewVideoPart" in message:
+                    console.log(message.NewVideoPart);
+                    break;
+
+                case "Thumbnail" in message:
+                    onThumbnailAvailable(message.Thumbnail);
+                    console.log(message.Thumbnail);
+                    break;
+
                 default:
                     console.log("Unknown variant");
             }
@@ -101,6 +111,8 @@ export const useWebsocketStore = defineStore("websocket", () => {
         sendMessage,
         setWebsockets,
 
+        setOnThumbnailAvailable: (callback: (thumbnail: Thumbnail) => void) =>
+            (onThumbnailAvailable = callback),
         setOnChatReceive: (callback: (chat: Chat) => void) =>
             (onChatReceive = callback),
         setOnChatEdit: (callback: (chat: EditChat) => void) =>

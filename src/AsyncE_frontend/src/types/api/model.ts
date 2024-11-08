@@ -45,6 +45,12 @@ interface VideoFrameHeader {
     url: string;
 }
 
+interface Thumbnail {
+    group_id: bigint;
+    meeting_id: bigint;
+    frame_index: bigint;
+}
+
 interface RecordedChunks {
     screen: Blob[];
     camera: Blob[];
@@ -168,5 +174,6 @@ export type {
     MeetingList,
     EditChat,
     VideoRefs,
+    Thumbnail,
     GroupInvite,
 };

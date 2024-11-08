@@ -47,21 +47,37 @@
                             placeholder="Enter video title"
                         />
                     </div>
-                    <template v-if="userCredentials?.subscription.length">
-                        <div class="flex items-center justify-between">
-                            <Label class="text-sm font-medium">
-                                Generate Subtitles
-                            </Label>
-                            <Switch v-model:checked="generateSubtitle" />
-                        </div>
-                        <div
-                            v-show="generateSubtitle"
-                            class="text-sm text-gray-500"
+                    <div class="flex items-center justify-between">
+                        <Label
+                            class="text-sm font-medium"
+                            :class="{
+                                'text-gray-700':
+                                    !userCredentials?.subscription?.length,
+                            }"
                         >
-                            Generating subtitles will take some time depending
-                            on the video size.
-                        </div>
-                    </template>
+                            Generate Subtitles
+                        </Label>
+
+                        <base-tooltip
+                            text="You need to subscribe to use this feature"
+                        >
+                            <template #trigger>
+                                <Switch
+                                    v-model:checked="generateSubtitle"
+                                    :disabled="
+                                        !userCredentials?.subscription.length
+                                    "
+                                />
+                            </template>
+                        </base-tooltip>
+                    </div>
+                    <div
+                        v-show="generateSubtitle"
+                        class="text-sm text-gray-500"
+                    >
+                        Generating subtitles will take some time depending on
+                        the video size.
+                    </div>
                 </div>
             </template>
 
@@ -186,13 +202,14 @@ import { Icon } from "@iconify/vue";
 import { useGroupStore } from "@stores/group-store";
 import { useUserStore } from "@stores/user-store";
 import BaseDialog from "@components/shared/BaseDialog.vue";
+import BaseTooltip from "@components/shared/BaseTooltip.vue";
 import { Button } from "@components/ui/button";
 import Input from "@components/ui/input/Input.vue";
 import Label from "@components/ui/label/Label.vue";
 import Switch from "@components/ui/switch/Switch.vue";
+import { useToast } from "@components/ui/toast/use-toast";
 import VideoControls from "@components/video/VideoControls.vue";
 import VideoList from "@components/video/VideoList.vue";
-import { useToast } from "@/components/ui/toast/use-toast";
 
 const route = useRoute();
 const groupStore = useGroupStore();
@@ -357,7 +374,7 @@ async function saveRecording() {
 
     toast({
         title: "You video is being processed",
-        description: "once finished, your video will appear on the video list",
+        description: "Once finished, your video will appear on the video list",
     });
 }
 
