@@ -350,6 +350,7 @@ async function saveRecording() {
     } finally {
         isUploading.value = false;
         toggleConfirmationModal();
+        videoTitle.value = "";
     }
 
     recordedChunks.value = [];
