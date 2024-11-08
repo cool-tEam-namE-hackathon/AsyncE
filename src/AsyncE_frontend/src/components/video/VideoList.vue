@@ -67,8 +67,10 @@
             </template>
         </base-dialog>
 
-        <div class="mb-4 flex items-center justify-between">
-            <span class="text-lg font-medium">Video Thumbnails</span>
+        <div
+            class="mb-4 flex items-center justify-between rounded-lg bg-white p-4 shadow-md"
+        >
+            <h2 class="text-lg font-semibold">Video List</h2>
             <Button
                 :disabled="!videoThumbnail.length"
                 @click="toggleCombinedVideoModal"

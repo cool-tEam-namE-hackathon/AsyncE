@@ -9,30 +9,27 @@
             class="w-full max-w-md rounded-lg shadow-xl"
         >
             <template #title>
-                <h2 class="mb-2 text-xl font-medium">Upload Video</h2>
+                <h2 class="mb-2 text-xl font-medium">Upload Your Video</h2>
             </template>
 
             <template #content>
-                <div class="">
-                    <p class="mb-1 block text-sm font-medium">Recorded Video</p>
-                    <video v-if="url" autoplay muted controls>
-                        <source :src="url" />
-                        Your browser does not support the video tag.
-                    </video>
-                    <div
-                        v-else
-                        class="flex w-full flex-col items-center justify-center"
-                    >
-                        <Icon
-                            icon="prime:spinner"
-                            width="64"
-                            height="64"
-                            class="mb-4 animate-spin text-black"
-                        />
-                        <p class="text-sm text-gray-600">
-                            Please wait while the video is loading...
-                        </p>
-                    </div>
+                <video v-if="url" autoplay muted controls class="w-full">
+                    <source :src="url" />
+                    Your browser does not support the video tag.
+                </video>
+                <div
+                    v-else
+                    class="flex w-full flex-col items-center justify-center"
+                >
+                    <Icon
+                        icon="prime:spinner"
+                        width="64"
+                        height="64"
+                        class="mb-4 animate-spin text-black"
+                    />
+                    <p class="text-sm text-gray-600">
+                        Please wait while the video is loading...
+                    </p>
                 </div>
 
                 <div class="space-y-6">
@@ -81,7 +78,7 @@
                         :is-loading="isUploading"
                         @click="saveRecording"
                     >
-                        <template #default> Upload Video </template>
+                        <template #default> Upload </template>
                         <template #loading>
                             <Icon
                                 icon="prime:spinner"
@@ -97,7 +94,7 @@
         </base-dialog>
 
         <!-- GROUP NAME -->
-        <span> {{ meetingDetail?.title }}</span>
+        <h1 class="text-xl font-semibold">{{ meetingDetail?.title }}</h1>
 
         <canvas ref="canvasRef" class="hidden" />
 
@@ -106,7 +103,7 @@
             <!-- VIDEO -->
             <div class="flex flex-col rounded-lg bg-white p-4 shadow-md">
                 <div class="flex items-center justify-between">
-                    <h2 class="text-xl font-semibold">Record New Video</h2>
+                    <h2 class="text-lg font-semibold">Record New Video</h2>
                     <video-controls
                         v-model="selectedCamera"
                         :camera-list="cameraList"
@@ -176,7 +173,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watchEffect, computed, onMounted, nextTick } from "vue";
+import { ref, watchEffect, computed, onMounted } from "vue";
 import { storeToRefs } from "pinia";
 import { useRoute } from "vue-router";
 import {
