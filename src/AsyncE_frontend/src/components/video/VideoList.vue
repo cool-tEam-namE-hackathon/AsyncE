@@ -10,11 +10,43 @@
             class="sm:min-w-[90vw] md:min-w-[80vw]"
             @on-close-dialog="togglePreviewModal"
         >
+            <template v-if="isSelectedVideoNotEmpty" #title>
+                <h2 class="text-xl font-bold text-gray-800">
+                    {{ currentVideo?.title }}
+                </h2>
+            </template>
+
             <template #content>
                 <div v-if="isSelectedVideoNotEmpty">
+                    <!-- Metadata Section -->
+                    <div class="mb-1 space-y-2">
+                        <div
+                            class="flex items-center justify-between text-sm text-gray-600"
+                        >
+                            <p>
+                                Created by:
+                                <span class="font-medium text-gray-700">{{
+                                    currentVideo?.created_by
+                                }}</span>
+                            </p>
+
+                            <p>
+                                Created on:
+                                <span class="font-medium text-gray-700">
+                                    {{
+                                        convertDateToReadableFormat(
+                                            currentVideo?.created_time_unix,
+                                        )
+                                    }}
+                                </span>
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Video Section -->
                     <video
                         ref="previewVideoRef"
-                        :src="selectedVideo"
+                        :src="currentVideo?.url"
                         class="mt-6 rounded-md"
                         autoplay
                         controls
@@ -155,11 +187,15 @@ import BaseDialog from "@shared/BaseDialog.vue";
 import { Button } from "@ui/button";
 import { ScrollArea, ScrollBar } from "@ui/scroll-area";
 import { useGroupStore } from "@stores/group-store";
+import { VideoFrameHeader } from "@/types/api/model";
+import { convertDateToReadableFormat } from "@/utils/helpers";
 
 const route = useRoute();
 const groupStore = useGroupStore();
 
 const { videoThumbnail, selectedVideo, meetingVideo } = storeToRefs(groupStore);
+
+const currentVideo = ref<VideoFrameHeader>();
 
 const isPreviewOpen = ref<boolean>(false);
 const isCombinedVideoOpen = ref<boolean>(false);
@@ -167,12 +203,17 @@ const isCombinedVideoOpen = ref<boolean>(false);
 const isFetchingThumbnails = ref<boolean>(false);
 
 const isVideoNotEmpty = computed(() => meetingVideo.value.length > 0);
-const isSelectedVideoNotEmpty = computed(() => selectedVideo.value.length > 0);
+const isSelectedVideoNotEmpty = computed(() => {
+    if (!currentVideo.value) return false;
+    return currentVideo.value.url.length > 0;
+});
 
 function togglePreviewModal(index: number = -1) {
     isPreviewOpen.value = !isPreviewOpen.value;
 
-    if (isPreviewOpen.value) getVideo(index);
+    if (isPreviewOpen.value) {
+        getVideo(index);
+    }
 }
 
 function toggleCombinedVideoModal() {
@@ -180,12 +221,15 @@ function toggleCombinedVideoModal() {
 }
 
 async function getVideo(index: number) {
+    currentVideo.value = undefined;
     try {
         await groupStore.getVideo(
             route.params.groupId as string,
             route.params.meetingId as string,
             index,
         );
+
+        currentVideo.value = selectedVideo.value.get(index);
     } catch (e) {
         console.log((e as Error).message);
     }

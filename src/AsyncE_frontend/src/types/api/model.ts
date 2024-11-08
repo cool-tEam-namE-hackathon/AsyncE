@@ -38,6 +38,13 @@ interface Video {
     camera: Uint8Array | null;
 }
 
+interface VideoFrameHeader {
+    title: string;
+    created_time_unix: bigint;
+    created_by: string;
+    url: string;
+}
+
 interface RecordedChunks {
     screen: Blob[];
     camera: Blob[];
@@ -145,6 +152,7 @@ export type {
     Message,
     Group,
     Video,
+    VideoFrameHeader,
     DeleteChat,
     BaseDialogProps,
     BaseDropdownProps,

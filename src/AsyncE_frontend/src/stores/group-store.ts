@@ -8,7 +8,7 @@ import {
     MeetingHeader,
 } from "@declarations/AsyncE_backend/AsyncE_backend.did";
 import { useUserStore } from "@stores/user-store";
-import { Group, MeetingList } from "@/types/api/model";
+import { Group, MeetingList, VideoFrameHeader } from "@/types/api/model";
 import { blobToURL, validateResponse } from "@/utils/helpers";
 
 export const useGroupStore = defineStore("group", () => {
@@ -24,7 +24,7 @@ export const useGroupStore = defineStore("group", () => {
     const videoThumbnail = ref<string[]>([]);
 
     const meetingVideo = ref<string>("");
-    const selectedVideo = ref<string>("");
+    const selectedVideo = ref(new Map<number, VideoFrameHeader>());
 
     function convertGroupFromResponse(groupResponse: GroupQueryResponse) {
         return {
@@ -225,37 +225,53 @@ export const useGroupStore = defineStore("group", () => {
     }
 
     async function getVideo(groupId: string, meetingId: string, index: number) {
-        selectedVideo.value = "";
+        if (selectedVideo.value.has(index)) return;
+
+        const videoHeader: Partial<VideoFrameHeader> = {};
 
         const response = await actor.value?.get_video_frame_size(
             BigInt(groupId),
             BigInt(meetingId),
             BigInt(index),
         );
-
         const videoSize = Number(validateResponse(response));
-
         const videoData = new Uint8Array(videoSize);
 
-        const videoPromises = [];
+        // video header promise
+        const headerPromise = actor.value
+            ?.get_video_frame_detail(
+                BigInt(groupId),
+                BigInt(meetingId),
+                BigInt(index),
+            )
+            .then((res) => {
+                const okRes = validateResponse(res);
+                Object.assign(videoHeader, okRes, { url: "" });
+            });
 
-        for (let i = 0; i < Math.ceil(videoSize / MB); ++i) {
-            const videoPromise = actor.value
-                ?.get_video_frame_chunk_blob(
-                    BigInt(groupId),
-                    BigInt(meetingId),
-                    BigInt(index),
-                    BigInt(i),
-                )
-                .then((chunk) => {
-                    const okChunk = validateResponse(chunk);
-                    videoData.set(okChunk, i * MB);
-                });
-            videoPromises.push(videoPromise);
-        }
+        // video chunk promise
+        const chunkPromises = Array.from(
+            { length: Math.ceil(videoSize / MB) },
+            (_, i) =>
+                actor.value
+                    ?.get_video_frame_chunk_blob(
+                        BigInt(groupId),
+                        BigInt(meetingId),
+                        BigInt(index),
+                        BigInt(i),
+                    )
+                    .then((chunk) => {
+                        const okChunk = validateResponse(chunk);
+                        videoData.set(okChunk, i * MB);
+                    }),
+        );
 
-        await Promise.all(videoPromises);
-        selectedVideo.value = blobToURL(videoData);
+        await Promise.all([headerPromise, ...chunkPromises]);
+
+        selectedVideo.value.set(index, {
+            ...(videoHeader as VideoFrameHeader),
+            url: blobToURL(videoData),
+        });
     }
 
     async function inviteUser(id: bigint, name: string) {

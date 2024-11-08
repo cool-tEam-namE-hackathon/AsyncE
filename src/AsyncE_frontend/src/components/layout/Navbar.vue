@@ -24,7 +24,7 @@
             <!-- AUTHENTICATED -->
             <div v-else class="flex items-center gap-3">
                 <!-- DASHBOARD LINK -->
-                <router-link to="/group-list"> Dashboard </router-link>
+                <router-link to="/group-list"> Groups </router-link>
 
                 <!-- NOTIFICATION -->
                 <navbar-notification />
