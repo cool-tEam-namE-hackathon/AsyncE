@@ -6,16 +6,20 @@
                     Create a New Group
                 </h1>
                 <p class="text-sm text-gray-500">
-                    Set up a group for your asynchronous meetings
+                    Set up a group for your asynchronous meetings / gatherings
                 </p>
             </div>
             <div class="space-y-4">
                 <div class="space-y-2">
-                    <Label>Group Name</Label>
+                    <Label
+                        >Group Name<span class="text-red-500"> *</span></Label
+                    >
                     <Input v-model="groupName" placeholder="Enter group name" />
                 </div>
                 <div class="space-y-2">
-                    <Label>Group Image</Label>
+                    <Label
+                        >Group Image<span class="text-red-500"> *</span></Label
+                    >
                     <div class="flex items-center space-x-2">
                         <Input
                             type="file"
@@ -28,7 +32,7 @@
                 <template v-if="!imageUrl">
                     <img
                         src="/images/placeholder.webp"
-                        class="rounded-md"
+                        class="max-h-80 w-full rounded-md object-cover"
                         alt="placeholder"
                     />
                 </template>
@@ -111,7 +115,7 @@ async function createGroup() {
 
     try {
         await groupStore.createGroup(payload);
-        router.push("/group-list");
+        router.push("/groups");
     } catch (e) {
         console.log((e as Error).message);
     } finally {

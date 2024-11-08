@@ -24,9 +24,9 @@
             <div class="space-x-4">
                 <a href="#learn-more">
                     <Button>
-                        <div class="flex items-center gap-2">
-                            Learn More
+                        <div class="flex items-center gap-3">
                             <BookOpen />
+                            Learn More
                         </div>
                     </Button>
                 </a>

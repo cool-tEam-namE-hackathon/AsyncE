@@ -20,7 +20,9 @@
             :hide-close-button="true"
             :is-closable="false"
         >
-            <template #title> Input your username </template>
+            <template #title>
+                Input your username<span class="text-red-500"> *</span>
+            </template>
 
             <template #description> Username must be unique </template>
 
@@ -47,7 +49,11 @@
                     </div>
 
                     <div class="space-y-2">
-                        <Label>Profile picture</Label>
+                        <Label
+                            >Profile picture<span class="text-red-500">
+                                *</span
+                            ></Label
+                        >
                         <Input
                             type="file"
                             accept="image/*"
@@ -58,7 +64,7 @@
                     <template v-if="!imageUrl">
                         <img
                             src="/images/placeholder.webp"
-                            class="rounded-md"
+                            class="max-h-80 w-full rounded-md object-cover"
                             alt="placeholder"
                         />
                     </template>

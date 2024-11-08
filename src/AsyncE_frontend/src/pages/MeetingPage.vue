@@ -1,5 +1,5 @@
 <template>
-    <div class="container mb-2 flex flex-col">
+    <div class="container mb-2 mt-6 flex flex-col">
         <!-- INPUT GROUP TITLE -->
         <base-dialog
             :open="isConfirmationModalOpen"
@@ -38,7 +38,7 @@
                             for="videoTitle"
                             class="mb-1 block text-sm font-medium"
                         >
-                            Video Title
+                            Video Title<span class="text-red-500"> *</span>
                         </Label>
                         <Input
                             id="videoTitle"
@@ -383,7 +383,7 @@ async function fetchMeetingDetail() {
     }
 }
 
-const requestVideoFrame = function (callback) {
+const requestVideoFrame = function (callback: (date: number) => void) {
     return window.setTimeout(function () {
         callback(Date.now());
     }, 1000 / 60); // 60 fps - just like requestAnimationFrame

@@ -1,5 +1,5 @@
 <template>
-    <div class="container mx-auto mb-6 mt-10 h-full rounded-lg px-4">
+    <div class="container mx-auto mb-6 mt-6 h-full rounded-lg px-4">
         <!-- INVITE USER DIALOG -->
         <base-dialog
             :open="isInviteUserDialogOpen"
@@ -79,7 +79,7 @@
             :is-closable="true"
             @on-close-dialog="toggleCreateMeetingDialog"
         >
-            <template #title> Create New Meeting </template>
+            <template #title> Create Meeting </template>
 
             <template #content>
                 <Input v-model="meetingName" class="w-full" />
@@ -117,7 +117,7 @@
                 >
                     <h2 class="text-xl font-bold">Active Meetings</h2>
                     <Button
-                        class="w-full rounded-full sm:w-auto"
+                        class="flex w-full gap-2 rounded-full sm:w-auto"
                         @click="toggleCreateMeetingDialog"
                     >
                         <Icon
@@ -160,7 +160,7 @@
                             >
                         </div>
                         <Button @click="goToMeetingPage(meeting.id.toString())">
-                            Join
+                            Open
                         </Button>
                     </div>
                 </div>

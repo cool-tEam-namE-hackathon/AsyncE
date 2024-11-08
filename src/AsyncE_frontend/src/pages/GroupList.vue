@@ -1,16 +1,16 @@
 <template>
-    <div class="container mx-auto px-4 py-8">
+    <div class="container mx-auto mt-6 px-4 pb-6">
         <div class="mb-12 flex items-center justify-between">
-            <h1 class="text-3xl font-bold text-gray-900">Your Groups</h1>
+            <h1 class="text-2xl font-bold text-gray-900">Your Groups</h1>
             <router-link
                 to="/create-group"
-                class="inline-flex items-center rounded-full bg-black px-6 py-2.5 text-sm font-medium text-white transition-colors hover:bg-gray-800"
+                class="inline-flex items-center gap-2 rounded-full bg-black px-6 py-2.5 text-sm font-medium text-white transition-colors hover:bg-gray-800"
             >
                 <Icon
-                    icon="mdi-light:plus-circle"
-                    class="mr-2"
-                    width="1.2rem"
-                    height="1.2rem"
+                    icon="tabler:plus"
+                    width="22"
+                    height="22"
+                    class="text-white"
                 />
                 Create New Group
             </router-link>
@@ -89,7 +89,6 @@ import { storeToRefs } from "pinia";
 import { useRouter } from "vue-router";
 import { Icon } from "@iconify/vue";
 import { useGroupStore } from "@stores/group-store";
-import { Button } from "@components/ui/button";
 import { blobToURL } from "@/utils/helpers";
 
 const router = useRouter();

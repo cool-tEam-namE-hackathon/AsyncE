@@ -1,4 +1,3 @@
-import { storeToRefs } from "pinia";
 import { createRouter, createWebHistory } from "vue-router";
 import {
     Home,
@@ -9,8 +8,6 @@ import {
     NotFoundPage,
     ProfilePage,
 } from "@lazy-loading-routes";
-import { useUserStore } from "@stores/user-store";
-import { useToast } from "@components/ui/toast";
 
 const routes = [
     {
@@ -29,7 +26,7 @@ const routes = [
         component: CreateGroup,
     },
     {
-        path: "/group-list",
+        path: "/groups",
         name: "GroupList",
         component: GroupList,
     },
