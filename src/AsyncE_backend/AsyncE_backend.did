@@ -59,6 +59,12 @@ type GroupInviteResponse = record {
     group_name: text;
 };
 
+type VideoFrameHeader = record {
+    title: text;
+    created_by: text;
+    created_time_unix: nat;
+};
+
 type WebsocketEventMessage = variant {
     Ping: null;
     GroupInvited: GroupInviteResponse;
@@ -182,6 +188,11 @@ service : {
 
     get_video_meeting_chunk_blob: (nat, nat, nat) -> (variant {
         Ok: blob;
+        Err: text;
+    });
+
+    get_video_frame_detail: (nat, nat, nat) -> (variant {
+        Ok: VideoFrameHeader;
         Err: text;
     });
 

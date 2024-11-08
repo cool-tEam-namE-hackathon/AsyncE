@@ -51,6 +51,23 @@ pub struct VideoFrame {
     pub created_time_unix: u128,
 }
 
+#[derive(Clone, Debug, Default, CandidType, Deserialize)]
+pub struct VideoFrameHeader {
+    pub title: String,
+    pub created_by: String,
+    pub created_time_unix: u128,
+}
+
+impl From<&VideoFrame> for VideoFrameHeader {
+    fn from(value: &VideoFrame) -> Self {
+        Self {
+            title: value.title.clone(),
+            created_by: value.created_by.clone(),
+            created_time_unix: value.created_time_unix,
+        }
+    }
+}
+
 impl VideoFrame {
     fn new(username: String, title: String) -> Self {
         Self {
@@ -415,6 +432,26 @@ pub fn get_meeting_thumbnail_chunk_blob(
         .collect())
 }
 
+#[ic_cdk::query]
+pub fn get_video_frame_detail(group_id: u128, meeting_id: u128, frame_index: u128) -> Result<VideoFrameHeader, String> {
+    user::assert_user_logged_in()?;
+    assert_check_group(group_id)?;
+
+    let meetings = MEETINGS.lock().map_err(|err| format!("Failed to lock meeting: {}", err))?;
+    let meetings = meetings
+        .get(&group_id)
+        .ok_or(String::from("No meetings found on this group!"))?;
+
+    let meeting = meetings
+        .get(&meeting_id)
+        .ok_or(String::from("No meeting found on this meeting ID!"))?;
+
+    meeting
+        .frames
+        .get(frame_index as usize)
+        .map(VideoFrameHeader::from)
+        .ok_or(String::from("Cannot find this meeting with the provided index!"))
+}
 
 #[ic_cdk::query]
 pub fn get_meeting_video_frame_thumbnail_size(group_id: u128, meeting_id: u128, frame_index: u128) -> Result<u128, String> {
