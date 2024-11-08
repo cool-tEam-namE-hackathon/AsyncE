@@ -107,10 +107,10 @@
         </base-dialog>
 
         <!-- MAIN CONTENT -->
-        <div class="flex min-h-[calc(100vh-8rem)] flex-col gap-6 lg:flex-row">
+        <div class="flex h-full flex-col gap-6 lg:flex-row">
             <!-- MEETING LIST SECTION -->
             <div
-                class="flex w-full flex-1 flex-col rounded-md border p-4 shadow-md sm:p-6"
+                class="flex h-[300px] flex-1 flex-col rounded-md border p-4 shadow-md sm:h-[350px] sm:p-6 lg:h-full"
             >
                 <div
                     class="mb-6 flex flex-col items-center justify-between gap-4 sm:flex-row"
@@ -129,7 +129,27 @@
                         Create Meeting
                     </Button>
                 </div>
-                <div class="space-y-2">
+
+                <div
+                    v-if="!meetingList.length"
+                    class="flex flex-1 flex-col items-center justify-center text-center text-gray-500"
+                >
+                    <Icon
+                        icon="line-md:file-document-cancel-twotone"
+                        width="128"
+                        height="128"
+                        class="mb-4 text-black"
+                    />
+                    <h2 class="text-xl font-semibold text-gray-700">
+                        No Meetings Found
+                    </h2>
+                    <p class="mt-3 text-gray-500">
+                        You don't have any meetings scheduled yet. Start by
+                        creating a new meeting!
+                    </p>
+                </div>
+
+                <div v-else class="flex-1 space-y-2 overflow-y-auto">
                     <div
                         v-for="(meeting, index) in meetingList"
                         :key="index"
@@ -150,49 +170,27 @@
                                     >Created by: {{ meeting.created_by }}</span
                                 >
                             </div>
-                            <span class="text-sm text-gray-500"
-                                >Created at:
+                            <span class="text-sm text-gray-500">
+                                Created at:
                                 {{
                                     convertDateToReadableFormat(
                                         meeting.created_time_unix,
                                     )
-                                }}</span
-                            >
+                                }}
+                            </span>
                         </div>
-                        <Button @click="goToMeetingPage(meeting.id.toString())">
-                            Join
-                        </Button>
+                        <Button @click="goToMeetingPage(meeting.id.toString())"
+                            >Join</Button
+                        >
                     </div>
-                </div>
-
-                <!-- NO MEETINGS -->
-                <div
-                    v-if="!meetingList.length"
-                    class="flex h-full flex-col items-center justify-center text-center text-gray-500"
-                >
-                    <Icon
-                        icon="line-md:file-document-cancel-twotone"
-                        width="128"
-                        height="128"
-                        class="mb-4 text-black"
-                    />
-                    <h2 class="text-xl font-semibold text-gray-700">
-                        No Meetings Found
-                    </h2>
-                    <p class="mt-3 text-gray-500">
-                        You don't have any meetings scheduled yet. Start by
-                        creating a new meeting!
-                    </p>
                 </div>
             </div>
 
             <!-- USER LIST AND CHAT SECTION -->
-            <div
-                class="flex h-[calc(100vh-8rem)] w-full flex-col gap-6 lg:w-1/4"
-            >
+            <div class="flex h-full flex-col gap-6 overflow-hidden lg:w-1/4">
                 <!-- USER LIST -->
                 <div
-                    class="flex min-h-[250px] flex-col rounded-md border p-4 shadow-md sm:p-6 lg:h-2/5"
+                    class="flex h-1/2 flex-col overflow-auto rounded-md border p-4 shadow-md sm:p-6 lg:h-2/5"
                 >
                     <div class="mb-4 flex items-center justify-between">
                         <h2 class="text-xl font-bold">Members</h2>
@@ -205,60 +203,54 @@
                             />
                         </Button>
                     </div>
-                    <div class="h-full space-y-3 overflow-auto">
-                        <div class="space-y-2">
-                            <div
-                                v-for="(user, index) in currentGroup?.members"
-                                :key="index"
-                                class="flex items-center justify-between rounded-lg border border-gray-100 bg-gray-50 p-3 text-sm"
-                            >
-                                <div class="flex items-center gap-2">
-                                    <Icon
-                                        v-if="
-                                            'Admin' in user.role ||
+                    <div class="flex-1 space-y-3 overflow-auto">
+                        <div
+                            v-for="(user, index) in currentGroup?.members"
+                            :key="index"
+                            class="flex items-center justify-between rounded-lg border border-gray-100 bg-gray-50 p-3 text-sm"
+                        >
+                            <div class="flex items-center gap-2">
+                                <Icon
+                                    v-if="
+                                        'Admin' in user.role ||
+                                        currentGroup?.owner === user.username
+                                    "
+                                    icon="mdi:crown"
+                                    :class="{
+                                        'text-yellow-500':
                                             currentGroup?.owner ===
-                                                user.username
-                                        "
-                                        icon="mdi:crown"
-                                        :class="{
-                                            'text-yellow-500':
-                                                currentGroup?.owner ===
-                                                user.username,
-                                            'text-blue-500':
-                                                'Admin' in user.role,
-                                        }"
-                                        width="16"
-                                        height="16"
-                                    />
-                                    <span class="font-medium text-gray-900">{{
-                                        user.username
-                                    }}</span>
-                                </div>
-
-                                <base-dropdown
-                                    v-if="showDropdownFor(user)"
-                                    label="Your account"
-                                    :options="editUserOptions"
-                                    @on-option-click="handleOptionClick"
-                                >
-                                    <template #trigger>
-                                        <button @click="setSelectedUser(user)">
-                                            <Icon
-                                                icon="ph:dots-three-bold"
-                                                width="16"
-                                                height="16"
-                                                class="ml-auto mt-1 text-black"
-                                            />
-                                        </button>
-                                    </template>
-                                </base-dropdown>
+                                            user.username,
+                                        'text-blue-500': 'Admin' in user.role,
+                                    }"
+                                    width="16"
+                                    height="16"
+                                />
+                                <span class="font-medium text-gray-900">{{
+                                    user.username
+                                }}</span>
                             </div>
+                            <base-dropdown
+                                v-if="showDropdownFor(user)"
+                                label="Your account"
+                                :options="editUserOptions"
+                                @on-option-click="handleOptionClick"
+                            >
+                                <template #trigger>
+                                    <button @click="setSelectedUser(user)">
+                                        <Icon
+                                            icon="ph:dots-three-bold"
+                                            width="16"
+                                            height="16"
+                                            class="ml-auto mt-1 text-black"
+                                        />
+                                    </button>
+                                </template>
+                            </base-dropdown>
                         </div>
                     </div>
                 </div>
 
-                <!-- CHAT WINDOW -->
-                <div class="h-3/5 rounded-lg shadow-md">
+                <div class="flex h-1/2 flex-col overflow-auto lg:h-3/5">
                     <meeting-chat-window />
                 </div>
             </div>

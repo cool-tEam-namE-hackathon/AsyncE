@@ -1,5 +1,5 @@
 <template>
-    <div class="flex h-full flex-col rounded-lg border bg-white">
+    <div class="flex h-full flex-col rounded-lg border bg-white shadow-md">
         <!-- Chat Header -->
         <div class="flex items-center justify-between gap-1 border-b p-4">
             <div class="flex items-center gap-1">
