@@ -18,7 +18,6 @@
                         class="mt-6 rounded-md"
                         autoplay
                         controls
-                        muted
                     />
                 </div>
                 <div v-else class="flex flex-col items-center justify-center">
@@ -51,7 +50,6 @@
                         class="mt-6 rounded-md"
                         autoplay
                         controls
-                        muted
                     />
                 </div>
                 <div v-else class="flex flex-col items-center justify-center">
@@ -69,8 +67,10 @@
             </template>
         </base-dialog>
 
-        <div class="mb-4 flex items-center justify-between">
-            <span class="text-lg font-medium">Video Thumbnails</span>
+        <div
+            class="mb-4 flex items-center justify-between rounded-lg bg-white p-4 shadow-md"
+        >
+            <h2 class="text-lg font-semibold">Video List</h2>
             <Button
                 :disabled="!videoThumbnail.length"
                 @click="toggleCombinedVideoModal"

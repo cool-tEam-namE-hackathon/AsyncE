@@ -15,7 +15,7 @@ use crate::{
     chat::Chat,
     group::{GroupMemberRole, GroupQueryResponse},
     invite::GroupInviteResponse,
-    meeting::MeetingHeader,
+    meeting::{MeetingHeader, VideoFrameHeader},
     user::UserCredentialsResponse,
     websocket::WebsocketEventMessage,
 };

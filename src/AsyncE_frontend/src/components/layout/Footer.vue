@@ -10,13 +10,13 @@
                 to="/"
                 class="text-xs underline-offset-4 hover:underline"
             >
-                Terms of Service
+                Home
             </router-link>
             <router-link
-                to="/"
+                to="/#learn-more"
                 class="text-xs underline-offset-4 hover:underline"
             >
-                Privacy
+                Learn More
             </router-link>
         </div>
     </footer>

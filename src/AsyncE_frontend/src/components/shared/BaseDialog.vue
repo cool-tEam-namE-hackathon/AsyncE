@@ -24,7 +24,6 @@
 
 <script setup lang="ts">
 import { computed, useAttrs } from "vue";
-
 import {
     Dialog,
     DialogContent,
@@ -34,7 +33,6 @@ import {
     DialogTitle,
 } from "@ui/dialog";
 import { FocusOutsideEvent } from "radix-vue/dist/DismissableLayer";
-
 import { BaseDialogProps } from "@/types/api/model";
 
 const props = defineProps<BaseDialogProps>();
