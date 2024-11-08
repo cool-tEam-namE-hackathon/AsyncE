@@ -18,7 +18,6 @@
                         class="mt-6 rounded-md"
                         autoplay
                         controls
-                        muted
                     />
                 </div>
                 <div v-else class="flex flex-col items-center justify-center">
@@ -51,7 +50,6 @@
                         class="mt-6 rounded-md"
                         autoplay
                         controls
-                        muted
                     />
                 </div>
                 <div v-else class="flex flex-col items-center justify-center">

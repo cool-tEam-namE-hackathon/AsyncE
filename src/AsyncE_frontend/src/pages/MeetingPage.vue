@@ -3,7 +3,8 @@
         <!-- INPUT GROUP TITLE -->
         <base-dialog
             :open="isConfirmationModalOpen"
-            :is-closable="false"
+            :isClosable="false"
+            :hideCloseButton="true"
             @on-close-dialog="toggleConfirmationModal"
             class="w-full max-w-md rounded-lg shadow-xl"
         >
@@ -12,6 +13,28 @@
             </template>
 
             <template #content>
+                <div class="">
+                    <p class="mb-1 block text-sm font-medium">Recorded Video</p>
+                    <video v-if="url" autoplay muted controls>
+                        <source :src="url" />
+                        Your browser does not support the video tag.
+                    </video>
+                    <div
+                        v-else
+                        class="flex w-full flex-col items-center justify-center"
+                    >
+                        <Icon
+                            icon="prime:spinner"
+                            width="64"
+                            height="64"
+                            class="mb-4 animate-spin text-black"
+                        />
+                        <p class="text-sm text-gray-600">
+                            Please wait while the video is loading...
+                        </p>
+                    </div>
+                </div>
+
                 <div class="space-y-6">
                     <div>
                         <Label
@@ -150,15 +173,10 @@
     </div>
 
     <video-list ref="videoList" />
-
-    <video v-if="url" autoplay muted controls>
-        <source :src="url" type="video/webm" />
-        Your browser does not support the video tag.
-    </video>
 </template>
 
 <script setup lang="ts">
-import { ref, watchEffect, computed, onMounted } from "vue";
+import { ref, watchEffect, computed, onMounted, nextTick } from "vue";
 import { storeToRefs } from "pinia";
 import { useRoute } from "vue-router";
 import {
@@ -249,7 +267,7 @@ const recordingPhaseText = computed(() => {
     if (isRecording.value) {
         return "Stop";
     }
-    return recordedChunks.value.length > 0 ? "Save" : "Record";
+    return recordedChunks.value.length > 0 ? "Record" : "Record";
 });
 
 const cameraDimensions = computed(() => ({
@@ -263,12 +281,13 @@ const cameraDimensions = computed(() => ({
 
 function toggleConfirmationModal() {
     isConfirmationModalOpen.value = !isConfirmationModalOpen.value;
+    if (!isConfirmationModalOpen.value) url.value = "";
 }
 
 const videoMimeType = MediaRecorder.isTypeSupported(
-    "video/webm; codecs=vp8,opus",
+    'video/webm; codecs="vp8, opus"',
 )
-    ? "video/webm; codecs=vp8,opus"
+    ? 'video/webm; codecs="vp8, opus"'
     : "video/webm";
 
 function startRecording() {
@@ -316,8 +335,6 @@ async function saveRecording() {
 
     const data = new Uint8Array(await blob.arrayBuffer());
 
-    url.value = URL.createObjectURL(blob);
-
     try {
         await groupStore.uploadVideo(
             data,
@@ -342,10 +359,20 @@ function handleRecord() {
         startRecording();
     } else if (recordingPhaseText.value === "Stop") {
         stopRecording();
-    } else {
+
+        setTimeout(() => {
+            const blob = new Blob(recordedChunks.value, {
+                type: videoMimeType,
+            });
+            url.value = URL.createObjectURL(blob);
+        }, 2000);
+
         toggleConfirmationModal();
+    } else {
+        startRecording();
     }
 }
+
 async function fetchMeetingDetail() {
     const { groupId, meetingId } = route.params;
 
