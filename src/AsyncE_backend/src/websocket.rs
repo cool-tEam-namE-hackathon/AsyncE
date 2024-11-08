@@ -35,6 +35,11 @@ pub enum WebsocketEventMessage {
         chat_id: u128,
         group_id: u128,
     },
+    Thumbnail {
+        group_id: u128,
+        meeting_id: u128,
+        frame_index: u128,
+    },
 }
 
 impl WebsocketEventMessage {
@@ -94,7 +99,8 @@ pub fn on_message(args: OnMessageCallbackArgs) {
         WebsocketEventMessage::GroupInvited { .. }
         | WebsocketEventMessage::NewVideoPart { .. }
         | WebsocketEventMessage::DeleteChat { .. }
-        | WebsocketEventMessage::EditChat { .. } => {}
+        | WebsocketEventMessage::EditChat { .. }
+        | WebsocketEventMessage::Thumbnail { .. } => {}
 
         WebsocketEventMessage::AddChat(mut chat) => {
             let name = USERS
@@ -206,4 +212,25 @@ pub fn broadcast_edit_chat(group_id: u128, chat_id: u128, new_content: String) {
 
 pub fn broadcast_delete_chat(group_id: u128, chat_id: u128) {
     broadcast_websocket_message(WebsocketEventMessage::DeleteChat { chat_id, group_id });
+}
+
+pub fn broadcast_thumbnail(group: &Group, meeting_id: u128, frame_index: usize) {
+    for group_member in group.members.iter() {
+        USERS.with_borrow(|users| {
+            if let Some(principal) = users
+                .iter()
+                .find(|x| x.1.username.eq_ignore_ascii_case(&group_member.username))
+                .map(|x| x.0)
+            {
+                send_websocket_message(
+                    *principal,
+                    WebsocketEventMessage::Thumbnail {
+                        group_id: group.id,
+                        meeting_id,
+                        frame_index: frame_index as u128,
+                    },
+                );
+            }
+        })
+    }
 }
