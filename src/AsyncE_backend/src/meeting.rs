@@ -3,7 +3,7 @@ use serde::Deserialize;
 
 use crate::{
     chunk,
-    globals::{MEETINGS, VIDEO_UPLOADS},
+    globals::{GROUPS, MEETINGS, VIDEO_UPLOADS},
     group, http,
     primary_key::{self, PrimaryKeyType},
     user, websocket,
@@ -264,26 +264,31 @@ fn get_thumbnail_from_video_data(group_id: u128, meeting_id: u128, frame_index: 
             }
         };
 
-        let mut meetings = MEETINGS.lock().unwrap();
-        let meetings = meetings
-            .get_mut(&group_id)
-            .ok_or(String::from("No meetings found on this group!"))
-            .unwrap();
+        GROUPS.with_borrow(|groups| {
+            let group = groups.get(&group_id).ok_or(String::from("Cannot find group with this ID!")).unwrap();
+            let mut meetings = MEETINGS.lock().unwrap();
+            let meetings = meetings
+                .get_mut(&group_id)
+                .ok_or(String::from("No meetings found on this group!"))
+                .unwrap();
 
-        let meeting = meetings
-            .get_mut(&meeting_id)
-            .ok_or(String::from("No meeting found on this video ID!"))
-            .unwrap();
-        if meeting.thumbnail_data.is_empty() {
-            meeting.thumbnail_data = thumbnail_data.clone();
-        }
+            let meeting = meetings
+                .get_mut(&meeting_id)
+                .ok_or(String::from("No meeting found on this video ID!"))
+                .unwrap();
+            if meeting.thumbnail_data.is_empty() {
+                meeting.thumbnail_data = thumbnail_data.clone();
+            }
 
-        meeting
-            .frames
-            .get_mut(frame_index)
-            .ok_or(String::from("No frame found on this meeting index!"))
-            .unwrap()
-            .thumbnail_data = thumbnail_data;
+            meeting
+                .frames
+                .get_mut(frame_index)
+                .ok_or(String::from("No frame found on this meeting index!"))
+                .unwrap()
+                .thumbnail_data = thumbnail_data;
+
+            websocket::broadcast_thumbnail(group, meeting_id, frame_index);
+        })
     })
 }
 
