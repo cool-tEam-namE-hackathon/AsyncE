@@ -192,9 +192,11 @@ import Label from "@components/ui/label/Label.vue";
 import Switch from "@components/ui/switch/Switch.vue";
 import VideoControls from "@components/video/VideoControls.vue";
 import VideoList from "@components/video/VideoList.vue";
+import { useToast } from "@/components/ui/toast/use-toast";
 
 const route = useRoute();
 const groupStore = useGroupStore();
+const { toast } = useToast();
 
 const videoTitle = ref<string>("");
 const url = ref<string>("");
@@ -224,14 +226,19 @@ const { uploadVideoProgress, meetingDetail } = storeToRefs(groupStore);
 
 const { stream: displayStream, enabled: enabledScreen } = useDisplayMedia();
 
-const { videoInputs: cameras, audioInputs: microphones } = useDevicesList({
+let {
+    videoInputs: cameras,
+    audioInputs: microphones,
+    ensurePermissions,
+} = useDevicesList({
     requestPermissions: true,
 });
+ensurePermissions();
 
 const { width: screenWidth, height: screenHeight } =
     useElementSize(containerEl);
 
-const selectedCamera = computed(() => cameras.value[0].deviceId);
+const selectedCamera = computed(() => cameras.value[0]?.deviceId);
 const currentMicrophone = computed(() => microphones.value[0]?.deviceId);
 
 const { stream: displayCamera, enabled: enabledCamera } = useUserMedia({
@@ -346,6 +353,11 @@ async function saveRecording() {
     }
 
     recordedChunks.value = [];
+
+    toast({
+        title: "You video is being processed",
+        description: "once finished, your video will appear on the video list",
+    });
 }
 
 function handleRecord() {

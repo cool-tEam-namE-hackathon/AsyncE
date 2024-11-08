@@ -35,6 +35,7 @@
                             }"
                         >
                             Username
+                            <span class="text-red-500"> *</span>
                         </Label>
                         <Input
                             v-model="username"
