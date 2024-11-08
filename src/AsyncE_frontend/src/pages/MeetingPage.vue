@@ -218,7 +218,7 @@ const { videoInputs: cameras, audioInputs: microphones } = useDevicesList({
 const { width: screenWidth, height: screenHeight } =
     useElementSize(containerEl);
 
-const selectedCamera = computed(() => cameraList.value[0].deviceId);
+const selectedCamera = computed(() => cameras.value[0].deviceId);
 const currentMicrophone = computed(() => microphones.value[0]?.deviceId);
 
 const { stream: displayCamera, enabled: enabledCamera } = useUserMedia({
@@ -265,6 +265,12 @@ function toggleConfirmationModal() {
     isConfirmationModalOpen.value = !isConfirmationModalOpen.value;
 }
 
+const videoMimeType = MediaRecorder.isTypeSupported(
+    "video/webm; codecs=vp8,opus",
+)
+    ? "video/webm; codecs=vp8,opus"
+    : "video/webm";
+
 function startRecording() {
     if (!canvasRef.value) return;
 
@@ -279,7 +285,7 @@ function startRecording() {
     ]);
 
     mediaRecorder.value = new MediaRecorder(combinedStream, {
-        mimeType: "video/webm; codecs=vp9",
+        mimeType: videoMimeType,
     });
 
     mediaRecorder.value.ondataavailable = (e) => {
@@ -305,7 +311,7 @@ async function saveRecording() {
     isUploading.value = true;
 
     const blob = new Blob(recordedChunks.value, {
-        type: "video/webm; codecs=vp9",
+        type: videoMimeType,
     });
 
     const data = new Uint8Array(await blob.arrayBuffer());
