@@ -389,7 +389,7 @@ pub async fn get_processed_video_subtitles(uuid: &str) -> Result<Option<Vec<u8>>
 
     let mut data = Vec::with_capacity(response.file_size);
     for i in 0..response.chunk_count {
-        let url = format!("http://localhost:17191/subtitles/{}/{}", uuid, i);
+        let url = format!("http://localhost:17191/subtitles/{}/{}", uuid, i + 1);
         let response = send_get_request(url).await.map_err(|_| {
             String::from("Failed to send HTTP request for getting processed video subtitles chunk")
         })?;
