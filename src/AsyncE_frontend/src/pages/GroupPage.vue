@@ -115,7 +115,7 @@
                 <div
                     class="mb-6 flex flex-col items-center justify-between gap-4 sm:flex-row"
                 >
-                    <h2 class="text-xl font-bold">List of meetings</h2>
+                    <h2 class="text-xl font-bold">Active Meetings</h2>
                     <Button
                         class="w-full rounded-full sm:w-auto"
                         @click="toggleCreateMeetingDialog"
@@ -133,12 +133,35 @@
                     <div
                         v-for="(meeting, index) in meetingList"
                         :key="index"
-                        class="cursor-pointer rounded-lg border border-gray-100 bg-gray-50 p-4 transition-all hover:border-gray-200 hover:bg-gray-100"
-                        @click="goToMeetingPage(meeting.id.toString())"
+                        class="flex items-center justify-between rounded-lg border border-gray-100 bg-gray-100 p-4 shadow-sm"
                     >
-                        <span class="font-medium text-gray-900">{{
-                            meeting.title
-                        }}</span>
+                        <div class="flex flex-col gap-2">
+                            <h2 class="text-xl font-semibold">
+                                {{ meeting.title }}
+                            </h2>
+                            <div class="flex items-center gap-1">
+                                <Icon
+                                    icon="line-md:person"
+                                    width="24"
+                                    height="24"
+                                    class="text-black"
+                                />
+                                <span class="text-gray-500"
+                                    >Created by: {{ meeting.created_by }}</span
+                                >
+                            </div>
+                            <span class="text-sm text-gray-500"
+                                >Created at:
+                                {{
+                                    convertDateToReadableFormat(
+                                        meeting.created_time_unix,
+                                    )
+                                }}</span
+                            >
+                        </div>
+                        <Button @click="goToMeetingPage(meeting.id.toString())">
+                            Join
+                        </Button>
                     </div>
                 </div>
 
@@ -172,7 +195,7 @@
                     class="flex min-h-[250px] flex-col rounded-md border p-4 shadow-md sm:p-6 lg:h-2/5"
                 >
                     <div class="mb-4 flex items-center justify-between">
-                        <h2 class="text-xl font-bold">List of users</h2>
+                        <h2 class="text-xl font-bold">Members</h2>
                         <Button class="rounded-full" @click="toggleInviteModal">
                             <Icon
                                 icon="mdi:invite"
@@ -259,6 +282,7 @@ import BaseDropdown from "@components/shared/BaseDropdown.vue";
 import { Button } from "@components/ui/button";
 import { Input } from "@components/ui/input";
 import { RoleKeys } from "@/types/api/model";
+import { convertDateToReadableFormat } from "@/utils/helpers";
 
 const route = useRoute();
 const router = useRouter();
@@ -438,6 +462,7 @@ async function createMeeting() {
 async function getAllMeetings() {
     try {
         await groupStore.getAllMeetings(route.params.id as string);
+        console.log(meetingList.value);
     } catch (e) {
         console.log((e as Error).message);
     }

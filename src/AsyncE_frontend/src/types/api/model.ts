@@ -1,6 +1,7 @@
 import {
     GroupMemberRole,
     MeetingHeader,
+    MeetingProcessType,
 } from "@declarations/AsyncE_backend/AsyncE_backend.did";
 
 interface User {
@@ -11,6 +12,16 @@ interface User {
 interface GroupMember {
     role: GroupMemberRole;
     username: string;
+}
+
+interface MeetingList {
+    id: bigint;
+    title: string;
+    created_time_unix: bigint;
+    process_type: MeetingProcessType;
+    created_by: string;
+    frames_count: bigint;
+    thumbnail_blob?: Uint8Array | number[];
 }
 
 interface Group {
@@ -146,6 +157,7 @@ export type {
     MediaRecorders,
     RecordingStatus,
     Elements,
+    MeetingList,
     EditChat,
     VideoRefs,
     GroupInvite,

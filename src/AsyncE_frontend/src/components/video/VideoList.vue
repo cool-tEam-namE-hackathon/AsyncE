@@ -90,11 +90,13 @@
                         class="cursor-pointer"
                         @click="togglePreviewModal(index)"
                     >
-                        <img
-                            :src="thumbnail"
-                            alt="thumbnail"
-                            class="h-36 w-64"
-                        />
+                        <div class="h-36 w-64">
+                            <img
+                                :src="thumbnail"
+                                alt="thumbnail"
+                                class="h-full w-full object-cover"
+                            />
+                        </div>
                     </div>
 
                     <div
@@ -106,7 +108,7 @@
                 <!-- SKELETON PLACEHOLDER -->
                 <div v-if="isFetchingThumbnails" class="flex gap-3">
                     <div
-                        v-for="index in 5"
+                        v-for="index in 10"
                         :key="index"
                         class="flex items-center gap-3"
                     >
@@ -190,9 +192,11 @@ async function getVideo(index: number) {
 }
 
 async function getAllThumbnails() {
+    console.log("fetch thumbnail");
     isFetchingThumbnails.value = true;
     try {
         await groupStore.getAllThumbnails(route.params.groupId as string);
+        console.log(videoThumbnail.value);
     } catch (e) {
         console.log((e as Error).message);
     } finally {

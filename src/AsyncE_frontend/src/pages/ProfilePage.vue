@@ -36,7 +36,9 @@
                         >
                     </div>
 
-                    <span class="mb-6 text-center text-gray-600"
+                    <span
+                        v-if="userCredentials?.subscription[0]"
+                        class="mb-6 text-center text-gray-600"
                         >Subscription ends in:
                         <strong>
                             {{
@@ -46,6 +48,10 @@
                         >
                         day(s)</span
                     >
+
+                    <span v-else class="mb-6 text-center text-gray-600">
+                        You are not currently subscribed
+                    </span>
                     <div class="mb-8 self-stretch rounded-2xl bg-gray-100 p-6">
                         <div class="flex items-center justify-between">
                             <div class="flex items-center gap-2">

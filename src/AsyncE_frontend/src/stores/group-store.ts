@@ -8,7 +8,7 @@ import {
     MeetingHeader,
 } from "@declarations/AsyncE_backend/AsyncE_backend.did";
 import { useUserStore } from "@stores/user-store";
-import { Group } from "@/types/api/model";
+import { Group, MeetingList } from "@/types/api/model";
 import { blobToURL, validateResponse } from "@/utils/helpers";
 
 export const useGroupStore = defineStore("group", () => {
@@ -19,7 +19,7 @@ export const useGroupStore = defineStore("group", () => {
     const currentGroup = ref<GroupQueryResponse>();
     const uploadVideoProgress = ref<number>(0);
 
-    const meetingList = ref<MeetingHeader[]>([]);
+    const meetingList = ref<MeetingList[]>([]);
     const meetingDetail = ref<MeetingHeader>();
     const videoThumbnail = ref<string[]>([]);
 
@@ -280,7 +280,6 @@ export const useGroupStore = defineStore("group", () => {
 
         validateResponse(response);
     }
-
     async function getAllThumbnails(groupId: string) {
         videoThumbnail.value = [];
 
@@ -336,14 +335,54 @@ export const useGroupStore = defineStore("group", () => {
         return okResponse;
     }
 
+    async function fetchMeetingThumbnail(groupId: bigint, meetingId: bigint) {
+        const response = await actor.value?.get_meeting_thumbnail_size(
+            groupId,
+            meetingId,
+        );
+        const meetingThumbnailSize = Number(validateResponse(response));
+
+        const meetingThumnbnailData = new Uint8Array(meetingThumbnailSize);
+
+        const chunkPromises = Array.from(
+            { length: Math.ceil(meetingThumbnailSize / MB) },
+            (_, i) =>
+                actor.value
+                    ?.get_meeting_thumbnail_chunk_blob(
+                        groupId,
+                        meetingId,
+                        BigInt(i),
+                    )
+                    .then((chunk) => {
+                        const okChunk = validateResponse(chunk);
+                        meetingThumnbnailData.set(okChunk, i * MB);
+                    }),
+        );
+
+        await Promise.all(chunkPromises);
+        console.log(meetingThumnbnailData);
+        return meetingThumnbnailData;
+    }
+
     async function getAllMeetings(groupId: string) {
         const response = await actor.value?.get_meetings(BigInt(groupId));
 
         const okResponse = validateResponse(response);
 
-        meetingList.value = okResponse;
+        const meetingFetchPromises = okResponse.map(
+            async (meetingResponse, index) => {
+                const meetingThumnbnailData = await fetchMeetingThumbnail(
+                    BigInt(groupId),
+                    meetingResponse.id,
+                );
 
-        return okResponse;
+                const thumbnailBlob = meetingThumnbnailData;
+                meetingList.value[index] = meetingResponse;
+                meetingList.value[index].thumbnail_blob = thumbnailBlob;
+            },
+        );
+
+        await Promise.all(meetingFetchPromises);
     }
 
     async function getMeetingDetail(groupId: string, meetingId: string) {

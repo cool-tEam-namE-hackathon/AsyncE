@@ -392,22 +392,27 @@ function startDrawing() {
             );
         }
 
+        // Draw camera if enabled
         if (enabledCamera.value && displayCamera.value && cameraRef.value) {
             const camera = cameraRef.value;
+            const videoAspectRatio = camera.videoWidth / camera.videoHeight;
 
             if (enabledScreen.value) {
-                // Camera in corner when screen is on
-                const cornerSize = {
-                    width: Math.floor(originalWidth / 4),
-                    height: Math.floor(originalHeight / 4),
-                };
-                ctx.value.drawImage(
-                    camera,
-                    0,
-                    0,
-                    cornerSize.width,
-                    cornerSize.height,
-                );
+                const maxCornerWidth = Math.floor(originalWidth / 4);
+                const maxCornerHeight = Math.floor(originalHeight / 4);
+                const cornerAspectRatio = maxCornerWidth / maxCornerHeight;
+
+                let cornerWidth, cornerHeight;
+
+                if (videoAspectRatio > cornerAspectRatio) {
+                    cornerWidth = maxCornerWidth;
+                    cornerHeight = cornerWidth / videoAspectRatio;
+                } else {
+                    cornerHeight = maxCornerHeight;
+                    cornerWidth = cornerHeight * videoAspectRatio;
+                }
+
+                ctx.value.drawImage(camera, 0, 0, cornerWidth, cornerHeight);
             } else {
                 // Camera full screen if screen is off
                 const scale = Math.max(
