@@ -1,6 +1,6 @@
+import { mount } from "@vue/test-utils";
 import { describe, expect, it } from "vitest";
 import App from "../App.vue";
-import { mount } from "@vue/test-utils";
 
 describe("App", () => {
     it("renders as expected", () => {

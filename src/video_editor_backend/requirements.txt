@@ -1,0 +1,9 @@
+flask
+moviepy
+ffmpeg-python
+pillow
+pydub
+speechrecognition
+pocketsphinx
+vosk
+soundfile

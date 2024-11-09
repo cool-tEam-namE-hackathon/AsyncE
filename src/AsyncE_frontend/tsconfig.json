@@ -16,10 +16,16 @@
         "strict": true,
         "target": "ESNext",
         "useDefineForClassFields": true,
+        "plugins": [{ "name": "@vue/typescript-plugin" }],
         "paths": {
             "@/*": ["*"],
-            "@declarations/*": ["./../declarations/*"],
-            "@dfinity/*": ["./node_modules/@dfinity/*"]
+            "@types": ["types/*"],
+            "@components/*": ["components/*"],
+            "@ui/*": ["components/ui/*"],
+            "@shared/*": ["components/shared/*"],
+            "@stores/*": ["stores/*"],
+            "@data/*": ["data/*"],
+            "@declarations/*": ["../../declarations/*"]
         }
     },
     "include": ["src"]

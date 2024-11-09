@@ -1,57 +1,268 @@
 import "./ws_types.did";
 
-type User = record {
-    "username": opt text;
-    "profile_picture_blob": blob;
+type UserSubscription = record {
+    time_started: nat;
+    duration_in_days: nat;
 };
 
-type Group = record {
-    "id": text;
-    "name": text;
-    "users": vec text;
-    "owner": text;
-    "profile_picture_blob": blob;
+type UserCredentialsResponse = record {
+    balance: nat;
+    username: text;
+    subscription: opt UserSubscription;
+    created_time_unix: nat;
 };
 
-type Video = record {
-    "id": text;
-    "webcam_blob": blob;
-    "screen_blob": blob;
+type GroupQueryResponse = record {
+    id: nat;
+    name: text;
+    owner: text;
+    members: vec GroupMember;
+    created_time_unix: nat;
 };
 
-type WebsocketEventMessageData = variant {
-    "ping": null;
-    "group_invited": text;
+type GroupMemberRole = variant {
+    Admin: null;
+    Member: null;
 };
 
-type WebsocketEventMessage = record {
-    "type": text;
-    "data": WebsocketEventMessageData;
+type GroupMember = record {
+    role: GroupMemberRole;
+    username: text;
+};
+
+type MeetingProcessType = variant {
+    None: null;
+    Concat: null;
+    Subtitle: null;
+};
+
+type MeetingHeader = record {
+    id: nat;
+    title: text;
+    created_by: text;
+    frames_count: nat;
+    created_time_unix: nat;
+    process_type: MeetingProcessType;
+};
+
+type Chat = record {
+    id: nat;
+    uuid: text;
+    group_id: nat;
+    content: text;
+    username: text;
+    created_time_unix: nat;
+};
+
+type GroupInviteResponse = record {
+    group_id: nat;
+    group_name: text;
+};
+
+type VideoFrameHeader = record {
+    title: text;
+    created_by: text;
+    created_time_unix: nat;
+};
+
+type WebsocketEventMessage = variant {
+    Ping: null;
+    GroupInvited: GroupInviteResponse;
+    AddChat: Chat;
+    NewVideoPart: record {
+        group_id: nat;
+        meeting_id: nat;
+        created_by: text;
+    };
+    EditChat: record {
+        chat_id: nat;
+        group_id: nat;
+        new_content: text;
+    };
+    DeleteChat: record {
+        chat_id: nat;
+        group_id: nat;
+    };
+    Thumbnail: record {
+        group_id: nat;
+        meeting_id: nat;
+        frame_index: nat;
+    };
 };
 
 service : {
-    "get_user_credentials": () -> (opt User) query;
-    "register": (User) -> ();
-    "get_self": () -> (opt User) query;
-    "get_selfname": () -> (opt text) query;
-    "get_user": (text) -> (opt User) query;
-    "get_username": () -> (opt text) query;
-    "query_username": (text) -> (vec text) query;
+    get_user_credentials: () -> (variant {
+        Ok: opt UserCredentialsResponse;
+        Err: text;
+    }) query;
 
-    "create_group": (text, blob) -> ();
-    "get_all_groups": () -> (vec Group) query;
-    "get_group": (text) -> (opt Group) query;
+    register: (text) -> (variant {
+        Ok: null;
+        Err: text;
+    });
+    
+    validate_username: (text) -> (variant {
+        Ok: bool;
+        Err: text;
+    }) query;
 
-    "get_videos": (text) -> (vec Video) query;
-    "add_video": (text, blob, blob) -> ();
-    "concat_video": (text, text, blob, blob) -> ();
+    upload_profile_picture: (blob, nat, nat) -> (variant {
+        Ok: null;
+        Err: text;
+    });
 
-    "invite_user": (text) -> ();
-    "get_self_group_invites": () -> (vec text) query;
-    "update_group_invite": (text, bool) -> ();
+    get_profile_picture_size: () -> (variant {
+        Ok: nat;
+        Err: text;
+    }) query;
 
-    "ws_open" : (CanisterWsOpenArguments) -> (CanisterWsOpenResult);
-    "ws_close" : (CanisterWsCloseArguments) -> (CanisterWsCloseResult);
-    "ws_message" : (CanisterWsMessageArguments, opt WebsocketEventMessage) -> (CanisterWsMessageResult);
-    "ws_get_messages" : (CanisterWsGetMessagesArguments) -> (CanisterWsGetMessagesResult) query;
+    get_profile_picture_chunk_blob: (nat) -> (variant {
+        Ok: blob;
+        Err: text;
+    }) query;
+
+    buy_subscription: () -> (variant {
+        Ok: null;
+        Err: text;
+    });
+
+    create_group: (text) -> (variant {
+        Ok: nat;
+        Err: text;
+    });
+
+    get_all_groups: () -> (variant {
+        Ok: vec GroupQueryResponse;
+        Err: text;
+    });
+
+    get_group: (nat) -> (variant {
+        Ok: opt GroupQueryResponse;
+        Err: text;
+    }) query;
+
+    upload_group_profile_picture: (nat, blob, nat, nat) -> (variant {
+        Ok: null;
+        Err: text;
+    });
+
+    get_group_profile_picture_size: (nat) -> (variant {
+        Ok: nat;
+        Err: text;
+    }) query;
+
+    get_group_profile_picture_chunk_blob: (nat, nat) -> (variant {
+        Ok: blob;
+        Err: text;
+    }) query;
+
+    kick_member: (nat, text) -> (variant {
+        Ok: null;
+        Err: text;
+    });
+
+    edit_member_role: (nat, text, GroupMemberRole) -> (variant {
+        Ok: null;
+        Err: text;
+    });
+
+    get_meetings: (nat) -> (variant {
+        Ok: vec MeetingHeader;
+        Err: text;
+    }) query;
+
+    create_meeting: (nat, text) -> (variant {
+        Ok: nat;
+        Err: text;
+    });
+
+    upload_video: (nat, nat, blob, bool, text, text, nat, nat, bool) -> (variant {
+        Ok: null;
+        Err: text;
+    });
+
+    get_meeting_detail: (nat, nat) -> (variant {
+        Ok: MeetingHeader;
+        Err: text;
+    });
+
+    get_video_meeting_size: (nat, nat) -> (variant {
+        Ok: nat;
+        Err: text;
+    });
+
+    get_video_meeting_chunk_blob: (nat, nat, nat) -> (variant {
+        Ok: blob;
+        Err: text;
+    });
+
+    get_video_frame_detail: (nat, nat, nat) -> (variant {
+        Ok: VideoFrameHeader;
+        Err: text;
+    });
+
+    get_video_frame_size: (nat, nat, nat) -> (variant {
+        Ok: nat;
+        Err: text;
+    });
+
+    get_video_frame_chunk_blob: (nat, nat, nat, nat) -> (variant {
+        Ok: blob;
+        Err: text;
+    });
+
+    get_meeting_thumbnail_size: (nat, nat) -> (variant {
+        Ok: nat;
+        Err: text;
+    });
+
+    get_meeting_thumbnail_chunk_blob: (nat, nat, nat) -> (variant {
+        Ok: blob;
+        Err: text;
+    });
+
+    get_meeting_video_frame_thumbnail_size: (nat, nat, nat) -> (variant {
+        Ok: nat;
+        Err: text;
+    });
+
+    get_meeting_video_frame_thumbnail_chunk_blob: (nat, nat, nat, nat) -> (variant {
+        Ok: blob;
+        Err: text;
+    });
+
+    invite_user: (nat, text) -> (variant {
+        Ok: null;
+        Err: text;
+    });
+
+    get_self_group_invites: () -> (variant {
+        Ok: vec GroupInviteResponse;
+        Err: text;
+    }) query;
+
+    update_group_invite: (nat, bool) -> (variant {
+        Ok: null;
+        Err: text;
+    });
+
+    ws_open : (CanisterWsOpenArguments) -> (CanisterWsOpenResult);
+    ws_close : (CanisterWsCloseArguments) -> (CanisterWsCloseResult);
+    ws_message : (CanisterWsMessageArguments, opt WebsocketEventMessage) -> (CanisterWsMessageResult);
+    ws_get_messages : (CanisterWsGetMessagesArguments) -> (CanisterWsGetMessagesResult) query;
+
+    get_chats: (nat) -> (variant {
+        Ok: vec Chat;
+        Err: text;
+    });
+
+    edit_chat: (nat, nat, text) -> (variant {
+        Ok: null;
+        Err: text;
+    });
+
+    delete_chat: (nat, nat) -> (variant {
+        Ok: null;
+        Err: text;
+    });    
 }

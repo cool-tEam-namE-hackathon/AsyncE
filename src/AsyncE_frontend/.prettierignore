@@ -24,3 +24,7 @@ dist/
 
 # environment variables
 .env
+
+# shadcn
+ui/
+shared/

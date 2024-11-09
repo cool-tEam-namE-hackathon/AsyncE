@@ -1,22 +1,22 @@
 <template>
     <footer
-        className="flex flex-col mt-auto gap-2 sm:flex-row py-6 w-full shrink-0 items-center px-4 md:px-6 border-t"
+        class="mt-auto flex w-full shrink-0 flex-col items-center gap-2 border-t px-4 py-6 sm:flex-row md:px-6"
     >
-        <p className="text-xs text-gray-500 dark:text-gray-400">
+        <p class="text-xs text-gray-500 dark:text-gray-400">
             © 2024 AsyncE. All rights reserved.
         </p>
-        <div className="sm:ml-auto flex gap-4 sm:gap-6">
+        <div class="flex gap-4 sm:ml-auto sm:gap-6">
             <router-link
                 to="/"
-                className="text-xs hover:underline underline-offset-4"
+                class="text-xs underline-offset-4 hover:underline"
             >
-                Terms of Service
+                Home
             </router-link>
             <router-link
-                to="/"
-                className="text-xs hover:underline underline-offset-4"
+                to="/#learn-more"
+                class="text-xs underline-offset-4 hover:underline"
             >
-                Privacy
+                Learn More
             </router-link>
         </div>
     </footer>
