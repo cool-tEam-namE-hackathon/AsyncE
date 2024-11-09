@@ -268,9 +268,10 @@ def gpt2():
   - Use the group's chat window for instant messaging.
   - Edit or delete messages to keep conversations clear and up-to-date.
 
-## Running The Artificial Intelligence Model
+## Running The Python Server For Video Editing
 
-To run the AI model, we would need python installed, specifically version 3.12
+We use Python to concatonate videos, generate thumbnails, and generate subtitles with AI.
+To run the python server, we would need python installed, specifically version 3.10 - 3.12
 
 Then, we can start our python environment and install the dependencies required by:
 
@@ -283,5 +284,6 @@ python3.12 -m pip install -r src/video_editor_backend/requirements.txt
 Then, we can run it by executing the command below:
 
 ```bash
-python src/video_editor_backend/app.py
+cd src/video_editor_backend/
+python app.py
 ```
