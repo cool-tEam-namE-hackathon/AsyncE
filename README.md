@@ -15,7 +15,7 @@ To get started, you might want to explore the project directory structure and th
   - [Setting Up OpenAI Whisper Locally (For Offline Use)](#setting-up-openai-whisper-locally-for-offline-use)
 - [Getting Started](#getting-started)
 - [How it Works](#how-it-works)
-- [Running Thee Artificial Intelligence Model](#running-the-artificial-intelligence-model)
+- [Running The Artificial Intelligence Model](#running-the-artificial-intelligence-model)
 
 ## Features
 - **Asynchronous Meetings**:
