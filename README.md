@@ -88,6 +88,11 @@ By choosing **AsyncE**, you embrace a communication platform designed for the mo
 
 This is the page where user will be in for the first time, it briefly tells the user about AsyncE platform.
 
+### Create User Page
+![Create User Page](https://github.com/cool-tEam-namE-hackathon/AsyncE/blob/main/demo_images/create_user.png?raw=true)
+
+This is the page where user will be prompted to enter his username and profile picture after successfully logged in using DFINITY's Internet Identity.
+
 ### Profile Page
 ![Profile Page](https://github.com/cool-tEam-namE-hackathon/AsyncE/blob/main/demo_images/profile.png?raw=true)
 
