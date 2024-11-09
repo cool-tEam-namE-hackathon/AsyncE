@@ -88,7 +88,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watchEffect, computed, onMounted, onUpdated } from "vue";
+import { ref, watchEffect, computed, onMounted } from "vue";
 import { storeToRefs } from "pinia";
 import { useRoute } from "vue-router";
 import {
@@ -244,7 +244,7 @@ function handleRecord() {
                 type: videoMimeType,
             });
             url.value = URL.createObjectURL(blob);
-        }, 2000);
+        }, 5000);
 
         toggleConfirmationModal();
     } else {

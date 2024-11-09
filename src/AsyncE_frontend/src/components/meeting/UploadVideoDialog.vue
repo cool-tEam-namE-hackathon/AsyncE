@@ -57,7 +57,11 @@
                     </Label>
 
                     <base-tooltip
-                        text="You need to subscribe to use this feature"
+                        :text="
+                            userCredentials?.subscription?.length
+                                ? 'You need to subscribe to use this feature'
+                                : ''
+                        "
                         :delay="200"
                     >
                         <template #trigger>
