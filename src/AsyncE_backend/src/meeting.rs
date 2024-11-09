@@ -188,7 +188,11 @@ pub fn upload_video(
     user::assert_user_logged_in()?;
     assert_check_group(group_id)?;
 
-    let selfname = user::get_selfname_force()?;
+    let selfuser =
+        user::get_selfuser()?.ok_or(String::from("This user does not have a username!"))?;
+    if with_subtitles && selfuser.subscription.is_none() {
+        return Err(String::from("User must be subscribed to use the subtitles AI feature!"));
+    }
 
     let mut meetings = MEETINGS.lock().unwrap();
     let meetings = meetings
@@ -202,8 +206,6 @@ pub fn upload_video(
     if meeting.process_type != MeetingProcessType::None {
         return Err(String::from("Video is still on procesing... Please try again later.."))
     }
-
-    ic_cdk::println!("Cool");
 
     VIDEO_UPLOADS.with_borrow_mut(|video_uploads| {
         let video_upload = video_uploads
@@ -229,7 +231,7 @@ pub fn upload_video(
                 http::send_concat_video_request(group_id, meeting_id, meeting.full_video_data.clone(), data.clone())
             }
 
-            let mut video_frame = VideoFrame::new(selfname.clone(), title);
+            let mut video_frame = VideoFrame::new(selfuser.username.clone(), title);
             video_frame.data = data.clone();
             meeting.frames.push(video_frame);
 
@@ -239,7 +241,7 @@ pub fn upload_video(
             }
             
             get_thumbnail_from_video_data(group_id, meeting_id, meeting.frames.len() - 1, data.clone());
-            websocket::broadcast_new_video_part(group_id, meeting_id, selfname);
+            websocket::broadcast_new_video_part(group_id, meeting_id, selfuser.username);
         }
 
         Ok(())

@@ -34,19 +34,26 @@ impl GroupInviteResponse {
 pub fn invite_user(group_id: u128, username: String) -> Result<(), String> {
     user::assert_user_logged_in()?;
 
-    let selfname = user::get_selfname_force()?;
+    let selfuser =
+        user::get_selfuser()?.ok_or(String::from("This user does not have a username!"))?;
 
     GROUPS.with_borrow(|groups| {
         let group = groups
             .get(&group_id)
             .ok_or(String::from("Cannot find group with this ID!"))?;
 
-        if !group.is_member(&selfname) {
+        if !group.is_member(&selfuser.username) {
             return Err(String::from("This user is not in this group!"));
         }
 
         if group.is_member(&username) {
             return Err(String::from("Chosen user is already in this group!"));
+        }
+
+        if selfuser.subscription.is_none() && group.members.len() >= 10 {
+            return Err(String::from(
+                "User must be subscribed to invite more users!",
+            ));
         }
 
         GROUP_INVITES.with_borrow_mut(|group_invites| {

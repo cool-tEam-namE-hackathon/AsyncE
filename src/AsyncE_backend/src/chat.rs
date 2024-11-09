@@ -47,14 +47,18 @@ pub fn get_chats(group_id: u128) -> Result<Vec<Chat>, String> {
 pub fn edit_chat(group_id: u128, chat_id: u128, new_content: String) -> Result<(), String> {
     user::assert_user_logged_in()?;
 
-    let selfname = user::get_selfname_force()?;
+    let selfuser =
+        user::get_selfuser()?.ok_or(String::from("This user does not have a username!"))?;
+    if selfuser.subscription.is_none() {
+        return Err(String::from("User must be subscribed to use this feature!"));
+    }
 
     GROUPS.with_borrow(|groups| {
         let group = groups
             .get(&group_id)
             .ok_or(String::from("Cannot find group with this ID!"))?;
 
-        if !group.is_member(&selfname) {
+        if !group.is_member(&selfuser.username) {
             return Err(String::from("This user is not in this group!"));
         }
 
@@ -79,14 +83,18 @@ pub fn edit_chat(group_id: u128, chat_id: u128, new_content: String) -> Result<(
 pub fn delete_chat(group_id: u128, chat_id: u128) -> Result<(), String> {
     user::assert_user_logged_in()?;
 
-    let selfname = user::get_selfname_force()?;
+    let selfuser =
+        user::get_selfuser()?.ok_or(String::from("This user does not have a username!"))?;
+    if selfuser.subscription.is_none() {
+        return Err(String::from("User must be subscribed to use this feature!"));
+    }
 
     GROUPS.with_borrow(|groups| {
         let group = groups
             .get(&group_id)
             .ok_or(String::from("Cannot find group with this ID!"))?;
 
-        if !group.is_member(&selfname) {
+        if !group.is_member(&selfuser.username) {
             return Err(String::from("This user is not in this group!"));
         }
 

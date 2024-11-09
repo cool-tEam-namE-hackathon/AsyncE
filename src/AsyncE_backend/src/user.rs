@@ -125,6 +125,14 @@ pub fn register(name: String) -> Result<(), String> {
     Ok(())
 }
 
+pub fn get_selfuser() -> Result<Option<User>, String> {
+    assert_user_logged_in()?;
+
+    let principal = ic_cdk::caller();
+
+    Ok(USERS.with_borrow(|users| users.get(&principal).cloned()))
+}
+
 pub fn get_selfname() -> Result<Option<String>, String> {
     assert_user_logged_in()?;
 
