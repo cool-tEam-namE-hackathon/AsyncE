@@ -1,113 +1,12 @@
 <template>
     <div class="container mb-2 mt-6 flex flex-col">
-        <!-- INPUT GROUP TITLE -->
-        <base-dialog
+        <!-- CONFIRMATION DIALOG -->
+        <upload-video-dialog
             :open="isConfirmationModalOpen"
-            :isClosable="false"
-            :hideCloseButton="true"
+            :url="url"
+            :recorded-chunks="recordedChunks"
             @on-close-dialog="toggleConfirmationModal"
-            class="w-full max-w-md rounded-lg shadow-xl"
-        >
-            <template #title>
-                <h2 class="mb-2 text-xl font-medium">Upload Your Video</h2>
-            </template>
-
-            <template #content>
-                <video v-if="url" autoplay muted controls class="w-full">
-                    <source :src="url" />
-                    Your browser does not support the video tag.
-                </video>
-                <div
-                    v-else
-                    class="flex w-full flex-col items-center justify-center"
-                >
-                    <Icon
-                        icon="prime:spinner"
-                        width="64"
-                        height="64"
-                        class="mb-4 animate-spin text-black"
-                    />
-                    <p class="text-sm text-gray-600">
-                        Please wait while the video is loading...
-                    </p>
-                </div>
-
-                <div class="space-y-6">
-                    <div>
-                        <Label
-                            for="videoTitle"
-                            class="mb-1 block text-sm font-medium"
-                        >
-                            Video Title<span class="text-red-500"> *</span>
-                        </Label>
-                        <Input
-                            id="videoTitle"
-                            v-model="videoTitle"
-                            class="w-full rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            placeholder="Enter video title"
-                        />
-                    </div>
-                    <div class="flex items-center justify-between">
-                        <Label
-                            class="text-sm font-medium"
-                            :class="{
-                                'text-gray-700':
-                                    !userCredentials?.subscription?.length,
-                            }"
-                        >
-                            Generate Subtitles
-                        </Label>
-
-                        <base-tooltip
-                            text="You need to subscribe to use this feature"
-                        >
-                            <template #trigger>
-                                <Switch
-                                    v-model:checked="generateSubtitle"
-                                    :disabled="
-                                        !userCredentials?.subscription.length
-                                    "
-                                />
-                            </template>
-                        </base-tooltip>
-                    </div>
-                    <div
-                        v-show="generateSubtitle"
-                        class="text-sm text-gray-500"
-                    >
-                        Generating subtitles will take some time depending on
-                        the video size.
-                    </div>
-                </div>
-            </template>
-
-            <template #footer>
-                <div class="flex justify-end space-x-3">
-                    <Button
-                        variant="secondary"
-                        @click="toggleConfirmationModal"
-                    >
-                        Cancel
-                    </Button>
-                    <Button
-                        :disabled="isUploading || !videoTitle"
-                        :is-loading="isUploading"
-                        @click="saveRecording"
-                    >
-                        <template #default> Upload </template>
-                        <template #loading>
-                            <Icon
-                                icon="prime:spinner"
-                                width="16"
-                                height="16"
-                                class="mr-1 animate-spin text-white"
-                            />
-                            Uploading... {{ uploadVideoProgress.toFixed(0) }}%
-                        </template>
-                    </Button>
-                </div>
-            </template>
-        </base-dialog>
+        />
 
         <!-- GROUP NAME -->
         <h1 class="text-xl font-semibold">{{ meetingDetail?.title }}</h1>
@@ -200,28 +99,17 @@ import {
 } from "@vueuse/core";
 import { Icon } from "@iconify/vue";
 import { useGroupStore } from "@stores/group-store";
-import { useUserStore } from "@stores/user-store";
-import BaseDialog from "@components/shared/BaseDialog.vue";
-import BaseTooltip from "@components/shared/BaseTooltip.vue";
-import { Button } from "@components/ui/button";
-import Input from "@components/ui/input/Input.vue";
-import Label from "@components/ui/label/Label.vue";
-import Switch from "@components/ui/switch/Switch.vue";
-import { useToast } from "@components/ui/toast/use-toast";
+import UploadVideoDialog from "@components/meeting/UploadVideoDialog.vue";
 import VideoControls from "@components/video/VideoControls.vue";
 import VideoList from "@components/video/VideoList.vue";
 
 const route = useRoute();
 const groupStore = useGroupStore();
-const { toast } = useToast();
 
-const videoTitle = ref<string>("");
 const url = ref<string>("");
 
 const isRecording = ref<boolean>(false);
-const isUploading = ref<boolean>(false);
 const isConfirmationModalOpen = ref<boolean>(false);
-const generateSubtitle = ref<boolean>(false);
 
 const recordedChunks = ref<Blob[]>([]);
 
@@ -238,8 +126,7 @@ const cameraRef = ref<HTMLVideoElement | null>(null);
 
 const mediaRecorder = ref<MediaRecorder | null>(null);
 
-const { userCredentials } = storeToRefs(useUserStore());
-const { uploadVideoProgress, meetingDetail } = storeToRefs(groupStore);
+const { meetingDetail } = storeToRefs(groupStore);
 
 const { stream: displayStream, enabled: enabledScreen } = useDisplayMedia();
 
@@ -301,6 +188,7 @@ const cameraDimensions = computed(() => ({
 function toggleConfirmationModal() {
     isConfirmationModalOpen.value = !isConfirmationModalOpen.value;
     if (!isConfirmationModalOpen.value) url.value = "";
+    if (recordedChunks.value.length > 0) recordedChunks.value = [];
 }
 
 const videoMimeType = MediaRecorder.isTypeSupported(
@@ -343,39 +231,6 @@ function stopRecording() {
     mediaRecorder.value.requestData();
     mediaRecorder.value.stop();
     isRecording.value = false;
-}
-
-async function saveRecording() {
-    isUploading.value = true;
-
-    const blob = new Blob(recordedChunks.value, {
-        type: videoMimeType,
-    });
-
-    const data = new Uint8Array(await blob.arrayBuffer());
-
-    try {
-        await groupStore.uploadVideo(
-            data,
-            route.params.groupId as string,
-            route.params.meetingId as string,
-            videoTitle.value,
-            generateSubtitle.value,
-        );
-    } catch (e) {
-        console.log((e as Error).message);
-    } finally {
-        isUploading.value = false;
-        toggleConfirmationModal();
-        videoTitle.value = "";
-    }
-
-    recordedChunks.value = [];
-
-    toast({
-        title: "You video is being processed",
-        description: "Once finished, your video will appear on the video list",
-    });
 }
 
 function handleRecord() {

@@ -60,7 +60,10 @@
                                 <span class="text-lg text-gray-600">
                                     Balance
                                 </span>
-                                <base-tooltip text="Subscription costs 5 coins">
+                                <base-tooltip
+                                    text="Subscription costs 5 coins"
+                                    :delay="200"
+                                >
                                     <template #trigger>
                                         <Icon
                                             icon="fe:info"
