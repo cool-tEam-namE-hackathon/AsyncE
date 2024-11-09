@@ -8,12 +8,14 @@ To get started, you might want to explore the project directory structure and th
 
 - [Features](#features)
 - [Why You Should Use AsyncE](#why-you-should-use-asynce)
+- [Project Demo](#project-demo)
 - [Documentation](#documentation)
 - [Running the Project Locally](#running-the-project-locally)
   - [Note on Frontend Environment Variables](#note-on-frontend-environment-variables)
   - [Setting Up OpenAI Whisper Locally (For Offline Use)](#setting-up-openai-whisper-locally-for-offline-use)
 - [Getting Started](#getting-started)
 - [How it Works](#how-it-works)
+- [Running Thee Artificial Intelligence Model](#running-the-artificial-intelligence-model)
 
 ## Features
 - **Asynchronous Meetings**:
@@ -77,6 +79,15 @@ Connect, collaborate, and celebrate at your own pace through asynchronous meetin
 ---
 
 By choosing **AsyncE**, you embrace a communication platform designed for the modern world—flexible, engaging, and built to enhance collaboration without the constraints of traditional meeting schedules.
+
+## Project Demo
+
+![Home Page](https://github.com/cool-tEam-namE-hackathon/AsyncE/blob/main/demo_images/home.png?raw=true)
+![Profile Page](https://github.com/cool-tEam-namE-hackathon/AsyncE/blob/main/demo_images/profile.png?raw=true)
+![Group List Page](https://github.com/cool-tEam-namE-hackathon/AsyncE/blob/main/demo_images/group_list.png?raw=true)
+![Create Group Page](https://github.com/cool-tEam-namE-hackathon/AsyncE/blob/main/demo_images/create_group.png?raw=true)
+![Meeting List Page](https://github.com/cool-tEam-namE-hackathon/AsyncE/blob/main/demo_images/meeting_list.png?raw=true)
+![Meeting Page](https://github.com/cool-tEam-namE-hackathon/AsyncE/blob/main/demo_images/meeting.png?raw=true)
 
 ## Documentation
 
@@ -218,3 +229,21 @@ def gpt2():
 - **Chat Functionality**:
   - Use the group's chat window for instant messaging.
   - Edit or delete messages to keep conversations clear and up-to-date.
+
+## Running The Artificial Intelligence Model
+
+To run the AI model, we would need python installed, specifically version 3.12
+
+Then, we can start our python environment and install the dependencies required by:
+
+```bash
+python3.12 -m venv .venv
+source .venv/bin/activate
+python3.12 -m pip install -r src/video_editor_backend/requirements.txt
+```
+
+Then, we can run it by executing the command below:
+
+```bash
+python src/video_editor_backend/app.py
+```
