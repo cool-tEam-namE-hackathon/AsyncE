@@ -1,7 +1,9 @@
 <template>
-    <div class="container my-auto w-full">
-        <div class="mx-auto max-w-2xl">
-            <div class="overflow-hidden rounded-3xl bg-white shadow-xl">
+    <div class="container w-full py-8">
+        <div class="mx-auto min-w-max max-w-4xl">
+            <div
+                class="overflow-hidden rounded-3xl bg-white px-8 py-8 shadow-xl"
+            >
                 <div
                     class="relative h-48 bg-gradient-to-r from-gray-200 to-gray-300"
                 >
@@ -11,7 +13,7 @@
                         class="absolute bottom-0 left-1/2 h-32 w-32 -translate-x-1/2 translate-y-1/2 transform rounded-full border-4 border-white object-cover shadow-md"
                     />
                 </div>
-                <div class="flex flex-col items-center px-8 pb-8 pt-20">
+                <div class="flex flex-col items-center pb-8 pt-20">
                     <h2
                         class="mb-2 text-center text-3xl font-bold text-gray-800"
                     >
@@ -83,26 +85,180 @@
                             </div>
                         </div>
                     </div>
-                    <Button
-                        class="w-full transform rounded-xl bg-black px-4 py-4 font-bold text-white transition duration-300 ease-in-out hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-opacity-50"
-                        :class="{
-                            'cursor-not-allowed opacity-50':
-                                isLoading || userCredentials?.balance === 0n,
-                        }"
-                        :disabled="isLoading || userCredentials?.balance === 0n"
-                        @click="buySubscription"
-                    >
-                        <template v-if="isLoading">
-                            <Icon
-                                icon="prime:spinner"
-                                width="16"
-                                height="16"
-                                class="mr-1 animate-spin text-white"
-                            />
-                            Buying Subscription...
-                        </template>
-                        <template v-else>Buy Subscription</template>
-                    </Button>
+
+                    <hr class="mb-8 w-full border-2 border-b-gray-100" />
+
+                    <h1 class="mb-8 text-2xl font-bold">Subscription Plans</h1>
+
+                    <div class="mb-8 flex flex-col gap-8 lg:flex-row">
+                        <div class="w-96 rounded-3xl shadow-lg">
+                            <div
+                                class="flex flex-col items-center justify-center rounded-t-3xl bg-[#211253] py-12"
+                            >
+                                <h4 class="text-2xl font-bold text-white">
+                                    BASIC PLAN
+                                </h4>
+                                <p class="text-slate-100">PER MONTH</p>
+                            </div>
+
+                            <div
+                                class="flex h-28 items-center justify-center bg-gradient-to-r from-[#2C8DFF] to-[#48E1FD]"
+                            >
+                                <div
+                                    class="flex h-36 w-36 items-center justify-center rounded-full bg-[#2CB9FF] p-5 shadow-xl"
+                                >
+                                    <p
+                                        class="text-3xl font-semibold text-white"
+                                    >
+                                        FREE
+                                    </p>
+                                </div>
+                            </div>
+                            <div class="mt-10 flex flex-col gap-4 px-5">
+                                <div class="flex gap-3">
+                                    <Check class="text-green-500" />
+                                    Create unlimited amount of meetings
+                                </div>
+                                <div class="flex gap-3">
+                                    <X class="text-red-500" />
+                                    Create more than 5 groups
+                                </div>
+                                <div class="flex gap-3">
+                                    <X class="text-red-500" />
+                                    Have more than 10 members in your group
+                                </div>
+                                <div class="flex gap-3">
+                                    <Check class="text-green-500" />
+                                    Upload unlimited amount of videos
+                                </div>
+                                <div class="flex gap-3">
+                                    <X class="text-red-500" />
+                                    Upload videos with generated subtitles using
+                                    AI
+                                </div>
+                                <div class="flex gap-3">
+                                    <Check class="text-green-500" />
+                                    Real-time group chat
+                                </div>
+                                <div class="flex gap-3">
+                                    <X class="text-red-500" />
+                                    Edit and delete chat
+                                </div>
+
+                                <p
+                                    class="mt-6 text-center font-bold text-gray-400"
+                                >
+                                    This is the default subscription plan
+                                </p>
+                            </div>
+                            <p
+                                class="mt-8 rounded-b-2xl bg-green-400 py-3 text-center text-black"
+                                v-if="
+                                    !isLoading &&
+                                    !userCredentials?.subscription.length
+                                "
+                            >
+                                You are currently on this subscription plan
+                            </p>
+                        </div>
+
+                        <div class="w-96 rounded-3xl shadow-lg">
+                            <div
+                                class="flex flex-col items-center justify-center rounded-t-3xl bg-[#211253] py-12"
+                            >
+                                <h4 class="text-2xl font-bold text-white">
+                                    ADVANCED PLAN
+                                </h4>
+                                <p class="text-slate-100">PER MONTH</p>
+                            </div>
+
+                            <div
+                                class="flex h-28 items-center justify-center bg-gradient-to-r from-[#6900E8] to-[#9B51FE]"
+                            >
+                                <div
+                                    class="flex h-36 w-36 items-center justify-center gap-1 rounded-full bg-[#8E32FF] p-5 shadow-xl"
+                                >
+                                    <p
+                                        class="text-3xl font-semibold text-white"
+                                    >
+                                        5
+                                    </p>
+                                    <Icon
+                                        icon="lucide:coins"
+                                        width="28"
+                                        height="28"
+                                        class="text-white"
+                                    />
+                                </div>
+                            </div>
+                            <div class="mt-10 flex flex-col gap-4 px-5">
+                                <div class="flex gap-3">
+                                    <Check class="text-green-500" />
+                                    Create unlimited amount of meetings
+                                </div>
+                                <div class="flex gap-3">
+                                    <Check class="text-green-500" />
+                                    Create unlimited amount of groups
+                                </div>
+                                <div class="flex gap-3">
+                                    <Check class="text-green-500" />
+                                    Have unlimited amount of members in your
+                                    group
+                                </div>
+                                <div class="flex gap-3">
+                                    <Check class="text-green-500" />
+                                    Upload unlimited amount of videos
+                                </div>
+                                <div class="flex gap-3">
+                                    <Check class="text-green-500" />
+                                    Upload videos with generated subtitles using
+                                    AI
+                                </div>
+                                <div class="flex gap-3">
+                                    <Check class="text-green-500" />
+                                    Real-time group chat
+                                </div>
+                                <div class="flex gap-3">
+                                    <Check class="text-green-500" />
+                                    Edit and delete chat
+                                </div>
+
+                                <Button
+                                    class="mt-4 w-full transform rounded-xl bg-gradient-to-r from-[#6900E8] to-[#9B51FE] px-4 py-5 font-bold text-white transition duration-300 ease-in-out hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-opacity-50"
+                                    :class="{
+                                        'cursor-not-allowed opacity-50':
+                                            isLoading ||
+                                            userCredentials?.balance === 0n,
+                                    }"
+                                    :disabled="
+                                        isLoading ||
+                                        userCredentials?.balance === 0n
+                                    "
+                                    @click="buySubscription"
+                                >
+                                    <template v-if="isLoading">
+                                        <Icon
+                                            icon="prime:spinner"
+                                            width="16"
+                                            height="16"
+                                            class="mr-1 animate-spin text-white"
+                                        />
+                                        Buying Subscription...
+                                    </template>
+                                    <template v-else>Buy Subscription</template>
+                                </Button>
+                            </div>
+                            <p
+                                class="mt-6 rounded-b-2xl bg-green-400 py-3 text-center text-black"
+                                v-if="
+                                    !isLoading &&
+                                    userCredentials?.subscription.length
+                                "
+                            >
+                                You are currently on this subscription plan
+                            </p>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -113,6 +269,7 @@
 import { ref } from "vue";
 import { storeToRefs } from "pinia";
 import { Icon } from "@iconify/vue";
+import { Check, X } from "lucide-vue-next";
 import { useUserStore } from "@stores/user-store";
 import BaseTooltip from "@components/shared/BaseTooltip.vue";
 import Button from "@components/ui/button/Button.vue";
