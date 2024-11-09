@@ -3,7 +3,7 @@
         :open="open"
         :is-closable="true"
         :class="isSelectedVideoNotEmpty ? 'sm:min-h-fit' : 'sm:min-h-[50vh]'"
-        class="sm:min-w-[90vw] md:min-w-[80vw]"
+        class="sm:min-w-[80vw] md:min-w-[70vw]"
         @on-close-dialog="emit('on-close-dialog')"
     >
         <template v-if="isSelectedVideoNotEmpty" #title>
@@ -40,13 +40,15 @@
                 </div>
 
                 <!-- Video Section -->
-                <video
-                    ref="previewVideoRef"
-                    :src="currentVideo?.url"
-                    class="mt-6 rounded-md"
-                    autoplay
-                    controls
-                />
+                <div class="flex items-center justify-center">
+                    <video
+                        ref="previewVideoRef"
+                        :src="currentVideo?.url"
+                        class="mt-6 rounded-md"
+                        autoplay
+                        controls
+                    />
+                </div>
             </div>
             <div v-else class="flex flex-col items-center justify-center">
                 <Icon

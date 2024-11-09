@@ -104,6 +104,11 @@
                         <Button
                             class="rounded-full"
                             @click="toggleInviteDialog"
+                            v-if="
+                                (currentUser?.role &&
+                                    'Admin' in currentUser?.role) ||
+                                currentUser?.username === currentGroup?.owner
+                            "
                         >
                             <Icon
                                 icon="mdi:invite"
@@ -182,6 +187,8 @@ import GroupChatWindow from "@components/group/GroupChatWindow.vue";
 import InviteUserDialog from "@components/group/InviteUserDialog.vue";
 import BaseDropdown from "@components/shared/BaseDropdown.vue";
 import { Button } from "@components/ui/button";
+import { useToast } from "@/components/ui/toast";
+import { MAX_MEMBERS_FOR_BASIC_PLAN } from "@/data/data-constants";
 import { RoleKeys } from "@/types/api/model";
 import { convertDateToReadableFormat } from "@/utils/helpers";
 
@@ -190,6 +197,8 @@ const router = useRouter();
 
 const userStore = useUserStore();
 const groupStore = useGroupStore();
+
+const { toast } = useToast();
 
 const { userCredentials } = storeToRefs(userStore);
 const { meetingList, currentGroup } = storeToRefs(groupStore);
@@ -255,6 +264,17 @@ function showDropdownFor(user: GroupMember): boolean {
 }
 
 function toggleInviteDialog() {
+    if (
+        currentGroup.value?.members &&
+        currentGroup.value.members.length > MAX_MEMBERS_FOR_BASIC_PLAN
+    ) {
+        toast({
+            title: "Cannot add another member",
+            description:
+                "You basic subscription plan does not allow more than 10 members for your group",
+        });
+        return;
+    }
     isInviteUserDialogOpen.value = !isInviteUserDialogOpen.value;
 }
 

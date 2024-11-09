@@ -2,7 +2,10 @@
     <base-dialog
         :open="open"
         :is-closable="true"
-        @on-close-dialog="emit('on-close-dialog')"
+        @on-close-dialog="
+            invitedUsername = '';
+            emit('on-close-dialog');
+        "
     >
         <template #title> Invite user </template>
 
@@ -19,8 +22,7 @@
                             v-model="invitedUsername"
                             class="w-full"
                             :class="{
-                                'border-red-400':
-                                    isFieldError && invitedUsername,
+                                'border-red-400': showRed,
                                 'border-green-700':
                                     !isFieldError && invitedUsername,
                                 'focus-visible:ring-0': true,
@@ -28,12 +30,16 @@
                             @update:model-value="validateUsername"
                         />
                         <Icon
-                            icon="ep:success-filled"
+                            :icon="
+                                showRed
+                                    ? 'gridicons:cross-circle'
+                                    : 'ep:success-filled'
+                            "
                             width="24"
                             height="24"
                             class="absolute right-2 top-1/2 -translate-y-1/2 transform"
                             :class="{
-                                'text-red-700': isFieldError && invitedUsername,
+                                'text-red-700': showRed,
                                 'text-green-700':
                                     !isFieldError && invitedUsername,
                                 hidden: !invitedUsername,
@@ -103,6 +109,12 @@ const inputtedUsername = ref<string>("");
 const isFieldError = computed(() => {
     return !isError.value && inputtedUsername.value;
 });
+
+const showRed = computed(
+    () =>
+        isFieldError.value ||
+        (invitedUsername.value && invitedUsername.value.length < 3),
+);
 
 const validateUsername = useDebounceFn(async (payload) => {
     try {

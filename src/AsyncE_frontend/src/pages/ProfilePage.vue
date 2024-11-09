@@ -123,12 +123,14 @@
                                     Create unlimited amount of meetings
                                 </div>
                                 <div class="flex gap-3">
-                                    <X class="text-red-500" />
-                                    Create more than 5 groups
+                                    <Check class="text-green-500" />
+                                    Create unlimited amount of groups
                                 </div>
                                 <div class="flex gap-3">
                                     <X class="text-red-500" />
-                                    Have more than 10 members in your group
+                                    Have more than
+                                    {{ MAX_MEMBERS_FOR_BASIC_PLAN }} members for
+                                    groups that you own
                                 </div>
                                 <div class="flex gap-3">
                                     <Check class="text-green-500" />
@@ -202,8 +204,8 @@
                                 </div>
                                 <div class="flex gap-3">
                                     <Check class="text-green-500" />
-                                    Have unlimited amount of members in your
-                                    group
+                                    Have unlimited amount of members for groups
+                                    that you own
                                 </div>
                                 <div class="flex gap-3">
                                     <Check class="text-green-500" />
@@ -271,6 +273,7 @@ import { useUserStore } from "@stores/user-store";
 import BaseTooltip from "@components/shared/BaseTooltip.vue";
 import Button from "@components/ui/button/Button.vue";
 import { useToast } from "@components/ui/toast/use-toast";
+import { MAX_MEMBERS_FOR_BASIC_PLAN } from "@/data/data-constants";
 import { convertDateToReadableFormat } from "@/utils/helpers";
 
 const { userCredentials, profilePicture } = storeToRefs(useUserStore());
