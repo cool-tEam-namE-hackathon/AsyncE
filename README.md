@@ -7,6 +7,7 @@ To get started, you might want to explore the project directory structure and th
 ## Table of Contents
 
 - [Features](#features)
+- [Why You Should Use AsyncE](#why-you-should-use-asynce)
 - [Documentation](#documentation)
 - [Running the Project Locally](#running-the-project-locally)
   - [Note on Frontend Environment Variables](#note-on-frontend-environment-variables)
@@ -46,6 +47,36 @@ To get started, you might want to explore the project directory structure and th
 - **Persistent Memory Hub**:
   
   - All conversations and videos are saved, allowing users to revisit and reflect on past discussions and shared content.
+ 
+## Why You Should Use AsyncE
+
+### **Empower Your Communications**
+
+Connect, collaborate, and celebrate at your own pace through asynchronous meetings, with both instant and real-time chat. **AsyncE** empowers you to communicate on your terms, fitting seamlessly into your schedule.
+
+### **Connect on Your Schedule**
+
+- **True Flexibility**: Add your thoughts and updates whenever it fits your day, allowing for true flexibility.
+- **Personalized Participation**: Join conversations when you’re ready, without the constraints of live meeting attendance.
+
+### **Engaging Video Conversations**
+
+- **Interactive Discussions**: Build on existing conversations by adding video responses, making discussions more interactive.
+- **Asynchronous Brainstorming**: Generate and refine ideas over time, giving everyone the chance to think, reflect, and respond thoughtfully.
+
+### **Seamless Global Collaboration**
+
+- **No Time Zone Barriers**: Stay connected with family, friends, or colleagues worldwide, without the need for matching schedules.
+- **Enhanced Team Productivity**: Empower teams to contribute from any location and at any time, making teamwork more inclusive and efficient.
+
+### **Long-Term Memory Hub**
+
+- **Save and Revisit**: Save and revisit past conversations, creating a lasting archive of shared insights and memories.
+- **Streamlined Knowledge Sharing**: Build a collective resource where everyone can access valuable insights and information, even long after discussions take place.
+
+---
+
+By choosing **AsyncE**, you embrace a communication platform designed for the modern world—flexible, engaging, and built to enhance collaboration without the constraints of traditional meeting schedules.
 
 ## Documentation
 
