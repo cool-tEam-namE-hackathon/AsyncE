@@ -8,12 +8,7 @@ import {
     MeetingHeader,
 } from "@declarations/AsyncE_backend/AsyncE_backend.did";
 import { useUserStore } from "@stores/user-store";
-import {
-    Group,
-    MeetingList,
-    Thumbnail,
-    VideoFrameHeader,
-} from "@/types/api/model";
+import { Group, MeetingList, VideoFrameHeader } from "@/types/api/model";
 import { blobToURL, validateResponse } from "@/utils/helpers";
 
 export const useGroupStore = defineStore("group", () => {
@@ -29,8 +24,6 @@ export const useGroupStore = defineStore("group", () => {
 
     const meetingVideo = ref<string>("");
     const selectedVideo = ref(new Map<number, VideoFrameHeader>());
-
-    const fetchedCombinedVideo = new Set<string>();
 
     function convertGroupFromResponse(groupResponse: GroupQueryResponse) {
         return {
@@ -199,10 +192,6 @@ export const useGroupStore = defineStore("group", () => {
     }
 
     async function getMeetingVideo(groupId: string, meetingId: string) {
-        const videoKey = `${groupId}-${meetingId}`;
-
-        if (fetchedCombinedVideo.has(videoKey)) return;
-
         meetingVideo.value = "";
 
         const response = await actor.value?.get_video_meeting_size(
@@ -235,8 +224,6 @@ export const useGroupStore = defineStore("group", () => {
         if (videoMeetingData.length === 0) return;
 
         meetingVideo.value = blobToURL(videoMeetingData);
-
-        fetchedCombinedVideo.add(videoKey);
     }
 
     async function getVideo(groupId: string, meetingId: string, index: number) {
