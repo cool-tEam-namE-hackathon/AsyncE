@@ -59,17 +59,11 @@ type GroupInviteResponse = record {
     group_name: text;
 };
 
-type VideoFrameHeader = variant {
-    Video: record {
-        title: text;
-        created_by: text;
-        created_time_unix: nat;
-    };
-    Notes: record {
-        content: text;
-        hex_color: text;
-    };
-}
+type VideoFrameHeader = record {
+    title: text;
+    created_by: text;
+    created_time_unix: nat;
+};
 
 type WebsocketEventMessage = variant {
     Ping: null;

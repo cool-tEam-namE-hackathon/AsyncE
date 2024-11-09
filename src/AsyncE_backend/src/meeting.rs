@@ -42,58 +42,41 @@ pub struct MeetingHeader {
     pub process_type: MeetingProcessType
 }
 
-#[derive(Clone, Debug, CandidType, Deserialize)]
-pub enum VideoFrame {
-    Video {
-        data: Vec<u8>,
-        title: String,
-        created_by: String,
-        thumbnail_data: Vec<u8>,
-        created_time_unix: u128,
-    },
-    Notes {
-        content: String,
-        hex_color: String,
-    }
+#[derive(Clone, Debug, Default, CandidType, Deserialize)]
+pub struct VideoFrame {
+    pub data: Vec<u8>,
+    pub title: String,
+    pub created_by: String,
+    pub thumbnail_data: Vec<u8>,
+    pub created_time_unix: u128,
 }
 
-#[derive(Clone, Debug, CandidType, Deserialize)]
-pub enum VideoFrameHeader {
-    Video {
-        title: String,
-        created_by: String,
-        created_time_unix: u128,
-    },
-    Notes {
-        content: String,
-        hex_color: String,
-    }
+#[derive(Clone, Debug, Default, CandidType, Deserialize)]
+pub struct VideoFrameHeader {
+    pub title: String,
+    pub created_by: String,
+    pub created_time_unix: u128,
 }
 
 impl From<&VideoFrame> for VideoFrameHeader {
     fn from(value: &VideoFrame) -> Self {
-        match value {
-            VideoFrame::Video { title, created_by, created_time_unix, .. } => Self::Video {
-                title: title.clone(),
-                created_by: created_by.clone(),
-                created_time_unix: *created_time_unix,
-            },
-
-            VideoFrame::Notes { content, hex_color } => Self::Notes {
-                content: content.clone(),
-                hex_color: hex_color.clone()
-            },
+        Self {
+            title: value.title.clone(),
+            created_by: value.created_by.clone(),
+            created_time_unix: value.created_time_unix,
         }
     }
 }
 
 impl VideoFrame {
-    fn new_video(username: String, title: String) -> Self {
-        Self::Video { data: Vec::new(), title, created_by: username, thumbnail_data: Vec::new(), created_time_unix: ic_cdk::api::time() as u128 }
-    }
-
-    fn new_notes(content: String, hex_color: String) -> Self {
-        Self::Notes { content, hex_color }
+    fn new(username: String, title: String) -> Self {
+        Self {
+            data: Vec::new(),
+            title,
+            created_by: username,
+            thumbnail_data: Vec::new(),
+            created_time_unix: ic_cdk::api::time() as u128,
+        }
     }
 }
 
@@ -191,34 +174,6 @@ pub fn create_meeting(group_id: u128, title: String) -> Result<u128, String> {
 }
 
 #[ic_cdk::update]
-pub fn add_note(
-    group_id: u128,
-    meeting_id: u128,
-    content: String,
-    hex_color: String
-) -> Result<(), String> {
-    user::assert_user_logged_in()?;
-    assert_check_group(group_id)?;
-
-    let mut meetings = MEETINGS.lock().unwrap();
-    let meetings = meetings
-        .get_mut(&group_id)
-        .ok_or(String::from("No meetings found on this group!"))?;
-
-    let meeting = meetings
-        .get_mut(&meeting_id)
-        .ok_or(String::from("No meeting found on this video ID!"))?;
-
-    if meeting.process_type != MeetingProcessType::None {
-        return Err(String::from("Video is still on procesing... Please try again later.."))
-    }
-
-    meeting.frames.push(VideoFrame::new_notes(content, hex_color));
-
-    Ok(())
-}
-
-#[ic_cdk::update]
 pub fn upload_video(
     group_id: u128,
     meeting_id: u128,
@@ -274,11 +229,8 @@ pub fn upload_video(
                 http::send_concat_video_request(group_id, meeting_id, meeting.full_video_data.clone(), data.clone())
             }
 
-            let mut video_frame = VideoFrame::new_video(selfname.clone(), title);
-            if let VideoFrame::Video { data: video_frame_data, .. } = &mut video_frame {
-                *video_frame_data = data.clone();
-            }
-
+            let mut video_frame = VideoFrame::new(selfname.clone(), title);
+            video_frame.data = data.clone();
             meeting.frames.push(video_frame);
 
             if with_subtitles {
@@ -328,14 +280,12 @@ fn get_thumbnail_from_video_data(group_id: u128, meeting_id: u128, frame_index: 
                 meeting.thumbnail_data = thumbnail_data.clone();
             }
 
-            let video_frame = meeting
+            meeting
                 .frames
                 .get_mut(frame_index)
                 .ok_or(String::from("No frame found on this meeting index!"))
-                .unwrap();
-            if let VideoFrame::Video { thumbnail_data: video_thumbnail_data, .. } = video_frame {
-                *video_thumbnail_data = thumbnail_data;
-            }
+                .unwrap()
+                .thumbnail_data = thumbnail_data;
 
             websocket::broadcast_thumbnail(group, meeting_id, frame_index);
         })
@@ -404,16 +354,12 @@ pub fn get_video_frame_size(
         .get(&meeting_id)
         .ok_or(String::from("No meeting found on this meeting ID!"))?;
 
-    let video_frame = meeting
+    Ok(meeting
         .frames
         .get(frame_index as usize)
-        .ok_or(String::from("Frame index is out of bounds!"))?;
-
-    if let VideoFrame::Video { data, .. } = video_frame {
-        return Ok(data.len() as u128);
-    }
-
-    Err(String::from("This frame is not a video!"))
+        .ok_or(String::from("Frame index is out of bounds!"))?
+        .data
+        .len() as u128)
 }
 
 #[ic_cdk::query]
@@ -435,20 +381,16 @@ pub fn get_video_frame_chunk_blob(
         .get(&meeting_id)
         .ok_or(String::from("No meeting found on this meeting ID!"))?;
 
-    let video_frame = meeting
+    Ok(meeting
         .frames
         .get(frame_index as usize)
-        .ok_or(String::from("Frame index is out of bounds!"))?;
-
-    if let VideoFrame::Video { data, .. } = video_frame {
-        return Ok(data.iter()
+        .ok_or(String::from("Frame index is out of bounds!"))?
+        .data
+        .iter()
         .skip(index as usize * chunk::MB)
         .take(chunk::MB)
         .cloned()
-        .collect());
-    }
-
-    Err(String::from("This frame is not a video!"))
+        .collect())
 }
 
 #[ic_cdk::query]
@@ -530,16 +472,11 @@ pub fn get_meeting_video_frame_thumbnail_size(group_id: u128, meeting_id: u128, 
         .get(&meeting_id)
         .ok_or(String::from("No meeting found on this meeting ID!"))?;
 
-    let video_frame = meeting
+    Ok(meeting
         .frames
         .get(frame_index as usize)
-        .ok_or(String::from("Frame index is out of bounds!"))?;
-
-    if let VideoFrame::Video { thumbnail_data, .. } = video_frame {
-        return Ok(thumbnail_data.len() as u128);
-    }
-
-    Err(String::from("This frame is not a video!"))
+        .ok_or(String::from("Cannot find this meeting with the provided index!"))?
+        .thumbnail_data.len() as u128)
 }
 
 #[ic_cdk::query]
@@ -561,19 +498,15 @@ pub fn get_meeting_video_frame_thumbnail_chunk_blob(
         .get(&meeting_id)
         .ok_or(String::from("No meeting found on this meeting ID!"))?;
 
-    let video_frame = meeting
+    Ok(meeting
         .frames
         .get(frame_index as usize)
-        .ok_or(String::from("Frame index is out of bounds!"))?;
-
-    if let VideoFrame::Video { thumbnail_data, .. } = video_frame {
-        return Ok(thumbnail_data.iter()
+        .ok_or(String::from("Cannot find this meeting with the provided index!"))?
+        .thumbnail_data
+        .iter()
         .skip(index as usize * chunk::MB)
         .take(chunk::MB)
         .cloned()
-        .collect());
-    }
-
-    Err(String::from("This frame is not a video!"))
+        .collect())
 }
 

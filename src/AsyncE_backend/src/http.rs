@@ -11,11 +11,7 @@ use ic_cdk::api::{
 };
 use serde::Deserialize;
 
-use crate::{
-    chunk,
-    globals::MEETINGS,
-    meeting::{MeetingProcessType, VideoFrame},
-};
+use crate::{chunk, globals::MEETINGS, meeting::MeetingProcessType};
 
 #[derive(Debug, Clone)]
 pub struct ProcessRequest {
@@ -126,12 +122,7 @@ pub fn poll_subtitle_requests() {
                     .unwrap();
 
                 meeting.process_type = MeetingProcessType::None;
-                let video_frame = meeting.frames.get_mut(req.index).unwrap();
-
-                if let VideoFrame::Video { data, .. } = video_frame {
-                    *data = processed_video_data.clone();
-                }
-
+                meeting.frames.get_mut(req.index).unwrap().data = processed_video_data.clone();
                 indexes_to_remove.push(req.uuid);
 
                 if meeting.full_video_data.is_empty() {
