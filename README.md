@@ -82,12 +82,45 @@ By choosing **AsyncE**, you embrace a communication platform designed for the mo
 
 ## Project Demo
 
+
+### Home Page
 ![Home Page](https://github.com/cool-tEam-namE-hackathon/AsyncE/blob/main/demo_images/home.png?raw=true)
+
+This is the page where user will be in for the first time, it briefly tells the user about AsyncE platform.
+
+### Profile Page
 ![Profile Page](https://github.com/cool-tEam-namE-hackathon/AsyncE/blob/main/demo_images/profile.png?raw=true)
+
+This is the page where user sees their profile information, as well as information about subscription.
+In this page, user can buy subscription and enjoy the subscription benefits.
+
+### Group List Page
 ![Group List Page](https://github.com/cool-tEam-namE-hackathon/AsyncE/blob/main/demo_images/group_list.png?raw=true)
+
+This is the page where user can see all their groups created.
+User can also create a new group if they want!
+
+### Create Group Page
 ![Create Group Page](https://github.com/cool-tEam-namE-hackathon/AsyncE/blob/main/demo_images/create_group.png?raw=true)
-![Meeting List Page](https://github.com/cool-tEam-namE-hackathon/AsyncE/blob/main/demo_images/meeting_list.png?raw=true)
+
+This is the page where user creates a new group.
+
+### Group Page
+![Group Page](https://github.com/cool-tEam-namE-hackathon/AsyncE/blob/main/demo_images/meeting_list.png?raw=true)
+
+This is the page where user will see the inside of a group.
+In this page, user can chat with another users on real time.
+User can also invite another user to the group, which will trigger notification for the other user on real time.
+User can also create a new meeting to setup a meeting with others!
+
+### Meeting Page
 ![Meeting Page](https://github.com/cool-tEam-namE-hackathon/AsyncE/blob/main/demo_images/meeting.png?raw=true)
+
+This is the page where user will see the inside of a meeting.
+In this page, user can see all videos that were uploaded by all users on the group.
+User can also see the combined videos across all videos that were uploaded, hence calling it a "meeting".
+User can also upload a meeting themselves, with video-cam and screenshare-cam support.
+If user is subscribed, user can enable the "Subtitles" AI feature to automatically generate subtitles for the video!
 
 ## Documentation
 
