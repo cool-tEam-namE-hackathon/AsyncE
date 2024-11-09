@@ -62,14 +62,10 @@ If you are hosting frontend code somewhere without using DFX, you may need to ma
 
 ### Setting Up OpenAI Whisper Locally (For Offline Use)
 
-put encoder.json, vocab.bpe, and the <Model Name>.pt file in the same folder
-edit the file:
-
--   `~/.local/lib/python3.10/site-packages/tiktoken_ext/openai_public.py` if you are on Linux / MacOS
--   `C:\Users\<Your Username>\AppData\Local\Programs\Python\Python310-32\Lib\site-packagespython3.9/site-packages/tiktoken_ext/openai_public.py` if you are on windows
-
-edit the above `openai_public.py` file to change the gpt2 function to the following:
-
+- Download OpenAI Whisper model, encoder.json, and vobac.bpe
+- Put the fiels <Model Name>.pt, encoder.json, and vocab.bpe in the same folder
+- Edit the file `~/.local/lib/python3.10/site-packages/tiktoken_ext/openai_public.py` (if you are on Linux / MacOS) or `C:\Users\<Your Username>\AppData\Local\Programs\Python\Python310-32\Lib\site-packagespython3.9/site-packages/tiktoken_ext/openai_public.py` (if you are on Windows)
+- Edit the previously located `openai_public.py` file to change the gpt2 function to the following:
 ```py
 def gpt2():
     mergeable_ranks = data_gym_to_mergeable_bpe_ranks(
