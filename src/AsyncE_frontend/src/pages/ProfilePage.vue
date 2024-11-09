@@ -94,7 +94,7 @@
                     <h1 class="mb-8 text-2xl font-bold">Subscription Plans</h1>
 
                     <div class="mb-8 flex flex-col gap-8 lg:flex-row">
-                        <div class="w-96 rounded-3xl shadow-lg">
+                        <div class="h-full w-96 rounded-3xl shadow-lg">
                             <div
                                 class="flex flex-col items-center justify-center rounded-t-3xl bg-[#211253] py-12"
                             >
@@ -117,7 +117,7 @@
                                     </p>
                                 </div>
                             </div>
-                            <div class="mt-10 flex flex-col gap-4 px-5">
+                            <div class="mb-6 mt-10 flex flex-col gap-4 px-5">
                                 <div class="flex gap-3">
                                     <Check class="text-green-500" />
                                     Create unlimited amount of meetings
@@ -147,15 +147,12 @@
                                     <X class="text-red-500" />
                                     Edit and delete chat
                                 </div>
-
-                                <p
-                                    class="mt-6 text-center font-bold text-gray-400"
-                                >
-                                    This is the default subscription plan
-                                </p>
                             </div>
+                            <p class="mb-6 text-center font-bold text-gray-400">
+                                This is the default subscription plan
+                            </p>
                             <p
-                                class="mt-8 rounded-b-2xl bg-green-400 py-3 text-center text-black"
+                                class="rounded-b-2xl bg-green-400 py-3 text-center text-black"
                                 v-if="
                                     !isLoading &&
                                     !userCredentials?.subscription.length
@@ -165,7 +162,7 @@
                             </p>
                         </div>
 
-                        <div class="w-96 rounded-3xl shadow-lg">
+                        <div class="h-full w-96 rounded-3xl shadow-lg">
                             <div
                                 class="flex flex-col items-center justify-center rounded-t-3xl bg-[#211253] py-12"
                             >
@@ -194,7 +191,7 @@
                                     />
                                 </div>
                             </div>
-                            <div class="mt-10 flex flex-col gap-4 px-5">
+                            <div class="mb-6 mt-10 flex flex-col gap-4 px-5">
                                 <div class="flex gap-3">
                                     <Check class="text-green-500" />
                                     Create unlimited amount of meetings
@@ -225,32 +222,29 @@
                                     <Check class="text-green-500" />
                                     Edit and delete chat
                                 </div>
-
-                                <Button
-                                    class="mt-4 w-full transform rounded-xl bg-gradient-to-r from-[#6900E8] to-[#9B51FE] px-4 py-5 font-bold text-white transition duration-300 ease-in-out hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-opacity-50"
-                                    :class="{
-                                        'cursor-not-allowed opacity-50':
-                                            isLoading ||
-                                            userCredentials?.balance === 0n,
-                                    }"
-                                    :disabled="
-                                        isLoading ||
-                                        userCredentials?.balance === 0n
-                                    "
-                                    @click="buySubscription"
-                                >
-                                    <template v-if="isLoading">
-                                        <Icon
-                                            icon="prime:spinner"
-                                            width="16"
-                                            height="16"
-                                            class="mr-1 animate-spin text-white"
-                                        />
-                                        Buying Subscription...
-                                    </template>
-                                    <template v-else>Buy Subscription</template>
-                                </Button>
                             </div>
+
+                            <Button
+                                class="w-full transform rounded-xl bg-gradient-to-r from-[#6900E8] to-[#9B51FE] px-4 py-5 font-bold text-white transition duration-300 ease-in-out hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-opacity-50"
+                                v-if="
+                                    !isLoading &&
+                                    userCredentials &&
+                                    !userCredentials.subscription.length &&
+                                    userCredentials.balance > 5n
+                                "
+                                @click="buySubscription"
+                            >
+                                <template v-if="isLoading">
+                                    <Icon
+                                        icon="prime:spinner"
+                                        width="16"
+                                        height="16"
+                                        class="mr-1 animate-spin text-white"
+                                    />
+                                    Buying Subscription...
+                                </template>
+                                <template v-else>Buy Subscription</template>
+                            </Button>
                             <p
                                 class="mt-6 rounded-b-2xl bg-green-400 py-3 text-center text-black"
                                 v-if="

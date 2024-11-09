@@ -101,7 +101,7 @@
                 v-motion-slide-visible-left
                 v-for="({ text, color }, index) in meet_texts"
                 :key="index"
-                v-show="currentVerticalCarouselIndex === index"
+                v-show="currentMeetTextsIndex === index"
             >
                 {{ text }}.
             </h2>
@@ -178,14 +178,14 @@ onMounted(() => {
     const meetTextsInterval = setInterval(() => {
         currentMeetTextsIndex.value =
             (currentMeetTextsIndex.value + 1) % meet_texts.length;
-    }, 10000);
+    }, 3000);
     parallaxWhenScrolling();
     window.addEventListener("scroll", parallaxWhenScrolling);
 
     onUnmounted(() => {
         clearInterval(verticalCarouselInterval);
         clearInterval(meetTextsInterval);
-        window.addEventListener("scroll", parallaxWhenScrolling);
+        window.removeEventListener("scroll", parallaxWhenScrolling);
     });
 });
 </script>
