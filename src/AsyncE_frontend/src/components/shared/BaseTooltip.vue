@@ -1,5 +1,5 @@
 <template>
-    <TooltipProvider>
+    <TooltipProvider :delay-duration="delay" >
         <Tooltip>
             <TooltipTrigger v-if="$slots['trigger']">
                 <slot name="trigger" />
@@ -20,6 +20,7 @@ import {
 } from "@components/ui/tooltip";
 
 const props = defineProps<{
+    delay?: number; 
     text: string;
 }>();
 </script>

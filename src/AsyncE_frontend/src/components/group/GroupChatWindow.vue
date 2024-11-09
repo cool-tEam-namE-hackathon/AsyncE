@@ -11,7 +11,10 @@
                 />
                 <h1>Chat</h1>
             </div>
-            <base-tooltip text="Right click to edit or delete a chat">
+            <base-tooltip
+                text="Right click to edit or delete a chat"
+                :delay="200"
+            >
                 <template #trigger>
                     <Icon
                         icon="fe:info"

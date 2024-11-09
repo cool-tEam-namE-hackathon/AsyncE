@@ -30,6 +30,8 @@ export const useGroupStore = defineStore("group", () => {
     const meetingVideo = ref<string>("");
     const selectedVideo = ref(new Map<number, VideoFrameHeader>());
 
+    const fetchedCombinedVideo = new Set<string>();
+
     function convertGroupFromResponse(groupResponse: GroupQueryResponse) {
         return {
             id: groupResponse.id,
@@ -197,6 +199,10 @@ export const useGroupStore = defineStore("group", () => {
     }
 
     async function getMeetingVideo(groupId: string, meetingId: string) {
+        const videoKey = `${groupId}-${meetingId}`;
+
+        if (fetchedCombinedVideo.has(videoKey)) return;
+
         meetingVideo.value = "";
 
         const response = await actor.value?.get_video_meeting_size(
@@ -225,7 +231,12 @@ export const useGroupStore = defineStore("group", () => {
         }
 
         await Promise.all(videoPromises);
+
+        if (videoMeetingData.length === 0) return;
+
         meetingVideo.value = blobToURL(videoMeetingData);
+
+        fetchedCombinedVideo.add(videoKey);
     }
 
     async function getVideo(groupId: string, meetingId: string, index: number) {
@@ -432,20 +443,22 @@ export const useGroupStore = defineStore("group", () => {
 
         const okResponse = validateResponse(response);
 
-        const meetingFetchPromises = okResponse.map(
-            async (meetingResponse, index) => {
-                const meetingThumnbnailData = await fetchMeetingThumbnail(
-                    BigInt(groupId),
-                    meetingResponse.id,
-                );
+        meetingList.value = okResponse;
 
-                const thumbnailBlob = meetingThumnbnailData;
-                meetingList.value[index] = meetingResponse;
-                meetingList.value[index].thumbnail_blob = thumbnailBlob;
-            },
-        );
+        // const meetingFetchPromises = okResponse.map(
+        //     async (meetingResponse, index) => {
+        //         const meetingThumnbnailData = await fetchMeetingThumbnail(
+        //             BigInt(groupId),
+        //             meetingResponse.id,
+        //         );
 
-        await Promise.all(meetingFetchPromises);
+        //         const thumbnailBlob = meetingThumnbnailData;
+        //         meetingList.value[index] = meetingResponse;
+        //         meetingList.value[index].thumbnail_blob = thumbnailBlob;
+        //     },
+        // );
+
+        // await Promise.all(meetingFetchPromises);
     }
 
     async function getMeetingDetail(groupId: string, meetingId: string) {
