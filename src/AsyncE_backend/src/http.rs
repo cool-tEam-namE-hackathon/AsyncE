@@ -100,7 +100,7 @@ pub fn poll_subtitle_requests() {
                 let processed_video_data = match get_processed_video_subtitles(&req.uuid).await {
                     Ok(processed_video_data) => processed_video_data,
                     Err(err) => {
-                        ic_cdk::eprintln!("Error while getting processed video concat: {}", err);
+                        ic_cdk::eprintln!("Error while getting processed video subtitles: {}", err);
                         continue;
                     }
                 };
