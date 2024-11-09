@@ -60,7 +60,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from "vue";
+import { computed } from "vue";
 import { Icon } from "@iconify/vue";
 import BaseSelect from "@shared/BaseSelect.vue";
 import { Button } from "@ui/button";
@@ -74,5 +74,8 @@ const emits = defineEmits<{
     (e: "on-record"): void;
 }>();
 
-const selectedCamera = ref<string>(props.modelValue);
+const selectedCamera = computed({
+    get: () => props.modelValue,
+    set: (value: string) => emits("update:modelValue", value),
+});
 </script>

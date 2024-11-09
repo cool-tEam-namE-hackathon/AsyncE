@@ -88,7 +88,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watchEffect, computed, onMounted } from "vue";
+import { ref, watchEffect, computed, onMounted, onUpdated } from "vue";
 import { storeToRefs } from "pinia";
 import { useRoute } from "vue-router";
 import {
@@ -142,14 +142,14 @@ ensurePermissions();
 const { width: screenWidth, height: screenHeight } =
     useElementSize(containerEl);
 
-const selectedCamera = computed(() => cameras.value[0]?.deviceId);
+const selectedCamera = ref(cameras.value[0]?.deviceId);
 const currentMicrophone = computed(() => microphones.value[0]?.deviceId);
 
 const { stream: displayCamera, enabled: enabledCamera } = useUserMedia({
     constraints: {
-        // @ts-expect-error passing .value will cause problems when selecting a different camera
+        // @ts-expect-error ref for reactive
         video: { deviceId: selectedCamera },
-        // @ts-expect-error passing .value will cause problems when selecting a different camera
+        // @ts-expect-error ref for reactive
         audio: { deviceId: currentMicrophone },
     },
 });
