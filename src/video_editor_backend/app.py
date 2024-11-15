@@ -53,7 +53,7 @@ def get_processed_video_chunk_response(
     return make_response(
         send_file(
             video_bytesio,
-            mimetype=f"application/octet-stream",
+            mimetype="application/octet-stream",
         ),
         200,
     )

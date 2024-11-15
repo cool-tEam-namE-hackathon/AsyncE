@@ -3,6 +3,8 @@ subtitle_height_px = 100
 timestamp_chunk_duration_seconds = 5
 timestamp_chunk_duration_ms = timestamp_chunk_duration_seconds * 1000
 
+write_video_preset = None  # "ultrafast" will make the processing time much faster, but bigger output size
+
 video_io_format_extension = "webm"
 image_output_format_extension = "jpeg"
 

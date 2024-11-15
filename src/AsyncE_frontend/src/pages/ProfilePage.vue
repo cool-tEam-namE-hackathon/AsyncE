@@ -227,7 +227,7 @@
                             </div>
 
                             <Button
-                                class="w-full transform rounded-xl bg-gradient-to-r from-[#6900E8] to-[#9B51FE] px-4 py-5 font-bold text-white transition duration-300 ease-in-out hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-opacity-50"
+                                class="mb-6 w-full transform rounded-xl bg-gradient-to-r from-[#6900E8] to-[#9B51FE] px-4 py-5 font-bold text-white transition duration-300 ease-in-out hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-opacity-50"
                                 v-if="
                                     !isLoading &&
                                     userCredentials &&
