@@ -1,4 +1,4 @@
-enable_transcription_using_whisper = True
+enable_transcription_using_whisper = False
 subtitle_height_px = 100
 timestamp_chunk_duration_seconds = 5
 timestamp_chunk_duration_ms = timestamp_chunk_duration_seconds * 1000
@@ -14,4 +14,4 @@ concat_video_processor_workers = 2
 subtitle_video_processor_workers = 1  # do not set higher than 1 if transcription using whisper is enabled (will consume too much memory)
 
 verbose_debug_prints = False
-custom_log_prints = True
+custom_log_prints = False
